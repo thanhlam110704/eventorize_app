@@ -13,6 +13,7 @@
 migrate_working_dir/
 .idea/
 
+.env
 # Ignore auto-generated Dart files
 .dart_tool/
 .packages
