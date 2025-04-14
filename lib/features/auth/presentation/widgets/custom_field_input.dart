@@ -3,7 +3,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:eventorize_app/assets/styles/text_styles.dart';
 import 'package:eventorize_app/assets/styles/colors.dart';
 
-enum InputType { email, password }
+enum InputType { email, fullname, phone, password }
 
 class CustomFieldInput extends StatefulWidget {
   final TextEditingController controller;
@@ -60,6 +60,14 @@ class CustomFieldInputState extends State<CustomFieldInput> {
     if (widget.inputType == InputType.email &&
         !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
       return 'Please enter a valid email';
+    }
+    if (widget.inputType == InputType.fullname &&
+        !RegExp(r"^[a-zA-Z\s'-]{2,}$").hasMatch(value)) {
+      return 'Please enter a valid name';
+    }
+    if (widget.inputType == InputType.phone &&
+        !RegExp(r'^\+?\d{7,15}$').hasMatch(value)) {
+      return 'Please enter a valid name';
     }
     if (widget.inputType == InputType.password && value.length < 6) {
       return 'Password must be at least 6 characters long';
