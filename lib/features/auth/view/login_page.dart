@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:eventorize_app/assets/styles/text_styles.dart';
-import 'package:eventorize_app/assets/styles/colors.dart';
-import '../widgets/custom_field_input.dart';
+import 'package:eventorize_app/core/configs/theme/text_styles.dart';
+import 'package:eventorize_app/core/configs/theme/colors.dart';
+import '../../../common/widgets/custom_field_input.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -39,7 +39,7 @@ class LoginPageState extends State<LoginPage> {
       isValid &= passwordInputKey.currentState!.validate();
     }
     if (isValid) {
-      // Placeholder for login logic
+    
     }
   }
 
