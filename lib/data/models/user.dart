@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 class User extends Equatable {
-  final String id; // ObjectIdStr từ BE sẽ được biểu diễn dưới dạng String trong Dart
+  final String id; 
   final String fullname;
   final String email;
   final String? position;
@@ -16,7 +16,7 @@ class User extends Equatable {
   final String? twitter;
   final String? linkedin;
   final String? instagram;
-  final String? password; // Password là bytes trong BE, nhưng trong Dart sẽ xử lý dưới dạng String (nếu cần)
+  final String? password; 
   final String? googleId;
   final String? githubId;
   final bool isVerified;
@@ -26,13 +26,13 @@ class User extends Equatable {
   final String? verifyEmailOtp;
   final DateTime? verifyEmailOtpExpire;
   final int? verifyEmailOtpAttempts;
-  final String type; // Literal["admin", "user"] sẽ được biểu diễn dưới dạng String
+  final String type;
   final DateTime createdAt;
-  final String? createdBy; // ObjectIdStr
+  final String? createdBy;
   final DateTime? updatedAt;
-  final String? updatedBy; // ObjectIdStr
+  final String? updatedBy;
   final DateTime? deletedAt;
-  final String? deletedBy; // ObjectIdStr
+  final String? deletedBy; 
 
   const User({
     required this.id,

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:eventorize_app/data/repositories/user_repository.dart';
 import 'package:eventorize_app/data/api/user_api.dart';
 import 'package:eventorize_app/common/network/dio_client.dart';
-import 'package:eventorize_app/common/errors/api_error_handler.dart';
 
 class HealthCheckPage extends StatefulWidget {
   const HealthCheckPage({super.key});
@@ -30,15 +29,13 @@ class HealthCheckPageState extends State<HealthCheckPage> {
         _result = response['ping'] as String? ?? 'No ping value';
       });
     } catch (e) {
+      String errorMessage = 'Unexpected error: $e';
       if (e is ApiException) {
-        setState(() {
-          _result = 'Error: ${e.message} (Code: ${e.code}${e.statusCode != null ? ', Status: ${e.statusCode}' : ''})';
-        });
-      } else {
-        setState(() {
-          _result = 'Unexpected error: $e';
-        });
+        errorMessage = 'Error: ${e.message}';
       }
+      setState(() {
+        _result = errorMessage;
+      });
     } finally {
       setState(() {
         _isLoading = false;

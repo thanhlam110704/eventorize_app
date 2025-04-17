@@ -1,110 +1,75 @@
 import 'package:dio/dio.dart';
-import '../../core/constants/api_url.dart';
-import 'interceptors.dart';
+import 'package:eventorize_app/core/constants/api_url.dart';
 
 class DioClient {
-  late final Dio _dio;
+  final Dio _dio;
 
-  DioClient()
-      : _dio = Dio(
-          BaseOptions(
-            baseUrl: ApiUrl.baseUrlBE,
-            headers: {
-              'Content-Type': 'application/json; charset=UTF-8',
-            },
-            responseType: ResponseType.json,
-            sendTimeout: const Duration(seconds: 10),
-            receiveTimeout: const Duration(seconds: 10),
-          ),
-        )..interceptors.addAll([AuthorizationInterceptor(), LoggerInterceptor()]);
+  DioClient() : _dio = Dio() {
+    _dio.options.baseUrl = ApiUrl.baseUrlBE;
+    _dio.options.connectTimeout = const Duration(seconds: 5);
+    _dio.options.receiveTimeout = const Duration(seconds: 3);
 
-  Future<Response> get(
-    String url, {
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-    CancelToken? cancelToken,
-    ProgressCallback? onReceiveProgress,
-  }) async {
-    try {
-      final Response response = await _dio.get(
-        url,
-        queryParameters: queryParameters,
-        options: options,
-        cancelToken: cancelToken,
-        onReceiveProgress: onReceiveProgress,
-      );
-      return response;
-    } on DioException {
-      rethrow;
-    }
+    _dio.interceptors.add(InterceptorsWrapper(
+      onError: (DioException e, ErrorInterceptorHandler handler) {
+        String errorMessage = 'An error occurred';
+        if (e.response != null) {
+          final statusCode = e.response!.statusCode;
+          final data = e.response!.data;
+
+          switch (statusCode) {
+            case 400:
+              errorMessage = data['message'] ?? 'Bad request';
+              break;
+            case 401:
+              errorMessage = 'Unauthorized. Please log in again.';
+              break;
+            case 403:
+              errorMessage = 'Forbidden. You do not have permission.';
+              break;
+            case 404:
+              errorMessage = 'Resource not found.';
+              break;
+            case 500:
+              errorMessage = 'Server error. Please try again later.';
+              break;
+            default:
+              errorMessage = 'Unexpected error: $statusCode';
+          }
+        } else if (e.type == DioExceptionType.connectionTimeout) {
+          errorMessage = 'Connection timeout. Please check your internet connection.';
+        } else if (e.type == DioExceptionType.receiveTimeout) {
+          errorMessage = 'Receive timeout. Please try again later.';
+        } else {
+          errorMessage = e.message ?? 'Unknown error';
+        }
+
+        throw ApiException(errorMessage);
+      },
+    ));
   }
 
-  Future<Response> post(
-    String url, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-    ProgressCallback? onSendProgress,
-    ProgressCallback? onReceiveProgress,
-  }) async {
-    try {
-      final Response response = await _dio.post(
-        url,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-        onSendProgress: onSendProgress,
-        onReceiveProgress: onReceiveProgress,
-      );
-      return response;
-    } catch (e) {
-      rethrow;
-    }
+  Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
+    return await _dio.get(path, queryParameters: queryParameters);
   }
 
-  Future<Response> put(
-    String url, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-    CancelToken? cancelToken,
-    ProgressCallback? onSendProgress,
-    ProgressCallback? onReceiveProgress,
-  }) async {
-    try {
-      final Response response = await _dio.put(
-        url,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-        cancelToken: cancelToken,
-        onSendProgress: onSendProgress,
-        onReceiveProgress: onReceiveProgress,
-      );
-      return response;
-    } catch (e) {
-      rethrow;
-    }
+  Future<Response> post(String path, {dynamic data}) async {
+    return await _dio.post(path, data: data);
   }
 
-  Future<dynamic> delete(
-    String url, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-    CancelToken? cancelToken,
-  }) async {
-    try {
-      final Response response = await _dio.delete(
-        url,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-        cancelToken: cancelToken,
-      );
-      return response.data;
-    } catch (e) {
-      rethrow;
-    }
+  Future<Response> put(String path, {dynamic data}) async {
+    return await _dio.put(path, data: data);
   }
+
+  Future<Response> delete(String path) async {
+    return await _dio.delete(path);
+  }
+}
+
+class ApiException implements Exception {
+  final String message;
+
+  ApiException(this.message);
+
+  @override
+  String toString() => message;
 }
