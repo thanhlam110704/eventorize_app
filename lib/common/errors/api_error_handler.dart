@@ -36,7 +36,7 @@ class ApiErrorHandler {
         case DioExceptionType.badResponse:
           statusCode = error.response?.statusCode;
           errorMessage = 'Server error: ${statusCode ?? 'unknown'}';
-          errorCode = statusCode?.toString() ?? 'BAD_RESPONSE';
+          errorCode = statusCode.toString() ?? 'BAD_RESPONSE';
           if (statusCode == 401) {
             errorMessage = 'Unauthorized. Please log in again.';
             errorCode = 'UNAUTHORIZED';

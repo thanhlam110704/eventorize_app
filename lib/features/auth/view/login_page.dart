@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
-import '../../../common/widgets/custom_field_input.dart';
+import 'package:eventorize_app/common/widgets/custom_field_input.dart';
+import 'package:eventorize_app/data/api/user_api.dart';
+import 'package:eventorize_app/data/api/shared_preferences_service.dart';
+import 'package:eventorize_app/common/network/dio_client.dart';
+import 'package:eventorize_app/data/repositories/user_repository.dart';
+import 'package:eventorize_app/features/auth/view_model/login_view_model.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -24,13 +31,27 @@ class LoginPageState extends State<LoginPage> {
   final passwordInputKey = GlobalKey<CustomFieldInputState>();
 
   @override
+  void initState() {
+    super.initState();
+    // Điền trước email nếu đã lưu
+    SharedPreferencesService.getEmail().then((email) {
+      if (email != null) {
+        setState(() {
+          emailController.text = email;
+          rememberMe = true;
+        });
+      }
+    });
+  }
+
+  @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
   }
 
-  void handleLogin() {
+  void handleLogin(BuildContext context) {
     bool isValid = true;
     if (emailInputKey.currentState != null) {
       isValid &= emailInputKey.currentState!.validate();
@@ -39,7 +60,11 @@ class LoginPageState extends State<LoginPage> {
       isValid &= passwordInputKey.currentState!.validate();
     }
     if (isValid) {
-    
+      context.read<LoginViewModel>().login(
+            email: emailController.text.trim(),
+            password: passwordController.text.trim(),
+            rememberMe: rememberMe,
+          );
     }
   }
 
@@ -54,11 +79,49 @@ class LoginPageState extends State<LoginPage> {
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.width <= smallScreenThreshold;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: buildMainContainer(isSmallScreen, screenSize),
+    return MultiProvider(
+      providers: [
+        Provider<UserRepository>(
+          create: (_) => UserRepository(UserApi(DioClient())),
+        ),
+        ChangeNotifierProvider<LoginViewModel>(
+          create: (context) => LoginViewModel(context.read<UserRepository>()),
+        ),
+      ],
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Consumer<LoginViewModel>(
+              builder: (context, viewModel, child) {
+                // Xử lý trạng thái
+                if (viewModel.isLoading) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Logging in...')),
+                    );
+                  });
+                } else if (viewModel.errorMessage != null) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(viewModel.errorMessage!)),
+                    );
+                    viewModel.clearError();
+                  });
+                } else if (viewModel.user != null) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text('Welcome, ${viewModel.user!.fullname}!')),
+                    );
+                    context.goNamed('home'); // Chuyển hướng bằng go_router
+                  });
+                }
+
+                return buildMainContainer(isSmallScreen, screenSize);
+              },
+            ),
+          ),
         ),
       ),
     );
@@ -117,10 +180,12 @@ class LoginPageState extends State<LoginPage> {
 
   Widget buildLogo() {
     return Padding(
-      padding: const EdgeInsets.only(left: 13),
+      padding: const EdgeInsets.only(left: 13, top: 40),
       child: Text(
         'eventorize',
-        style: AppTextStyles.logo,
+        style: AppTextStyles.logo.copyWith(
+          fontWeight: FontWeight.w900
+        ),
       ),
     );
   }
@@ -181,12 +246,14 @@ class LoginPageState extends State<LoginPage> {
   }
 
   Widget buildLoginButton(bool isSmallScreen, Size screenSize) {
-    return Container(
+    return Padding(
+      padding: const EdgeInsets.only(top: 100),
+      child: Container(
       width: isSmallScreen ? double.infinity : screenSize.width * 0.9,
       height: buttonHeight,
       margin: const EdgeInsets.only(top: 10),
       child: ElevatedButton(
-        onPressed: handleLogin,
+        onPressed: () => handleLogin(context),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           shape: RoundedRectangleBorder(
@@ -199,6 +266,7 @@ class LoginPageState extends State<LoginPage> {
           style: AppTextStyles.text.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.w600,
+          ),
           ),
         ),
       ),
@@ -227,7 +295,9 @@ class LoginPageState extends State<LoginPage> {
       width: isSmallScreen ? double.infinity : screenSize.width * 0.9,
       height: buttonHeight,
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: () {
+          // Xử lý đăng nhập Google (triển khai sau)
+        },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
@@ -239,7 +309,7 @@ class LoginPageState extends State<LoginPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'lib/assets/icon/logo_google.png',
+              'assets/icons/logo_google.png',
               width: screenSize.width * 0.06,
               height: screenSize.width * 0.06,
             ),
@@ -259,7 +329,9 @@ class LoginPageState extends State<LoginPage> {
   Widget buildRegisterLink() {
     return Center(
       child: GestureDetector(
-        onTap: () {},
+        onTap: () {
+          context.goNamed('register'); 
+        },
         child: Text(
           'Don\'t have an account? Register now!',
           style: AppTextStyles.link,
