@@ -21,7 +21,10 @@ dependencies:
   material_design_icons_flutter: ^7.0.7296
   flutter_svg: ^2.0.10+1
   logger: ^2.0.2
-
+  flutter_dotenv: ^5.0.2
+  shared_preferences: ^2.3.0
+  go_router: ^14.2.0
+  provider: ^6.1.2
 
 
 dev_dependencies:
@@ -37,7 +40,7 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "lib/assets/icon/logo_eventorize.png"
+  image_path: "assets/icons/logo_eventorize.png"
   
 
 flutter:
@@ -45,19 +48,29 @@ flutter:
   fonts:
     - family: Roboto
       fonts:
-        - asset: lib/assets/fonts/Roboto-VariableFont_wdth,wght.ttf
-        - asset: lib/assets/fonts/Roboto-Italic-VariableFont_wdth,wght.ttf
+        - asset: assets/fonts/Roboto-VariableFont_wdth,wght.ttf
+        - asset: assets/fonts/Roboto-Italic-VariableFont_wdth,wght.ttf
           style: italic
 
     - family: Raleway
       fonts:
-        - asset: lib/assets/fonts/Raleway-VariableFont_wght.ttf
-        - asset: lib/assets/fonts/Raleway-Italic-VariableFont_wght.ttf
+        - asset: assets/fonts/Raleway-VariableFont_wght.ttf
+        - asset: assets/fonts/Raleway-Italic-VariableFont_wght.ttf
           style: italic      
+
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Black.ttf
+          weight: 900
+          
+          
+
 
     - family: Jua
       fonts:
-        - asset: lib/assets/fonts/Jua-Regular.ttf
+        - asset: assets/fonts/Jua-Regular.ttf
 
   assets:
-  - lib/assets/icon/logo_google.png
+  - assets/icons/logo_google.png
+  - .env/dev.env
+  - assets/icons/verify.png

@@ -10,7 +10,8 @@ class AppTextStyles {
   );
 
   static const TextStyle logo = TextStyle(
-    fontFamily: 'Jua',
+    fontFamily: 'Inter',
+    fontWeight: FontWeight.w900,
     fontSize: 36,
     color: AppColors.primary,
   );

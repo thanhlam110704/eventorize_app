@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:eventorize_app/assets/styles/text_styles.dart';
-import 'package:eventorize_app/assets/styles/colors.dart';
-import '../widgets/custom_field_input.dart';
+import 'package:eventorize_app/core/configs/theme/text_styles.dart';
+import 'package:eventorize_app/core/configs/theme/colors.dart';
+import 'package:eventorize_app/common/widgets/custom_field_input.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
 
   @override
-  State<SignupPage> createState() => _SignupPageState();
+  SignupPageState createState() => SignupPageState();
 }
 
-class _SignupPageState extends State<SignupPage> {
+class SignupPageState extends State<SignupPage> {
   static const smallScreenThreshold = 640.0;
   static const maxContentWidth = 600.0;
   static const buttonHeight = 50.0;
 
-  bool rememberMe = false;
   final emailController = TextEditingController();
   final fullnameController = TextEditingController();
   final phoneController = TextEditingController();
@@ -51,14 +51,8 @@ class _SignupPageState extends State<SignupPage> {
       isValid &= passwordInputKey.currentState!.validate();
     }
     if (isValid) {
-      // Placeholder for login logic
+      // login logic
     }
-  }
-
-  void toggleRememberMe() {
-    setState(() {
-      rememberMe = !rememberMe;
-    });
   }
 
   @override
@@ -107,9 +101,8 @@ class _SignupPageState extends State<SignupPage> {
                 const SizedBox(height: 21),
                 buildPasswordField(),
                 const SizedBox(height: 21),
-                if (isSmallScreen) const SizedBox(height: 15),
                 Padding(
-                  padding: EdgeInsets.only(top: screenSize.height * 0.01),
+                  padding: EdgeInsets.only(top: screenSize.height * 0.05),
                   child: Column(
                     children: [
                       buildRegisterButton(isSmallScreen, screenSize),
@@ -132,10 +125,12 @@ class _SignupPageState extends State<SignupPage> {
 
   Widget buildLogo() {
     return Padding(
-      padding: const EdgeInsets.only(left: 13),
+      padding: const EdgeInsets.only(left: 13, top: 40),
       child: Text(
         'eventorize',
-        style: AppTextStyles.logo,
+        style: AppTextStyles.logo.copyWith(
+          fontWeight: FontWeight.w900
+        ),
       ),
     );
   }
@@ -193,12 +188,14 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   Widget buildRegisterButton(bool isSmallScreen, Size screenSize) {
-    return Container(
+    return Padding(
+      padding: const EdgeInsets.only(top: 0),
+      child: Container(
       width: isSmallScreen ? double.infinity : screenSize.width * 0.9,
       height: buttonHeight,
       margin: const EdgeInsets.only(top: 10),
       child: ElevatedButton(
-        onPressed: handleRegister,
+        onPressed: () => handleRegister(),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           shape: RoundedRectangleBorder(
@@ -211,6 +208,7 @@ class _SignupPageState extends State<SignupPage> {
           style: AppTextStyles.text.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.w600,
+          ),
           ),
         ),
       ),
@@ -239,7 +237,9 @@ class _SignupPageState extends State<SignupPage> {
       width: isSmallScreen ? double.infinity : screenSize.width * 0.9,
       height: buttonHeight,
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: () {
+          // Xử lý đăng nhập Google (triển khai sau)
+        },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
@@ -251,7 +251,7 @@ class _SignupPageState extends State<SignupPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'lib/assets/icon/logo_google.png',
+              'assets/icons/logo_google.png',
               width: screenSize.width * 0.06,
               height: screenSize.width * 0.06,
             ),
@@ -271,7 +271,9 @@ class _SignupPageState extends State<SignupPage> {
   Widget buildLoginLink() {
     return Center(
       child: GestureDetector(
-        onTap: () {},
+        onTap: () {
+          context.goNamed('login'); 
+        },
         child: Text(
           'Login if you have an account!',
           style: AppTextStyles.link,
