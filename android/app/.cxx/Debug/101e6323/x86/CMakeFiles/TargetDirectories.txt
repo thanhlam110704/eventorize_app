@@ -1,0 +1,2 @@
+C:/Users/nhatp/OneDrive/Documents/New folder/eventorize_app/android/app/.cxx/Debug/101e6323/x86/CMakeFiles/edit_cache.dir
+C:/Users/nhatp/OneDrive/Documents/New folder/eventorize_app/android/app/.cxx/Debug/101e6323/x86/CMakeFiles/rebuild_cache.dir
