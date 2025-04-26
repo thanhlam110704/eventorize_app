@@ -74,3 +74,5 @@ flutter:
   - assets/icons/logo_google.png
   - .env/dev.env
   - assets/icons/verify.png
+  - assets/icons/logo_white.png
+  - assets/icons/event.png

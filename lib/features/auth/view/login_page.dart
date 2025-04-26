@@ -19,9 +19,9 @@ class LoginPage extends StatefulWidget {
 }
 
 class LoginPageState extends State<LoginPage> {
-  static const smallScreenThreshold = 640.0;
-  static const maxContentWidth = 600.0;
-  static const buttonHeight = 50.0;
+    static const smallScreenThreshold = 640.0;
+    static const maxContentWidth = 600.0;
+    static const buttonHeight = 50.0;
 
   bool rememberMe = false;
   final emailController = TextEditingController();

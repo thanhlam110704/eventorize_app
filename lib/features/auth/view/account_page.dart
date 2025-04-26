@@ -6,7 +6,7 @@ import 'package:eventorize_app/common/widgets/bottom_nav_bar.dart';
 
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
-
+  
   @override
   AccountPageState createState() => AccountPageState();
 }
@@ -144,12 +144,13 @@ class AccountPageState extends State<AccountPage> {
       ),
     );
   }
+  
   Widget buildPreferences() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Preferences',
+          'Setting',
           style: AppTextStyles.title.copyWith(fontSize: 20),
         ),
         const SizedBox(height: 20),
@@ -166,18 +167,42 @@ class AccountPageState extends State<AccountPage> {
         ),
         buildDivider(),
         buildPreferenceItem(
-          icon: Icons.settings_outlined,
-          title: 'Settings',
+          icon: Icons.account_circle,
+          title: 'Linked accounts',
           onTap: () {},
         ),
         buildDivider(),
-        buildPreferenceItem(
-          icon: Icons.logout,
-          title: 'Log out',
-          onTap: () {},
-        ),
+        buildLogoutItem(),
         buildDivider(),
       ],
+    );
+  }
+
+  Widget buildLogoutItem() {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(Icons.logout, color: Colors.red),
+      title: Row(
+        children: [
+         Text(
+            'Log out',
+            style: AppTextStyles.text.copyWith(
+              fontWeight: FontWeight.w600,
+              color: Colors.red,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            'Version 1.0.0',
+            style: AppTextStyles.text.copyWith(
+              fontSize: 12,
+              color: Colors.grey,
+            ),
+          ),
+        ],
+      ),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () {},
     );
   }
 
@@ -201,5 +226,4 @@ class AccountPageState extends State<AccountPage> {
       color: Colors.black12,
     );
   }
-  
 }

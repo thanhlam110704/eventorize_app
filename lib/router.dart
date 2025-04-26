@@ -7,16 +7,22 @@ import 'package:eventorize_app/features/auth/view/signup_page.dart';
 import 'package:eventorize_app/features/auth/view/splashscreen_page.dart';
 import 'package:eventorize_app/features/auth/view/verify_page.dart';
 import 'package:eventorize_app/features/auth/view/account_page.dart';
+import 'package:eventorize_app/features/auth/view/detailprofile_page.dart';
 import 'package:eventorize_app/data/api/shared_preferences_service.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: '/account',
+    initialLocation: '/home',
     routes: [
       GoRoute(
         path: '/splashscreen',
         name: 'splashscreen',
         builder: (context, state) => const SplashScreenPage(),
+      ),
+      GoRoute(
+        path: '/detailprof',
+        name: 'detailprof',
+        builder: (context, state) => const DetailprofilePage(),
       ),
       GoRoute(
         path: '/account',
@@ -47,13 +53,7 @@ class AppRouter {
         path: '/home',
         name: 'home',
         builder: (context, state) => const HomePage(),
-        redirect: (BuildContext context, GoRouterState state) async {
-          final token = await SharedPreferencesService.getToken();
-          if (token == null) {
-            return '/login';
-          }
-          return null;
-        },
+        
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
