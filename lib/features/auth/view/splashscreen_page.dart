@@ -3,9 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
-import 'package:eventorize_app/common/network/dio_client.dart';
-import 'package:eventorize_app/data/api/user_api.dart';
-import 'package:eventorize_app/data/repositories/user_repository.dart';
+import 'package:eventorize_app/data/api/secure_storage_service.dart';
+import 'package:eventorize_app/features/auth/view_model/login_view_model.dart';
+import 'package:get_it/get_it.dart';
 
 class SplashScreenPage extends StatefulWidget {
   const SplashScreenPage({super.key});
@@ -17,13 +17,47 @@ class SplashScreenPage extends StatefulWidget {
 class SplashScreenPageState extends State<SplashScreenPage> {
   static const smallScreenThreshold = 640.0;
   static const maxContentWidth = 600.0;
+  final getIt = GetIt.instance;
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 10), () {
-      context.goNamed('login'); 
-    });
+    _checkSession(context);
+  }
+
+  Future<void> _checkSession(BuildContext context) async {
+    final viewModel = context.read<LoginViewModel>();
+    final token = await SecureStorageService.getToken();
+
+    if (token != null) {
+      try {
+        await viewModel.checkSession();
+        if (viewModel.user != null && context.mounted) {
+          context.pushReplacementNamed('home');
+          return;
+        } 
+      } catch (e) {
+        if (e.toString().contains('401')) {
+          await SecureStorageService.clearToken();
+          await SecureStorageService.clearEmail();
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Session expired. Please log in again.')),
+            );
+          }
+        } else {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Failed to connect. Please check your network.')),
+            );
+          }
+        }
+      }
+    } 
+
+    if (context.mounted) {
+      context.pushReplacementNamed('login');
+    }
   }
 
   @override
@@ -31,18 +65,11 @@ class SplashScreenPageState extends State<SplashScreenPage> {
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.width <= smallScreenThreshold;
 
-    return MultiProvider(
-      providers: [
-        Provider<UserRepository>(
-          create: (_) => UserRepository(UserApi(DioClient())),
-        ),
-      ],
-      child: Scaffold(
-        backgroundColor: AppColors.primary, 
-        body: SafeArea(
-          child: SingleChildScrollView(
-            child: buildMainContainer(isSmallScreen, screenSize),
-          ),
+    return Scaffold(
+      backgroundColor: AppColors.primary,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: buildMainContainer(isSmallScreen, screenSize),
         ),
       ),
     );
@@ -73,15 +100,15 @@ class SplashScreenPageState extends State<SplashScreenPage> {
   }
 
   Widget buildLogo() {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 50), // 👈 padding bottom 20px
-    child: Text(
-      'eventorize',
-      style: AppTextStyles.logo.copyWith(
-        color: Colors.white,
-        fontWeight: FontWeight.w900,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 50),
+      child: Text(
+        'eventorize',
+        style: AppTextStyles.logo.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w900,
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 }

@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:eventorize_app/data/api/secure_storage_service.dart';
 
 class LoggerInterceptor extends Interceptor {
   Logger logger = Logger(printer: PrettyPrinter(methodCount: 0, colors: true,printEmojis: true));
@@ -34,12 +34,14 @@ class LoggerInterceptor extends Interceptor {
 
 
 class AuthorizationInterceptor extends Interceptor {
-
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
-    final SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    final token  = sharedPreferences.getString('token');
-    options.headers['Authorization'] = "Bearer $token";
-    handler.next(options); // continue with the Request
+    try {
+      final token = await SecureStorageService.getToken();
+      if (token != null && token.isNotEmpty) {
+        options.headers['Authorization'] = "Bearer $token";
+      }
+    } catch (_) {}
+    handler.next(options);
   }
 }

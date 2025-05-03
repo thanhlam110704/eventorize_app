@@ -3,24 +3,30 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 
-enum InputType { email, fullname, phone, password }
+enum InputType { email, fullname, phone, password, number }
 
 class CustomFieldInput extends StatefulWidget {
   final TextEditingController controller;
   final String hintText;
-  final IconData icon;
+  final IconData? icon;
   final bool isPassword;
   final InputType inputType;
   final TextInputType keyboardType;
+  final int? maxLength;
+  final TextAlign? textAlign;
+  final ValueChanged<String>? onChanged;
 
   const CustomFieldInput({
     super.key,
     required this.controller,
     required this.hintText,
-    required this.icon,
+    this.icon,
     this.isPassword = false,
     required this.inputType,
     this.keyboardType = TextInputType.text,
+    this.maxLength,
+    this.textAlign,
+    this.onChanged,
   });
 
   @override
@@ -67,10 +73,19 @@ class CustomFieldInputState extends State<CustomFieldInput> {
     }
     if (widget.inputType == InputType.phone &&
         !RegExp(r'^\+?\d{7,15}$').hasMatch(value)) {
-      return 'Please enter a valid name';
+      return 'Please enter a valid phone number';
     }
     if (widget.inputType == InputType.password && value.length < 6) {
       return 'Password must be at least 6 characters long';
+    }
+    if (widget.inputType == InputType.number &&
+        !RegExp(r'^\d+$').hasMatch(value)) {
+      return 'Please enter valid numbers';
+    }
+    if (widget.inputType == InputType.number &&
+        widget.maxLength != null &&
+        value.length != widget.maxLength) {
+      return 'Must be ${widget.maxLength} digits';
     }
     return null;
   }
@@ -162,12 +177,16 @@ class CustomFieldInputState extends State<CustomFieldInput> {
       controller: widget.controller,
       obscureText: widget.isPassword ? obscureText : false,
       keyboardType: widget.keyboardType,
+      maxLength: widget.maxLength,
+      textAlign: widget.textAlign ?? TextAlign.start,
+      onChanged: widget.onChanged,
       decoration: InputDecoration(
         hintText: widget.hintText,
         border: InputBorder.none,
         isDense: true,
         contentPadding: EdgeInsets.zero,
         hintStyle: AppTextStyles.hint,
+        counterText: '', // Ẩn bộ đếm ký tự
       ),
       style: AppTextStyles.text,
     );

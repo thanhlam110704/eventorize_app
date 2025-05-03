@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
-import 'package:eventorize_app/data/api/shared_preferences_service.dart';
 import 'package:eventorize_app/features/auth/view_model/login_view_model.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  Future<void> _handleLogout(BuildContext context, LoginViewModel viewModel) async {
+    await viewModel.logout();
+    if (context.mounted) {
+      context.pushReplacementNamed('login');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,20 +38,25 @@ class HomePage extends StatelessWidget {
         child: Center(
           child: Consumer<LoginViewModel>(
             builder: (context, viewModel, child) {
+              if (viewModel.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
               final user = viewModel.user;
+              if (user == null) {
+                context.pushReplacementNamed('login');
+                return const SizedBox.shrink();
+              }
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    user != null
-                        ? 'Welcome, ${user.fullname}!'
-                        : 'Welcome to Eventorize!',
+                    'Welcome, ${user.fullname}!',
                     style: AppTextStyles.title,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    user != null ? 'Email: ${user.email}' : 'Guest User',
+                    'Email: ${user.email}',
                     style: AppTextStyles.text,
                   ),
                   const SizedBox(height: 40),
@@ -47,12 +64,7 @@ class HomePage extends StatelessWidget {
                     width: screenSize.width * 0.8,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: () async {
-                        // Xóa token và chuyển hướng về LoginPage
-                        await SharedPreferencesService.clear();
-                        viewModel.clearError(); // Xóa trạng thái lỗi nếu có
-                        Navigator.pushReplacementNamed(context, '/login');
-                      },
+                      onPressed: () => _handleLogout(context, viewModel),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         shape: RoundedRectangleBorder(

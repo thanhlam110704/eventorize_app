@@ -2,17 +2,35 @@ import 'package:dio/dio.dart';
 import 'package:eventorize_app/data/api/user_api.dart';
 import 'package:eventorize_app/data/models/user.dart';
 
+
 class UserRepository {
   final UserApi _userApi;
 
   UserRepository(this._userApi);
 
-  Future<Map<String, dynamic>> login({required String email, required String password}) async {
+  Future<Map<String, dynamic>> register({
+    required String fullname,
+    required String email,
+    required String phone,
+    required String password,
+  }) async {
+    return await _userApi.register(
+      fullname: fullname,
+      email: email,
+      phone: phone,
+      password: password,
+    );
+  }
+
+  Future<Map<String, dynamic>> login({
+    required String email,
+    required String password,
+  }) async {
     return await _userApi.login(email: email, password: password);
   }
 
-  Future<Map<String, dynamic>> register({required String fullname, required String email, required String password}) async {
-    return await _userApi.register(fullname: fullname, email: email, password: password);
+  Future<void> logout() async {
+    await _userApi.logout();
   }
 
   Future<Map<String, dynamic>> checkHealth() async {
