@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'package:dio/dio.dart';
 import 'package:eventorize_app/data/models/user.dart';
 import 'package:eventorize_app/data/repositories/user_repository.dart';
-import 'package:eventorize_app/common/network/dio_client.dart';
+import 'package:eventorize_app/core/exceptions/exceptions.dart';
 
 class RegisterViewModel extends ChangeNotifier {
   final UserRepository _userRepository;
@@ -10,10 +11,12 @@ class RegisterViewModel extends ChangeNotifier {
 
   bool _isLoading = false;
   String? _errorMessage;
+  String? _errorTitle;
   User? _user;
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  String? get errorTitle => _errorTitle;
   User? get user => _user;
 
   Future<void> register({
@@ -24,6 +27,7 @@ class RegisterViewModel extends ChangeNotifier {
   }) async {
     _isLoading = true;
     _errorMessage = null;
+    _errorTitle = null;
     _user = null;
     notifyListeners();
 
@@ -35,36 +39,39 @@ class RegisterViewModel extends ChangeNotifier {
         password: password,
       );
       _user = result['user'] as User?;
-      if (_user == null) {
-        throw Exception('User data is missing');
+      final token = result['token'] as String?;
+      if (_user == null || token == null) {
+        throw Exception('Login failed: Invalid response');
       }
-    } catch (e) {
-      if (e is ApiException) {
-        if (e.message.toLowerCase().contains('email')) {
-          _errorMessage = 'Email đã tồn tại. Vui lòng sử dụng email khác.';
-        } else if (e.message.toLowerCase().contains('phone')) {
-          _errorMessage = 'Số điện thoại đã được sử dụng. Vui lòng sử dụng số khác.';
-        } else if (e.message.toLowerCase().contains('timeout')) {
-          _errorMessage = 'Vui lòng kiểm tra kết nối mạng của bạn.';
-        } else if (e.message.toLowerCase().contains('server error')) {
-          _errorMessage = 'Lỗi máy chủ. Vui lòng thử lại sau.';
-        } else {
-          _errorMessage = 'Đăng ký thất bại: ${e.message}';
-        }
+    } on DioException catch (e) {
+      if (e.error is CustomException) {
+        final customError = e.error as CustomException;
+        _errorTitle = 'Error ${customError.status}';
+        _errorMessage = customError.detail; 
       } else {
-        _errorMessage = 'Đăng ký thất bại: $e';
+        _errorTitle = 'Error';
+        _errorMessage = e.message ?? 'An unexpected error occurred';
       }
       _user = null;
       notifyListeners();
-      rethrow ;
+      rethrow;
+    } catch (e) {
+      _errorTitle = 'Error';
+      _errorMessage = 'An unexpected error occurred';
+      _user = null;
+      notifyListeners();
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
+
+  
   void clearError() {
     _errorMessage = null;
+    _errorTitle = null;
     notifyListeners();
   }
 }

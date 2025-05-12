@@ -1,37 +1,46 @@
 import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
 import 'package:eventorize_app/data/api/secure_storage_service.dart';
+import 'package:eventorize_app/core/exceptions/exceptions.dart';
 
 class LoggerInterceptor extends Interceptor {
-  Logger logger = Logger(printer: PrettyPrinter(methodCount: 0, colors: true,printEmojis: true));
+  Logger logger = Logger(printer: PrettyPrinter(methodCount: 0, colors: true, printEmojis: true));
 
   @override
-  void onError( DioException err, ErrorInterceptorHandler handler) {
+  void onError(DioException err, ErrorInterceptorHandler handler) {
     final options = err.requestOptions;
     final requestPath = '${options.baseUrl}${options.path}';
     logger.e('${options.method} request ==> $requestPath');
-    logger.d('Error type: ${err.error} \n '
-        'Error message: ${err.message}');
-    handler.next(err); 
+
+    if (err.error is CustomException) {
+      final customError = err.error as CustomException;
+      logger.e('Error type: ${customError.type} \n'
+          'Status: ${customError.status} \n'
+          'Title: ${customError.title} \n'
+          'Detail: ${customError.detail}');
+    } else {
+      logger.e('Error type: ${err.type} \n'
+          'Error message: ${err.message}');
+    }
+    handler.next(err);
   }
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     final requestPath = '${options.baseUrl}${options.path}';
-    logger.i('${options.method} request ==> $requestPath'); 
+    logger.i('${options.method} request ==> $requestPath');
     handler.next(options);
   }
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-    logger.d('STATUSCODE: ${response.statusCode} \n '
-        'STATUSMESSAGE: ${response.statusMessage} \n'
-        'HEADERS: ${response.headers} \n'
+    logger.d('Status: ${response.statusCode} \n'
+        'Messenge: ${response.statusMessage} \n'
+        'Header: ${response.headers} \n'
         'Data: ${response.data}');
-    handler.next(response); 
+    handler.next(response);
   }
 }
-
 
 class AuthorizationInterceptor extends Interceptor {
   @override

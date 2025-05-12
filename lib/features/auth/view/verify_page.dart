@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
-import 'package:eventorize_app/common/widgets/custom_field_input.dart';
-import 'package:eventorize_app/data/api/user_api.dart';
-import 'package:eventorize_app/common/network/dio_client.dart';
+import 'package:eventorize_app/common/widgets/otp_field_input.dart';
+import 'package:eventorize_app/common/widgets/toast_custom.dart';
+import 'package:eventorize_app/features/auth/view_model/verify_view_model.dart';
 
 class VerificationCodePage extends StatefulWidget {
   final String email;
@@ -29,24 +30,26 @@ class VerificationCodePageState extends State<VerificationCodePage> {
 
   final List<TextEditingController> codeControllers =
       List.generate(6, (_) => TextEditingController());
-  final List<GlobalKey<CustomFieldInputState>> codeInputKeys =
-      List.generate(6, (_) => GlobalKey<CustomFieldInputState>());
-  final formKey = GlobalKey<FormState>();
-  bool isLoading = false;
-  bool navigated = false;
+  final List<GlobalKey<State<OTPFieldInput>>> codeInputKeys =
+      List.generate(6, (_) => GlobalKey<State<OTPFieldInput>>());
   Timer? _timer;
   Duration _remainingTime = countdownDuration;
+  bool isSubmitEnabled = false;
 
   @override
   void initState() {
     super.initState();
     _startCountdown();
+    for (var controller in codeControllers) {
+      controller.addListener(_updateSubmitButtonState);
+    }
   }
 
   @override
   void dispose() {
     _timer?.cancel();
     for (var controller in codeControllers) {
+      controller.removeListener(_updateSubmitButtonState);
       controller.dispose();
     }
     super.dispose();
@@ -66,92 +69,55 @@ class VerificationCodePageState extends State<VerificationCodePage> {
     });
   }
 
-  Future<void> handleVerify() async {
-    bool isValid = true;
-    for (var key in codeInputKeys) {
-      if (key.currentState != null) {
-        isValid &= key.currentState!.validate();
-      }
-    }
-    if (!isValid || !formKey.currentState!.validate()) return;
-
+  void _updateSubmitButtonState() {
     setState(() {
-      isLoading = true;
+      isSubmitEnabled = codeControllers.every((controller) => controller.text.length == 1);
     });
+  }
+
+  Future<void> handleVerify(VerifyViewModel viewModel) async {
+    if (!isSubmitEnabled) return;
 
     final otp = codeControllers.map((c) => c.text).join();
-    try {
-      final userApi = UserApi(DioClient());
-      await userApi.verifyEmail(
-        email: widget.email,
-        otp: otp,
+    await viewModel.verifyEmail(email: widget.email, otp: otp);
+    if (mounted && viewModel.isSuccess) {
+      ToastCustom.show(
+        context: context,
+        title: 'Verification successful!',
+        description: 'Please log in.',
+        type: ToastificationType.success,
       );
-      if (mounted) {
-        toastification.show(
-          context: context,
-          type: ToastificationType.success,
-          style: ToastificationStyle.minimal,
-          title: const Text('Verification successful! Please log in.'),
-          autoCloseDuration: const Duration(seconds: 3),
-          alignment: Alignment.topCenter,
-        );
-        navigated = true;
-        context.goNamed('login');
-      }
-    } catch (e) {
-      if (mounted) {
-        toastification.show(
-          context: context,
-          type: ToastificationType.error,
-          style: ToastificationStyle.minimal,
-          title: Text('Verification failed: ${e.toString()}'),
-          autoCloseDuration: const Duration(seconds: 3),
-          alignment: Alignment.topCenter,
-        );
-      }
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
+      context.goNamed('login');
     }
   }
 
-  Future<void> handleResendCode() async {
+  Future<void> handleResendCode(VerifyViewModel viewModel) async {
     if (_remainingTime.inSeconds > 0) return;
 
-    setState(() {
-      isLoading = true;
-    });
+    await viewModel.resendVerificationEmail(email: widget.email);
+    if (mounted && viewModel.isSuccess) {
+      ToastCustom.show(
+        context: context,
+        title: 'Verification code resent!',
+        description: 'Check your email for the new code.',
+        type: ToastificationType.info,
+      );
+      for (var controller in codeControllers) {
+        controller.clear();
+      }
+      _startCountdown();
+      _updateSubmitButtonState();
+    }
+  }
 
-    try {
-      final userApi = UserApi(DioClient());
-      await userApi.resendVerificationEmail(email: widget.email);
-      if (mounted) {
-        toastification.show(
-          context: context,
-          type: ToastificationType.info,
-          style: ToastificationStyle.minimal,
-          title: const Text('Verification code has been resent!'),
-          autoCloseDuration: const Duration(seconds: 3),
-          alignment: Alignment.topCenter,
-        );
-        _startCountdown();
+  void handlePaste(String value, VerifyViewModel viewModel) {
+    if (value.length == 6 && RegExp(r'^\d{6}$').hasMatch(value)) {
+      for (int i = 0; i < 6; i++) {
+        codeControllers[i].text = value[i];
       }
-    } catch (e) {
-      if (mounted) {
-        toastification.show(
-          context: context,
-          type: ToastificationType.error,
-          style: ToastificationStyle.minimal,
-          title: Text('Failed to resend code: ${e.toString()}'),
-          autoCloseDuration: const Duration(seconds: 3),
-          alignment: Alignment.topCenter,
-        );
-      }
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
+      FocusScope.of(context).unfocus();
+      _updateSubmitButtonState();
+      handleVerify(viewModel);
     }
   }
 
@@ -169,31 +135,48 @@ class VerificationCodePageState extends State<VerificationCodePage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              child: buildMainContainer(isSmallScreen, screenSize),
-            ),
-            if (isLoading)
-              Container(
-                color: Colors.black.withAlpha(128),
-                child: const Center(
-                  child: SpinKitFadingCircle(
-                    color: AppColors.primary,
-                    size: 50.0,
-                  ),
+        child: Consumer<VerifyViewModel>(
+          builder: (context, viewModel, child) {
+            if (viewModel.errorMessage != null && mounted) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  ToastCustom.show(
+                    context: context,
+                    title: viewModel.errorTitle ?? 'Error',
+                    description: viewModel.errorMessage!,
+                    type: ToastificationType.error,
+                  );
+                  viewModel.clearError();
+                }
+              });
+            }
+
+            return Stack(
+              children: [
+                SingleChildScrollView(
+                  child: buildMainContainer(isSmallScreen, screenSize, viewModel),
                 ),
-              ),
-          ],
+                if (viewModel.isLoading)
+                  Container(
+                    color: Colors.black.withAlpha(128),
+                    child: const Center(
+                      child: SpinKitFadingCircle(
+                        color: AppColors.primary,
+                        size: 50.0,
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget buildMainContainer(bool isSmallScreen, Size screenSize) {
+  Widget buildMainContainer(bool isSmallScreen, Size screenSize, VerifyViewModel viewModel) {
     return Container(
       width: screenSize.width,
-      height: screenSize.height,
       color: AppColors.background,
       padding: EdgeInsets.fromLTRB(
         isSmallScreen ? 16 : 24,
@@ -204,26 +187,24 @@ class VerificationCodePageState extends State<VerificationCodePage> {
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: maxContentWidth),
-          child: Form(
-            key: formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                buildLogo(),
-                const SizedBox(height: 8),
-                buildTitle(),
-                const SizedBox(height: 8),
-                buildWarningText(),
-                const SizedBox(height: 24),
-                buildImage(),
-                const SizedBox(height: 24),
-                buildPinInput(),
-                const SizedBox(height: 16),
-                buildResendCodeButton(),
-                const SizedBox(height: 16),
-                buildSubmitButton(isSmallScreen, screenSize),
-              ],
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              buildLogo(),
+              const SizedBox(height: 8),
+              buildTitle(),
+              const SizedBox(height: 8),
+              buildWarningText(),
+              const SizedBox(height: 24),
+              buildImage(),
+              const SizedBox(height: 24),
+              buildOTPInput(viewModel),
+              const SizedBox(height: 16),
+              buildResendCodeButton(viewModel),
+              const SizedBox(height: 16),
+              buildSubmitButton(isSmallScreen, screenSize, viewModel),
+              const SizedBox(height: 16),
+            ],
           ),
         ),
       ),
@@ -269,7 +250,7 @@ class VerificationCodePageState extends State<VerificationCodePage> {
   Widget buildImage() {
     return Center(
       child: Image.asset(
-        'assets/icons/verify.png',
+        'assets/images/verify.png',
         width: 353,
         height: 248,
         fit: BoxFit.contain,
@@ -277,38 +258,43 @@ class VerificationCodePageState extends State<VerificationCodePage> {
     );
   }
 
-  Widget buildPinInput() {
-    return Center(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(6, (index) {
-          return SizedBox(
-            width: 48,
-            height: 48,
-            child: CustomFieldInput(
-              key: codeInputKeys[index],
-              controller: codeControllers[index],
-              hintText: '',
-              inputType: InputType.number,
-              keyboardType: TextInputType.number,
-              maxLength: 1,
-              textAlign: TextAlign.center,
-              onChanged: (value) {
-                if (value.length == 1 && index < 5) {
-                  FocusScope.of(context).nextFocus();
-                }
-              },
-            ),
-          );
-        }),
-      ),
+  Widget buildOTPInput(VerifyViewModel viewModel) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(6, (index) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: SizedBox(
+                width: 48,
+                height: 48,
+                child: OTPFieldInput(
+                  key: codeInputKeys[index],
+                  controller: codeControllers[index],
+                  index: index,
+                  allControllers: codeControllers,
+                  onChanged: (value) {
+                    if (index == 0) {
+                      handlePaste(value, viewModel);
+                    }
+                  },
+                ),
+              ),
+            );
+          }),
+        ),
+      ],
     );
   }
 
-  Widget buildResendCodeButton() {
+  Widget buildResendCodeButton(VerifyViewModel viewModel) {
     return Center(
       child: TextButton(
-        onPressed: _remainingTime.inSeconds == 0 && !isLoading ? handleResendCode : null,
+        onPressed: _remainingTime.inSeconds == 0 && !viewModel.isLoading
+            ? () => handleResendCode(viewModel)
+            : null,
         child: Text(
           _remainingTime.inSeconds > 0 ? countdownText : 'Resend',
           style: AppTextStyles.link.copyWith(
@@ -320,13 +306,13 @@ class VerificationCodePageState extends State<VerificationCodePage> {
     );
   }
 
-  Widget buildSubmitButton(bool isSmallScreen, Size screenSize) {
+  Widget buildSubmitButton(bool isSmallScreen, Size screenSize, VerifyViewModel viewModel) {
     return Container(
       width: isSmallScreen ? double.infinity : screenSize.width * 0.9,
       height: buttonHeight,
       margin: const EdgeInsets.only(top: 10),
       child: ElevatedButton(
-        onPressed: isLoading ? null : handleVerify,
+        onPressed: isSubmitEnabled && !viewModel.isLoading ? () => handleVerify(viewModel) : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           shape: RoundedRectangleBorder(

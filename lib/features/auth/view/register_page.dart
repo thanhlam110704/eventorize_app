@@ -7,6 +7,7 @@ import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/widgets/custom_field_input.dart';
+import 'package:eventorize_app/common/widgets/toast_custom.dart';
 import 'package:eventorize_app/features/auth/view_model/register_view_model.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -30,7 +31,6 @@ class RegisterPageState extends State<RegisterPage> {
   final fullnameInputKey = GlobalKey<CustomFieldInputState>();
   final phoneInputKey = GlobalKey<CustomFieldInputState>();
   final passwordInputKey = GlobalKey<CustomFieldInputState>();
-  bool navigated = false;
 
   @override
   void dispose() {
@@ -41,7 +41,7 @@ class RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  void handleRegister(RegisterViewModel viewModel) {
+  Future<void> handleRegister(RegisterViewModel viewModel) async {
     bool isValid = true;
     if (emailInputKey.currentState != null) {
       isValid &= emailInputKey.currentState!.validate();
@@ -57,12 +57,25 @@ class RegisterPageState extends State<RegisterPage> {
     }
 
     if (isValid) {
-      viewModel.register(
+      await viewModel.register(
         fullname: fullnameController.text.trim(),
         email: emailController.text.trim(),
         phone: phoneController.text.trim(),
         password: passwordController.text.trim(),
       );
+      if (mounted && viewModel.user != null) {
+        ToastCustom.show(
+          context: context,
+          title: 'Registration successful!',
+          type: ToastificationType.success,
+        );
+        context.goNamed(
+          'verify-code',
+          extra: {
+            'email': emailController.text.trim(),
+          },
+        );
+      }
     }
   }
 
@@ -76,38 +89,16 @@ class RegisterPageState extends State<RegisterPage> {
       body: SafeArea(
         child: Consumer<RegisterViewModel>(
           builder: (context, viewModel, child) {
-            if (viewModel.errorMessage != null) {
+            if (viewModel.errorMessage != null && viewModel.errorTitle != null && mounted) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted) {
-                  toastification.show(
+                  ToastCustom.show(
                     context: context,
-                    type: ToastificationType.warning,
-                    style: ToastificationStyle.minimal,
-                    title: Text(viewModel.errorMessage!),
-                    autoCloseDuration: const Duration(seconds: 3),
-                    alignment: Alignment.topCenter,
+                    title: viewModel.errorTitle!,
+                    description: viewModel.errorMessage!,
+                    type: ToastificationType.error,
                   );
                   viewModel.clearError();
-                }
-              });
-            } else if (viewModel.user != null && !navigated) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  toastification.show(
-                    context: context,
-                    type: ToastificationType.success,
-                    style: ToastificationStyle.minimal,
-                    title: const Text('Registration successful!'),
-                    autoCloseDuration: const Duration(seconds: 3),
-                    alignment: Alignment.topCenter,
-                  );
-                  navigated = true;
-                  context.goNamed(
-                    'verify-code',
-                    extra: {
-                      'email': emailController.text.trim(),
-                    },
-                  );
                 }
               });
             }
@@ -299,13 +290,10 @@ class RegisterPageState extends State<RegisterPage> {
       height: buttonHeight,
       child: ElevatedButton(
         onPressed: () {
-          toastification.show(
+          ToastCustom.show(
             context: context,
+            title: 'Processing registration with Google...',
             type: ToastificationType.info,
-            style: ToastificationStyle.minimal,
-            title: const Text('Đang xử lý đăng ký với Google...'),
-            autoCloseDuration: const Duration(seconds: 3),
-            alignment: Alignment.topCenter,
           );
         },
         style: ElevatedButton.styleFrom(

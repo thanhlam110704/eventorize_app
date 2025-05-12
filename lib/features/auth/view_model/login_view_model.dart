@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
+import 'package:dio/dio.dart';
 import 'package:eventorize_app/data/models/user.dart';
 import 'package:eventorize_app/data/repositories/user_repository.dart';
 import 'package:eventorize_app/data/api/secure_storage_service.dart';
+import 'package:eventorize_app/core/exceptions/exceptions.dart';
 
 class LoginViewModel extends ChangeNotifier {
   final UserRepository _userRepository;
@@ -10,10 +12,12 @@ class LoginViewModel extends ChangeNotifier {
 
   bool _isLoading = false;
   String? _errorMessage;
+  String? _errorTitle;
   User? _user;
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  String? get errorTitle => _errorTitle;
   User? get user => _user;
 
   Future<void> login({
@@ -23,6 +27,7 @@ class LoginViewModel extends ChangeNotifier {
   }) async {
     _isLoading = true;
     _errorMessage = null;
+    _errorTitle = null;
     _user = null;
     notifyListeners();
 
@@ -31,44 +36,35 @@ class LoginViewModel extends ChangeNotifier {
       _user = result['user'] as User?;
       final token = result['token'] as String?;
 
-      if (_user == null) {
-        throw Exception('User data is missing');
-      }
-      if (token == null) {
-        throw Exception('Access token is missing');
+      if (_user == null || token == null) {
+        throw Exception('Login failed: Invalid response');
       }
 
-      await SecureStorageService.saveToken(token);
-      if (rememberMe) {
-        await SecureStorageService.saveEmail(email);
+      if (_user!.isVerified) {
+        await SecureStorageService.saveToken(token);
+        if (rememberMe) {
+          await SecureStorageService.saveEmail(email);
+        } else {
+          await SecureStorageService.clearEmail();
+        }
+      }
+    } on DioException catch (e) {
+      if (e.error is CustomException) {
+        final customError = e.error as CustomException;
+        _errorTitle = 'Error ${customError.status}';
+        _errorMessage = customError.detail;
       } else {
-        await SecureStorageService.clearEmail();
+        _errorTitle = 'Error';
+        _errorMessage = e.message ?? 'Failed to log in. Please try again.';
       }
-    } catch (e) {
-      if (e.toString().contains('Network')) {
-        _errorMessage = 'Please check your internet connection';
-      } else if (e.toString().contains('Invalid credentials')) {
-        _errorMessage = 'Incorrect email or password';
-      } else {
-        _errorMessage = 'Login failed: $e';
-      }
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> checkSession() async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
-
-    try {
-      final user = await _userRepository.getMe();
-      _user = user;
-    } catch (e) {
-      _errorMessage = 'Session check failed: $e';
       _user = null;
+      notifyListeners();
+      rethrow;
+    } catch (e) {
+      _errorTitle = 'Error';
+      _errorMessage = 'An unexpected error occurred';
+      _user = null;
+      notifyListeners();
       rethrow;
     } finally {
       _isLoading = false;
@@ -76,26 +72,9 @@ class LoginViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> logout() async {
-    try {
-      await _userRepository.logout();
-      await SecureStorageService.clearAll();
-      _user = null;
-      _errorMessage = 'Logged out successfully';
-    } catch (e) {
-      _errorMessage = 'Logout failed: $e';
-    } finally {
-      notifyListeners();
-    }
-  }
-
   void clearError() {
     _errorMessage = null;
-    notifyListeners();
-  }
-
-  void clearUser() {
-    _user = null;
+    _errorTitle = null;
     notifyListeners();
   }
 }

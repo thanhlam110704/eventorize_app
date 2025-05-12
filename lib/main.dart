@@ -1,4 +1,8 @@
+
+import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
 import 'package:eventorize_app/features/auth/view_model/register_view_model.dart';
+import 'package:eventorize_app/features/auth/view_model/login_view_model.dart';
+import 'package:eventorize_app/features/auth/view_model/verify_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
@@ -6,7 +10,6 @@ import 'package:eventorize_app/router.dart';
 import 'package:eventorize_app/common/network/dio_client.dart';
 import 'package:eventorize_app/data/api/user_api.dart';
 import 'package:eventorize_app/data/repositories/user_repository.dart';
-import 'package:eventorize_app/features/auth/view_model/login_view_model.dart';
 import 'package:get_it/get_it.dart';
 
 void setupDependencies() {
@@ -36,6 +39,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider<HomeViewModel>(
+          create: (_) => HomeViewModel(GetIt.instance<UserRepository>()),
+        ),
+        ChangeNotifierProvider<VerifyViewModel>(
+          create: (_) => VerifyViewModel(GetIt.instance<UserRepository>()),
+        ),
         ChangeNotifierProvider<LoginViewModel>(
           create: (_) => LoginViewModel(GetIt.instance<UserRepository>()),
         ),
@@ -46,7 +55,6 @@ class MyApp extends StatelessWidget {
       child: MaterialApp.router(
         title: 'Eventorize',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
         routerConfig: AppRouter.router,

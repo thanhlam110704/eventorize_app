@@ -3,9 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
-import 'package:eventorize_app/data/api/secure_storage_service.dart';
-import 'package:eventorize_app/features/auth/view_model/login_view_model.dart';
-import 'package:get_it/get_it.dart';
+import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
 
 class SplashScreenPage extends StatefulWidget {
   const SplashScreenPage({super.key});
@@ -17,46 +15,26 @@ class SplashScreenPage extends StatefulWidget {
 class SplashScreenPageState extends State<SplashScreenPage> {
   static const smallScreenThreshold = 640.0;
   static const maxContentWidth = 600.0;
-  final getIt = GetIt.instance;
 
   @override
   void initState() {
     super.initState();
-    _checkSession(context);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.mounted) {
+        _checkSession(context);
+      }
+    });
   }
 
   Future<void> _checkSession(BuildContext context) async {
-    final viewModel = context.read<LoginViewModel>();
-    final token = await SecureStorageService.getToken();
-
-    if (token != null) {
-      try {
-        await viewModel.checkSession();
-        if (viewModel.user != null && context.mounted) {
-          context.pushReplacementNamed('home');
-          return;
-        } 
-      } catch (e) {
-        if (e.toString().contains('401')) {
-          await SecureStorageService.clearToken();
-          await SecureStorageService.clearEmail();
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Session expired. Please log in again.')),
-            );
-          }
-        } else {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Failed to connect. Please check your network.')),
-            );
-          }
-        }
-      }
-    } 
-
+    final viewModel = context.read<HomeViewModel>();
+    await viewModel.checkSession();
     if (context.mounted) {
-      context.pushReplacementNamed('login');
+      if (viewModel.user != null) {
+        context.pushReplacementNamed('home');
+      } else {
+        context.pushReplacementNamed('login');
+      }
     }
   }
 
@@ -69,44 +47,36 @@ class SplashScreenPageState extends State<SplashScreenPage> {
       backgroundColor: AppColors.primary,
       body: SafeArea(
         child: SingleChildScrollView(
-          child: buildMainContainer(isSmallScreen, screenSize),
-        ),
-      ),
-    );
-  }
-
-  Widget buildMainContainer(bool isSmallScreen, Size screenSize) {
-    return Container(
-      width: screenSize.width,
-      height: screenSize.height,
-      padding: EdgeInsets.fromLTRB(
-        isSmallScreen ? 16 : 24,
-        isSmallScreen ? 40 : 80,
-        isSmallScreen ? 16 : 24,
-        isSmallScreen ? 24 : 32,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: maxContentWidth),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              buildLogo(),
-            ],
+          child: Container(
+            width: screenSize.width,
+            height: screenSize.height,
+            padding: EdgeInsets.fromLTRB(
+              isSmallScreen ? 16 : 24,
+              isSmallScreen ? 40 : 80,
+              isSmallScreen ? 16 : 24,
+              isSmallScreen ? 24 : 32,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: maxContentWidth),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 50),
+                      child: Text(
+                        'eventorize',
+                        style: AppTextStyles.logo.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget buildLogo() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 50),
-      child: Text(
-        'eventorize',
-        style: AppTextStyles.logo.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w900,
         ),
       ),
     );

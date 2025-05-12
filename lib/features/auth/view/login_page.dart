@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/widgets/custom_field_input.dart';
+import 'package:eventorize_app/common/widgets/toast_custom.dart';
 import 'package:eventorize_app/data/api/secure_storage_service.dart';
 import 'package:eventorize_app/features/auth/view_model/login_view_model.dart';
+import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
+import 'package:eventorize_app/features/auth/view_model/verify_view_model.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:toastification/toastification.dart';
+import 'package:eventorize_app/data/api/google_signin_api.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -21,7 +25,6 @@ class LoginPageState extends State<LoginPage> {
   static const smallScreenThreshold = 640.0;
   static const maxContentWidth = 600.0;
   static const buttonHeight = 50.0;
-  bool navigated = false;
   bool rememberMe = false;
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -54,6 +57,54 @@ class LoginPageState extends State<LoginPage> {
       rememberMe = !rememberMe;
     });
   }
+ 
+  Future<void> handleLogin(LoginViewModel viewModel) async {
+    bool isValid = true;
+    if (emailInputKey.currentState != null) {
+      isValid &= emailInputKey.currentState!.validate();
+    }
+    if (passwordInputKey.currentState != null) {
+      isValid &= passwordInputKey.currentState!.validate();
+    }
+    if (isValid) {
+      await viewModel.login(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+        rememberMe: rememberMe,
+      );
+      if (mounted && viewModel.user != null) {
+        if (viewModel.user!.isVerified) {
+          context.read<HomeViewModel>().setUser(viewModel.user!);
+          ToastCustom.show(
+            context: context,
+            title: 'Login successful!',
+            description: 'Welcome, ${viewModel.user!.fullname}!',
+            type: ToastificationType.success,
+          );
+          context.goNamed('home');
+        } else {
+          final verifyViewModel = context.read<VerifyViewModel>();
+          await verifyViewModel.resendVerificationEmail(email: emailController.text.trim());
+          if (verifyViewModel.isSuccess) {
+            if (mounted) {
+              ToastCustom.show(
+                context: context,
+                title: 'Verification code sent',
+                description: 'A new verification code has been sent to ${emailController.text.trim()}',
+                type: ToastificationType.success,
+              );
+            }
+          }
+          if (mounted) {
+            context.goNamed(
+              'verify-code',
+              extra: {'email': emailController.text.trim()},
+            );
+          }
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,30 +119,13 @@ class LoginPageState extends State<LoginPage> {
             if (viewModel.errorMessage != null) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted) {
-                  toastification.show(
+                  ToastCustom.show(
                     context: context,
+                    title: 'Error',
+                    description: viewModel.errorMessage!,
                     type: ToastificationType.error,
-                    style: ToastificationStyle.minimal,
-                    title: Text(viewModel.errorMessage!),
-                    autoCloseDuration: const Duration(seconds: 3),
-                    alignment: Alignment.topCenter,
                   );
                   viewModel.clearError();
-                }
-              });
-            } else if (viewModel.user != null && !navigated) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  toastification.show(
-                    context: context,
-                    type: ToastificationType.success,
-                    style: ToastificationStyle.minimal,
-                    title: Text('Welcome, ${viewModel.user!.fullname}!'),
-                    autoCloseDuration: const Duration(seconds: 3),
-                    alignment: Alignment.topCenter,
-                  );
-                  navigated = true;
-                  context.goNamed('home');
                 }
               });
             }
@@ -138,22 +172,7 @@ class LoginPageState extends State<LoginPage> {
                                         height: buttonHeight,
                                         margin: const EdgeInsets.only(top: 10),
                                         child: ElevatedButton(
-                                          onPressed: () {
-                                            bool isValid = true;
-                                            if (emailInputKey.currentState != null) {
-                                              isValid &= emailInputKey.currentState!.validate();
-                                            }
-                                            if (passwordInputKey.currentState != null) {
-                                              isValid &= passwordInputKey.currentState!.validate();
-                                            }
-                                            if (isValid) {
-                                              viewModel.login(
-                                                email: emailController.text.trim(),
-                                                password: passwordController.text.trim(),
-                                                rememberMe: rememberMe,
-                                              );
-                                            }
-                                          },
+                                          onPressed: viewModel.isLoading ? null : () => handleLogin(viewModel),
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: AppColors.primary,
                                             shape: RoundedRectangleBorder(
@@ -174,7 +193,7 @@ class LoginPageState extends State<LoginPage> {
                                     const SizedBox(height: 10),
                                     buildDivider(),
                                     const SizedBox(height: 10),
-                                    buildGoogleButton(isSmallScreen, screenSize),
+                                    buildGoogleButton(isSmallScreen, screenSize, viewModel),
                                     const SizedBox(height: 29),
                                     buildRegisterLink(),
                                   ],
@@ -192,7 +211,7 @@ class LoginPageState extends State<LoginPage> {
                     color: Colors.black.withAlpha(128),
                     child: const Center(
                       child: SpinKitFadingCircle(
-                        color: AppColors.white,
+                        color: AppColors.primary,
                         size: 50.0,
                       ),
                     ),
@@ -289,12 +308,14 @@ class LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget buildGoogleButton(bool isSmallScreen, Size screenSize) {
+  Widget buildGoogleButton(bool isSmallScreen, Size screenSize, LoginViewModel viewModel) {
     return SizedBox(
       width: isSmallScreen ? double.infinity : screenSize.width * 0.9,
       height: buttonHeight,
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: () async {
+          await GoogleSignInApi.login();
+        },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(

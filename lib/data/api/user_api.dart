@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:eventorize_app/data/models/user.dart';
 import 'package:eventorize_app/core/constants/api_url.dart';
 import 'package:eventorize_app/common/network/dio_client.dart';
+import 'package:eventorize_app/data/api/secure_storage_service.dart';
 
 class UserApi {
   final DioClient _dioClient;
@@ -49,20 +50,25 @@ class UserApi {
       },
     );
     final data = response.data as Map<String, dynamic>?;
-    if (data == null || data['user'] == null || data['access_token'] == null) {
-      throw ApiException('Registration failed: Invalid response data');
+    if (data == null) {
+      throw Exception('Registration failed: Empty response data');
     }
+    final token = data['access_token'] as String? ??
+        (throw Exception('Registration failed: Missing token'));
+    await SecureStorageService.saveToken(token);
+
     return {
-      'user': User.fromJson(data['user']),
-      'token': data['access_token'] as String? ??
-          (throw ApiException('Login failed: Access token is missing')),
+      'user': User.fromJson(data),
+      'token': token,
     };
   }
 
-  Future<void> verifyEmail({
-    required String email,
-    required String otp,
-  }) async {
+
+  Future<User> verifyEmail({
+  required String email,
+  required String otp,
+}) async {
+  try {
     final response = await _dioClient.post(
       ApiUrl.verifyEmail,
       data: {
@@ -70,11 +76,28 @@ class UserApi {
         'otp': otp,
       },
     );
-    final data = response.data as Map<String, dynamic>?;
-    if (data == null || data['success'] != true) {
-      throw ApiException('Verification failed: Invalid OTP or server error');
+
+    final userData = response.data as Map<String, dynamic>?;
+    if (userData == null) {
+      throw Exception('Verification failed: Empty response data');
     }
+
+    final user = User.fromJson(userData);
+    if (!user.isVerified) {
+      throw Exception('Verification failed: User is not verified');
+    }
+
+    return user;
+  } on DioException catch (e) {
+    if (e.response?.statusCode == 404) {
+      throw Exception('Verification endpoint not found. Please check the API URL.');
+    }
+    final errorMessage = e.response?.data?['message'] ?? e.message ?? 'Unknown error';
+    throw Exception('Verification failed: $errorMessage');
   }
+}
+
+
 
   Future<void> resendVerificationEmail({
     required String email,
@@ -87,16 +110,12 @@ class UserApi {
         },
       );
       final data = response.data as Map<String, dynamic>?;
-      if (data == null || data['success'] != true) {
-        throw ApiException('Resend verification failed: Server error');
+      if (data == null || data['status'] != 'success') { 
+        throw Exception('Resend verification email failed: Server error');
       }
-    } catch (e) {
-      if (e is DioException && e.response != null) {
-        final errorData = e.response!.data as Map<String, dynamic>?;
-        throw ApiException(
-            errorData?['message'] ?? 'Resend verification failed: ${e.toString()}');
-      }
-      throw ApiException('Resend verification failed: ${e.toString()}');
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? e.message ?? 'Unknown error';
+      throw Exception('Resend verification email failed: $errorMessage');
     }
   }
 
@@ -113,24 +132,20 @@ class UserApi {
     );
     final data = response.data as Map<String, dynamic>?;
     if (data == null) {
-      throw ApiException('Login failed: Response data is null');
+      throw Exception('Login failed: Empty response data');
     }
-    if (data['_id'] == null ||
-        data['fullname'] == null ||
-        data['email'] == null ||
-        data['type'] == null ||
-        data['created_at'] == null) {
-      throw ApiException('Login failed: User data is missing');
-    }
+    final token = data['access_token'] as String? ??
+        (throw Exception('Login failed: Missing token'));
+    await SecureStorageService.saveToken(token);
     return {
       'user': User.fromJson(data),
-      'token': data['access_token'] as String? ??
-          (throw ApiException('Login failed: Access token is missing')),
+      'token': token,
     };
   }
 
+  
   Future<void> logout() async {
-    await _dioClient.clearJwtCookie();
+    await SecureStorageService.clearAll();
   }
 
   Future<User> getMe({String? fields}) async {
@@ -233,12 +248,4 @@ class UserApi {
     );
     return User.fromJson(response.data['data']);
   }
-}
-
-class ApiException implements Exception {
-  final String message;
-  ApiException(this.message);
-
-  @override
-  String toString() => message;
 }

@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:eventorize_app/data/api/user_api.dart';
 import 'package:eventorize_app/data/models/user.dart';
 
-
 class UserRepository {
   final UserApi _userApi;
 
@@ -105,5 +104,18 @@ class UserRepository {
 
   Future<User> editAvatar({MultipartFile? file, String? imageUrl}) async {
     return await _userApi.editAvatar(file: file, imageUrl: imageUrl);
+  }
+
+  Future<User> verifyEmail({
+  required String email,
+  required String otp,
+}) async {
+  return await _userApi.verifyEmail(email: email, otp: otp);
+}
+
+  Future<void> resendVerificationEmail({
+    required String email,
+  }) async {
+    await _userApi.resendVerificationEmail(email: email);
   }
 }
