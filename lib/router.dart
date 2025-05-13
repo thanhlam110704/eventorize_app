@@ -7,17 +7,23 @@ import 'package:eventorize_app/features/auth/view/signup_page.dart';
 import 'package:eventorize_app/features/auth/view/splashscreen_page.dart';
 import 'package:eventorize_app/features/auth/view/verify_page.dart';
 import 'package:eventorize_app/features/auth/view/account_page.dart';
+import 'package:eventorize_app/features/auth/view/eventdetail_page.dart';
 import 'package:eventorize_app/features/auth/view/detailprofile_page.dart';
 import 'package:eventorize_app/data/api/shared_preferences_service.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: '/home',
+    initialLocation: '/event-detail',
     routes: [
       GoRoute(
         path: '/splashscreen',
         name: 'splashscreen',
         builder: (context, state) => const SplashScreenPage(),
+      ),
+      GoRoute(
+        path: '/event-detail',
+        name: 'event-detail',
+        builder: (context, state) => const EventDetailPage(),
       ),
       GoRoute(
         path: '/detailprof',
