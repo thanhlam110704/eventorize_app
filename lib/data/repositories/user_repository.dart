@@ -7,12 +7,29 @@ class UserRepository {
 
   UserRepository(this._userApi);
 
-  Future<Map<String, dynamic>> login({required String email, required String password}) async {
+  Future<Map<String, dynamic>> register({
+    required String fullname,
+    required String email,
+    required String phone,
+    required String password,
+  }) async {
+    return await _userApi.register(
+      fullname: fullname,
+      email: email,
+      phone: phone,
+      password: password,
+    );
+  }
+
+  Future<Map<String, dynamic>> login({
+    required String email,
+    required String password,
+  }) async {
     return await _userApi.login(email: email, password: password);
   }
 
-  Future<Map<String, dynamic>> register({required String fullname, required String email, required String password}) async {
-    return await _userApi.register(fullname: fullname, email: email, password: password);
+  Future<void> logout() async {
+    await _userApi.logout();
   }
 
   Future<Map<String, dynamic>> checkHealth() async {
@@ -87,5 +104,18 @@ class UserRepository {
 
   Future<User> editAvatar({MultipartFile? file, String? imageUrl}) async {
     return await _userApi.editAvatar(file: file, imageUrl: imageUrl);
+  }
+
+  Future<User> verifyEmail({
+  required String email,
+  required String otp,
+}) async {
+  return await _userApi.verifyEmail(email: email, otp: otp);
+}
+
+  Future<void> resendVerificationEmail({
+    required String email,
+  }) async {
+    await _userApi.resendVerificationEmail(email: email);
   }
 }

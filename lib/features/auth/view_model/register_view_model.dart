@@ -2,13 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:eventorize_app/data/models/user.dart';
 import 'package:eventorize_app/data/repositories/user_repository.dart';
-import 'package:eventorize_app/data/api/secure_storage_service.dart';
 import 'package:eventorize_app/core/exceptions/exceptions.dart';
 
-class LoginViewModel extends ChangeNotifier {
+class RegisterViewModel extends ChangeNotifier {
   final UserRepository _userRepository;
 
-  LoginViewModel(this._userRepository);
+  RegisterViewModel(this._userRepository);
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -20,10 +19,11 @@ class LoginViewModel extends ChangeNotifier {
   String? get errorTitle => _errorTitle;
   User? get user => _user;
 
-  Future<void> login({
+  Future<void> register({
+    required String fullname,
     required String email,
+    required String phone,
     required String password,
-    required bool rememberMe,
   }) async {
     _isLoading = true;
     _errorMessage = null;
@@ -32,30 +32,25 @@ class LoginViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await _userRepository.login(email: email, password: password);
+      final result = await _userRepository.register(
+        fullname: fullname,
+        email: email,
+        phone: phone,
+        password: password,
+      );
       _user = result['user'] as User?;
       final token = result['token'] as String?;
-
       if (_user == null || token == null) {
         throw Exception('Login failed: Invalid response');
-      }
-
-      if (_user!.isVerified) {
-        await SecureStorageService.saveToken(token);
-        if (rememberMe) {
-          await SecureStorageService.saveEmail(email);
-        } else {
-          await SecureStorageService.clearEmail();
-        }
       }
     } on DioException catch (e) {
       if (e.error is CustomException) {
         final customError = e.error as CustomException;
         _errorTitle = 'Error ${customError.status}';
-        _errorMessage = customError.detail;
+        _errorMessage = customError.detail; 
       } else {
         _errorTitle = 'Error';
-        _errorMessage = e.message ?? 'Failed to log in. Please try again.';
+        _errorMessage = e.message ?? 'An unexpected error occurred';
       }
       _user = null;
       notifyListeners();
@@ -72,6 +67,8 @@ class LoginViewModel extends ChangeNotifier {
     }
   }
 
+
+  
   void clearError() {
     _errorMessage = null;
     _errorTitle = null;

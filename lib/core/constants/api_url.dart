@@ -12,5 +12,7 @@ class ApiUrl {
   static String editUser(String id) => '/v1/users/$id';
   static String deleteUser(String id) => '/v1/users/$id';
   static String get editAvatar => '/v1/users/me/avatar';
-  static String get googleSSO => '/auth/google/login';
-}
+  static String get googleSSO => '/v1/auth/google/login';
+  static const String verifyEmail = '/v1/auth/verify-email';
+  static const String resendVerificationEmail = '/v1/auth/resend-verification-email';
+} 

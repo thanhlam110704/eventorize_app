@@ -1,107 +1,80 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/widgets/custom_field_input.dart';
 import 'package:eventorize_app/common/widgets/toast_custom.dart';
-import 'package:eventorize_app/data/api/secure_storage_service.dart';
-import 'package:eventorize_app/features/auth/view_model/login_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/verify_view_model.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:toastification/toastification.dart';
-import 'package:eventorize_app/data/api/google_signin_api.dart';
+import 'package:eventorize_app/features/auth/view_model/register_view_model.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  LoginPageState createState() => LoginPageState();
+  RegisterPageState createState() => RegisterPageState();
 }
 
-class LoginPageState extends State<LoginPage> {
+class RegisterPageState extends State<RegisterPage> {
   static const smallScreenThreshold = 640.0;
   static const maxContentWidth = 600.0;
   static const buttonHeight = 50.0;
-  bool rememberMe = false;
+
   final emailController = TextEditingController();
+  final fullnameController = TextEditingController();
+  final phoneController = TextEditingController();
   final passwordController = TextEditingController();
   final formKey = GlobalKey<FormState>();
   final emailInputKey = GlobalKey<CustomFieldInputState>();
+  final fullnameInputKey = GlobalKey<CustomFieldInputState>();
+  final phoneInputKey = GlobalKey<CustomFieldInputState>();
   final passwordInputKey = GlobalKey<CustomFieldInputState>();
-
-  @override
-  void initState() {
-    super.initState();
-    SecureStorageService.getEmail().then((email) {
-      if (email != null) {
-        setState(() {
-          emailController.text = email;
-          rememberMe = true;
-        });
-      }
-    });
-  }
 
   @override
   void dispose() {
     emailController.dispose();
+    fullnameController.dispose();
+    phoneController.dispose();
     passwordController.dispose();
     super.dispose();
   }
 
-  void toggleRememberMe() {
-    setState(() {
-      rememberMe = !rememberMe;
-    });
-  }
- 
-  Future<void> handleLogin(LoginViewModel viewModel) async {
+  Future<void> handleRegister(RegisterViewModel viewModel) async {
     bool isValid = true;
     if (emailInputKey.currentState != null) {
       isValid &= emailInputKey.currentState!.validate();
     }
+    if (fullnameInputKey.currentState != null) {
+      isValid &= fullnameInputKey.currentState!.validate();
+    }
+    if (phoneInputKey.currentState != null) {
+      isValid &= phoneInputKey.currentState!.validate();
+    }
     if (passwordInputKey.currentState != null) {
       isValid &= passwordInputKey.currentState!.validate();
     }
+
     if (isValid) {
-      await viewModel.login(
+      await viewModel.register(
+        fullname: fullnameController.text.trim(),
         email: emailController.text.trim(),
+        phone: phoneController.text.trim(),
         password: passwordController.text.trim(),
-        rememberMe: rememberMe,
       );
       if (mounted && viewModel.user != null) {
-        if (viewModel.user!.isVerified) {
-          context.read<HomeViewModel>().setUser(viewModel.user!);
-          ToastCustom.show(
-            context: context,
-            title: 'Login successful!',
-            description: 'Welcome, ${viewModel.user!.fullname}!',
-            type: ToastificationType.success,
-          );
-          context.goNamed('home');
-        } else {
-          final verifyViewModel = context.read<VerifyViewModel>();
-          await verifyViewModel.resendVerificationEmail(email: emailController.text.trim());
-          if (verifyViewModel.isSuccess) {
-            if (mounted) {
-              ToastCustom.show(
-                context: context,
-                title: 'Verification code sent',
-                description: 'A new verification code has been sent to ${emailController.text.trim()}',
-                type: ToastificationType.success,
-              );
-            }
-          }
-          if (mounted) {
-            context.goNamed(
-              'verify-code',
-              extra: {'email': emailController.text.trim()},
-            );
-          }
-        }
+        ToastCustom.show(
+          context: context,
+          title: 'Registration successful!',
+          type: ToastificationType.success,
+        );
+        context.goNamed(
+          'verify-code',
+          extra: {
+            'email': emailController.text.trim(),
+          },
+        );
       }
     }
   }
@@ -114,14 +87,14 @@ class LoginPageState extends State<LoginPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Consumer<LoginViewModel>(
+        child: Consumer<RegisterViewModel>(
           builder: (context, viewModel, child) {
-            if (viewModel.errorMessage != null) {
+            if (viewModel.errorMessage != null && viewModel.errorTitle != null && mounted) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted) {
                   ToastCustom.show(
                     context: context,
-                    title: 'Error',
+                    title: viewModel.errorTitle!,
                     description: viewModel.errorMessage!,
                     type: ToastificationType.error,
                   );
@@ -157,45 +130,23 @@ class LoginPageState extends State<LoginPage> {
                               const SizedBox(height: 36),
                               buildEmailField(),
                               const SizedBox(height: 21),
+                              buildFullnameField(),
+                              const SizedBox(height: 21),
+                              buildPhoneField(),
+                              const SizedBox(height: 21),
                               buildPasswordField(),
                               const SizedBox(height: 21),
-                              buildRememberMe(isSmallScreen),
-                              if (isSmallScreen) const SizedBox(height: 15),
                               Padding(
                                 padding: EdgeInsets.only(top: screenSize.height * 0.05),
                                 child: Column(
                                   children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 90),
-                                      child: Container(
-                                        width: isSmallScreen ? double.infinity : screenSize.width * 0.9,
-                                        height: buttonHeight,
-                                        margin: const EdgeInsets.only(top: 10),
-                                        child: ElevatedButton(
-                                          onPressed: viewModel.isLoading ? null : () => handleLogin(viewModel),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: AppColors.primary,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(10),
-                                            ),
-                                            elevation: 0,
-                                          ),
-                                          child: Text(
-                                            'Log in',
-                                            style: AppTextStyles.text.copyWith(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
+                                    buildRegisterButton(isSmallScreen, screenSize, viewModel),
                                     const SizedBox(height: 10),
                                     buildDivider(),
                                     const SizedBox(height: 10),
-                                    buildGoogleButton(isSmallScreen, screenSize, viewModel),
+                                    buildGoogleButton(isSmallScreen, screenSize),
                                     const SizedBox(height: 29),
-                                    buildRegisterLink(),
+                                    buildLoginLink(),
                                   ],
                                 ),
                               ),
@@ -240,7 +191,7 @@ class LoginPageState extends State<LoginPage> {
     return Padding(
       padding: const EdgeInsets.only(left: 13),
       child: Text(
-        'Log in',
+        'Create an account',
         style: AppTextStyles.title,
       ),
     );
@@ -257,6 +208,26 @@ class LoginPageState extends State<LoginPage> {
     );
   }
 
+  Widget buildFullnameField() {
+    return CustomFieldInput(
+      key: fullnameInputKey,
+      controller: fullnameController,
+      hintText: 'Fullname',
+      icon: MdiIcons.accountOutline,
+      inputType: InputType.fullname,
+    );
+  }
+
+  Widget buildPhoneField() {
+    return CustomFieldInput(
+      key: phoneInputKey,
+      controller: phoneController,
+      hintText: 'Phone',
+      icon: MdiIcons.phone,
+      inputType: InputType.phone,
+    );
+  }
+
   Widget buildPasswordField() {
     return CustomFieldInput(
       key: passwordInputKey,
@@ -268,25 +239,30 @@ class LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget buildRememberMe(bool isSmallScreen) {
+  Widget buildRegisterButton(bool isSmallScreen, Size screenSize, RegisterViewModel viewModel) {
     return Padding(
-      padding: const EdgeInsets.only(right: 15),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: toggleRememberMe,
-            child: Icon(
-              rememberMe ? MdiIcons.checkboxMarked : MdiIcons.checkboxBlankOutline,
-              color: rememberMe ? AppColors.primary : AppColors.grey,
-              size: 24,
+      padding: const EdgeInsets.only(top: 0),
+      child: Container(
+        width: isSmallScreen ? double.infinity : screenSize.width * 0.9,
+        height: buttonHeight,
+        margin: const EdgeInsets.only(top: 10),
+        child: ElevatedButton(
+          onPressed: viewModel.isLoading ? null : () => handleRegister(viewModel),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            elevation: 0,
+          ),
+          child: Text(
+            'Register',
+            style: AppTextStyles.text.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(width: 7),
-          Text(
-            'Remember me',
-            style: AppTextStyles.text,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -308,13 +284,17 @@ class LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget buildGoogleButton(bool isSmallScreen, Size screenSize, LoginViewModel viewModel) {
+  Widget buildGoogleButton(bool isSmallScreen, Size screenSize) {
     return SizedBox(
       width: isSmallScreen ? double.infinity : screenSize.width * 0.9,
       height: buttonHeight,
       child: ElevatedButton(
-        onPressed: () async {
-          await GoogleSignInApi.login();
+        onPressed: () {
+          ToastCustom.show(
+            context: context,
+            title: 'Processing registration with Google...',
+            type: ToastificationType.info,
+          );
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
@@ -344,14 +324,14 @@ class LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget buildRegisterLink() {
+  Widget buildLoginLink() {
     return Center(
       child: GestureDetector(
         onTap: () {
-          context.goNamed('register');
+          context.goNamed('login');
         },
         child: Text(
-          'Don\'t have an account? Register now!',
+          'Login if you have an account!',
           style: AppTextStyles.link,
         ),
       ),
