@@ -57,7 +57,7 @@ class LoginPageState extends State<LoginPage> {
       rememberMe = !rememberMe;
     });
   }
- 
+
   Future<void> handleLogin(LoginViewModel viewModel) async {
     bool isValid = true;
     if (emailInputKey.currentState != null) {
@@ -121,7 +121,7 @@ class LoginPageState extends State<LoginPage> {
                 if (mounted) {
                   ToastCustom.show(
                     context: context,
-                    title: 'Error',
+                    title: viewModel.errorTitle ?? 'Error',
                     description: viewModel.errorMessage!,
                     type: ToastificationType.error,
                   );
@@ -313,9 +313,34 @@ class LoginPageState extends State<LoginPage> {
       width: isSmallScreen ? double.infinity : screenSize.width * 0.9,
       height: buttonHeight,
       child: ElevatedButton(
-        onPressed: () async {
-          await GoogleSignInApi.login();
-        },
+        onPressed: viewModel.isLoading
+            ? null
+            : () async {
+                final googleUser = await GoogleSignInApi.signIn();
+                if (googleUser != null && mounted) {
+                  try {
+                    await viewModel.googleSSOAndroid(
+                      googleId: googleUser['google_id']!,
+                      displayName: googleUser['fullname']!,
+                      email: googleUser['email']!,
+                      picture: googleUser['avatar']!,
+                      rememberMe: rememberMe,
+                    );
+                    if (viewModel.user != null && mounted) {
+                      context.read<HomeViewModel>().setUser(viewModel.user!);
+                      ToastCustom.show(
+                        context: context,
+                        title: 'Login successful!',
+                        description: 'Welcome, ${viewModel.user!.fullname}!',
+                        type: ToastificationType.success,
+                      );
+                      context.goNamed('home');
+                    }
+                  } catch (e) {
+                    // Error handling is done in LoginViewModel
+                  }
+                }
+              },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(

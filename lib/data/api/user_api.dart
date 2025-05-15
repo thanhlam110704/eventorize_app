@@ -63,41 +63,72 @@ class UserApi {
     };
   }
 
+  Future<Map<String, dynamic>> googleSSOAndroid({
+    required String googleId,
+    required String displayName,
+    required String email,
+    required String picture,
+  }) async {
+    try {
+      final response = await _dioClient.post(
+        ApiUrl.googleSSOAndroid,
+        data: {
+          'id': googleId,
+          'display_name': displayName,
+          'email': email,
+          'picture': picture,
+        },
+      );
+      final data = response.data as Map<String, dynamic>?;
+      if (data == null) {
+        throw Exception('Google SSO failed: Empty response data');
+      }
+      final token = data['access_token'] as String? ??
+          (throw Exception('Google SSO failed: Missing token'));
+      await SecureStorageService.saveToken(token);
+
+      return {
+        'user': User.fromJson(data),
+        'token': token,
+      };
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
+      throw Exception('Google SSO failed: $errorMessage');
+    }
+  }
 
   Future<User> verifyEmail({
-  required String email,
-  required String otp,
-}) async {
-  try {
-    final response = await _dioClient.post(
-      ApiUrl.verifyEmail,
-      data: {
-        'email': email,
-        'otp': otp,
-      },
-    );
+    required String email,
+    required String otp,
+  }) async {
+    try {
+      final response = await _dioClient.post(
+        ApiUrl.verifyEmail,
+        data: {
+          'email': email,
+          'otp': otp,
+        },
+      );
 
-    final userData = response.data as Map<String, dynamic>?;
-    if (userData == null) {
-      throw Exception('Verification failed: Empty response data');
-    }
+      final userData = response.data as Map<String, dynamic>?;
+      if (userData == null) {
+        throw Exception('Verification failed: Empty response data');
+      }
 
-    final user = User.fromJson(userData);
-    if (!user.isVerified) {
-      throw Exception('Verification failed: User is not verified');
-    }
+      final user = User.fromJson(userData);
+      if (!user.isVerified) {
+        throw Exception('Verification failed: User is not verified');
+      }
 
-    return user;
-  } on DioException catch (e) {
-    if (e.response?.statusCode == 404) {
-      throw Exception('Verification endpoint not found. Please check the API URL.');
+      return user;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        throw Exception('Verification endpoint not found. Please check the API URL.');
+      }
+      final errorMessage = e.response?.data?['message'] ?? e.message ?? 'Unknown error';
+      throw Exception('Verification failed: $errorMessage');
     }
-    final errorMessage = e.response?.data?['message'] ?? e.message ?? 'Unknown error';
-    throw Exception('Verification failed: $errorMessage');
   }
-}
-
-
 
   Future<void> resendVerificationEmail({
     required String email,
@@ -110,7 +141,7 @@ class UserApi {
         },
       );
       final data = response.data as Map<String, dynamic>?;
-      if (data == null || data['status'] != 'success') { 
+      if (data == null || data['status'] != 'success') {
         throw Exception('Resend verification email failed: Server error');
       }
     } on DioException catch (e) {
@@ -143,7 +174,6 @@ class UserApi {
     };
   }
 
-  
   Future<void> logout() async {
     await SecureStorageService.clearAll();
   }

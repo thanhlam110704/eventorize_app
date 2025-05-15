@@ -1,23 +1,32 @@
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class GoogleSignInApi {
   static final _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
-    clientId: dotenv.env['clientID'], 
   );
 
-  static Future<Map<String, dynamic>?> login() async {
+  static Future<Map<String, String>?> signIn() async {
     try {
+      await _googleSignIn.signOut();
       final account = await _googleSignIn.signIn();
-      if (account == null) return null;
+      if (account == null) {
+        print('Google Sign-In cancelled by user');
+        return null;
+      }
 
-      final authentication = await account.authentication;
+      final auth = await account.authentication; // Get access token
+      print('Signed in: ${account.email}');
+      print('displayName: ${account.displayName}');
+      print('Photo: ${account.photoUrl}');
+      print('Id: ${account.id}');
+      print('Access Token: ${auth.accessToken}');
+
       return {
-        'idToken': authentication.idToken,
-        'accessToken': authentication.accessToken,
+        'fullname': account.displayName ?? '',
         'email': account.email,
-        'displayName': account.displayName,
-        'photoUrl': account.photoUrl,
+        'google_id': account.id,
+        'avatar': account.photoUrl ?? '',
+        'access_token': auth.accessToken ?? '', 
       };
     } catch (e) {
       print('Google Sign-In error: $e');
@@ -27,5 +36,6 @@ class GoogleSignInApi {
 
   static Future<void> logout() async {
     await _googleSignIn.signOut();
+    print('Logged out from Google');
   }
 }

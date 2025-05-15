@@ -28,6 +28,20 @@ class UserRepository {
     return await _userApi.login(email: email, password: password);
   }
 
+  Future<Map<String, dynamic>> googleSSOAndroid({
+    required String googleId,
+    required String displayName,
+    required String email,
+    required String picture,
+  }) async {
+    return await _userApi.googleSSOAndroid(
+      googleId: googleId,
+      displayName: displayName,
+      email: email,
+      picture: picture,
+    );
+  }
+
   Future<void> logout() async {
     await _userApi.logout();
   }
@@ -107,11 +121,11 @@ class UserRepository {
   }
 
   Future<User> verifyEmail({
-  required String email,
-  required String otp,
-}) async {
-  return await _userApi.verifyEmail(email: email, otp: otp);
-}
+    required String email,
+    required String otp,
+  }) async {
+    return await _userApi.verifyEmail(email: email, otp: otp);
+  }
 
   Future<void> resendVerificationEmail({
     required String email,

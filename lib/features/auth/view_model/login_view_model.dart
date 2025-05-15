@@ -72,6 +72,63 @@ class LoginViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> googleSSOAndroid({
+    required String googleId,
+    required String displayName,
+    required String email,
+    required String picture,
+    required bool rememberMe,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    _errorTitle = null;
+    _user = null;
+    notifyListeners();
+
+    try {
+      final result = await _userRepository.googleSSOAndroid(
+        googleId: googleId,
+        displayName: displayName,
+        email: email,
+        picture: picture,
+      );
+      _user = result['user'] as User?;
+      final token = result['token'] as String?;
+
+      if (_user == null || token == null) {
+        throw Exception('Google SSO failed: Invalid response');
+      }
+
+      await SecureStorageService.saveToken(token);
+      if (rememberMe) {
+        await SecureStorageService.saveEmail(email);
+      } else {
+        await SecureStorageService.clearEmail();
+      }
+    } on DioException catch (e) {
+      if (e.error is CustomException) {
+        final customError = e.error as CustomException;
+        _errorTitle = 'Error ${customError.status}';
+        _errorMessage = customError.detail;
+      } else {
+        _errorTitle = 'Error';
+        _errorMessage = e.message ?? 'Failed to log in with Google. Please try again.';
+      }
+      _user = null;
+      notifyListeners();
+      rethrow;
+    } catch (e) {
+      _errorTitle = 'Error';
+      _errorMessage = 'An unexpected error occurred during Google SSO';
+      _user = null;
+      notifyListeners();
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   void clearError() {
     _errorMessage = null;
     _errorTitle = null;
