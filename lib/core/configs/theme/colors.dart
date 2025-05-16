@@ -10,4 +10,5 @@ class AppColors {
   static const Color linkBlue = Color(0xFF0885EB); 
   static const Color lightBackground = Color(0xFFF8F0F0); 
   static const Color darkGrey = Color(0xFF323232);
+  static const Color success = Color(0xFF4CAF50);
 }

@@ -1,9 +1,34 @@
+
+import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
+import 'package:eventorize_app/features/auth/view_model/register_view_model.dart';
+import 'package:eventorize_app/features/auth/view_model/login_view_model.dart';
+import 'package:eventorize_app/features/auth/view_model/verify_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider/provider.dart';
 import 'package:eventorize_app/router.dart';
+import 'package:eventorize_app/common/network/dio_client.dart';
+import 'package:eventorize_app/data/api/user_api.dart';
+import 'package:eventorize_app/data/repositories/user_repository.dart';
+import 'package:get_it/get_it.dart';
+
+void setupDependencies() {
+  final getIt = GetIt.instance;
+  if (!getIt.isRegistered<DioClient>()) {
+    getIt.registerSingleton<DioClient>(DioClient());
+  }
+  if (!getIt.isRegistered<UserApi>()) {
+    getIt.registerSingleton<UserApi>(UserApi(getIt<DioClient>()));
+  }
+  if (!getIt.isRegistered<UserRepository>()) {
+    getIt.registerSingleton<UserRepository>(UserRepository(getIt<UserApi>()));
+  }
+}
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env/dev.env");
+  setupDependencies();
   runApp(const MyApp());
 }
 
@@ -12,60 +37,28 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      routerConfig: AppRouter.router, // Sử dụng GoRouter từ router.dart
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<HomeViewModel>(
+          create: (_) => HomeViewModel(GetIt.instance<UserRepository>()),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+        ChangeNotifierProvider<VerifyViewModel>(
+          create: (_) => VerifyViewModel(GetIt.instance<UserRepository>()),
+        ),
+        ChangeNotifierProvider<LoginViewModel>(
+          create: (_) => LoginViewModel(GetIt.instance<UserRepository>()),
+        ),
+        ChangeNotifierProvider<RegisterViewModel>(
+          create: (_) => RegisterViewModel(GetIt.instance<UserRepository>()),
+        ),
+      ],
+      child: MaterialApp.router(
+        title: 'Eventorize',
+        theme: ThemeData(
+          useMaterial3: true,
+        ),
+        routerConfig: AppRouter.router,
+        debugShowCheckedModeBanner: false,
       ),
     );
   }
