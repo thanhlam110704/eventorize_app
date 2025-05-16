@@ -14,7 +14,7 @@ class GoogleSignInApi {
         return null;
       }
 
-      final auth = await account.authentication; // Get access token
+      final auth = await account.authentication;
       print('Signed in: ${account.email}');
       print('displayName: ${account.displayName}');
       print('Photo: ${account.photoUrl}');
@@ -26,7 +26,7 @@ class GoogleSignInApi {
         'email': account.email,
         'google_id': account.id,
         'avatar': account.photoUrl ?? '',
-        'access_token': auth.accessToken ?? '', 
+        'access_token': auth.accessToken ?? '',
       };
     } catch (e) {
       print('Google Sign-In error: $e');

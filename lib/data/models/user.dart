@@ -4,7 +4,7 @@ class User extends Equatable {
   final String id; 
   final String fullname;
   final String email;
-  final String phone;
+  final String? phone;
   final String? position;
   final String? avatar;
   final String? company;
@@ -38,7 +38,7 @@ class User extends Equatable {
     required this.id,
     required this.fullname,
     required this.email,
-    required this.phone,
+    this.phone,
     this.position,
     this.avatar,
     this.company,
@@ -74,7 +74,7 @@ class User extends Equatable {
       id: json['_id'] as String, 
       fullname: json['fullname'] as String,
       email: json['email'] as String,
-      phone: json['phone'] as String,
+      phone: json['phone'] as String?,
       position: json['position'] as String?,
       avatar: json['avatar'] as String?,
       company: json['company'] as String?,

@@ -9,7 +9,7 @@ import 'package:eventorize_app/features/auth/view/account_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: '/splashscreen',
+    initialLocation: '/register',
     routes: [
       GoRoute(
         path: '/splashscreen',
