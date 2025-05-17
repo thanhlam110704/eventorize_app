@@ -9,6 +9,8 @@ import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/widgets/custom_field_input.dart';
 import 'package:eventorize_app/common/widgets/toast_custom.dart';
 import 'package:eventorize_app/features/auth/view_model/register_view_model.dart';
+import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
+import 'package:eventorize_app/data/api/google_signin_api.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -144,7 +146,7 @@ class RegisterPageState extends State<RegisterPage> {
                                     const SizedBox(height: 10),
                                     buildDivider(),
                                     const SizedBox(height: 10),
-                                    buildGoogleButton(isSmallScreen, screenSize),
+                                    buildGoogleButton(isSmallScreen, screenSize, viewModel),
                                     const SizedBox(height: 29),
                                     buildLoginLink(),
                                   ],
@@ -284,18 +286,55 @@ class RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget buildGoogleButton(bool isSmallScreen, Size screenSize) {
+  Widget buildGoogleButton(bool isSmallScreen, Size screenSize, RegisterViewModel viewModel) {
     return SizedBox(
       width: isSmallScreen ? double.infinity : screenSize.width * 0.9,
       height: buttonHeight,
       child: ElevatedButton(
-        onPressed: () {
-          ToastCustom.show(
-            context: context,
-            title: 'Processing registration with Google...',
-            type: ToastificationType.info,
-          );
-        },
+        onPressed: viewModel.isLoading
+            ? null
+            : () async {
+                final googleUser = await GoogleSignInApi.signIn();
+
+                if (googleUser == null) {
+                  if (mounted) {
+                    ToastCustom.show(
+                      context: context,
+                      title: 'Sign-In Canceled',
+                      description: 'Google Sign-In was canceled. Please try again.',
+                      type: ToastificationType.info,
+                    );
+                  }
+                  return;
+                }
+
+                if (mounted) {
+                  await viewModel.googleSSOAndroid(
+                    googleId: googleUser['google_id']!,
+                    displayName: googleUser['fullname']!,
+                    email: googleUser['email']!,
+                    picture: googleUser['avatar']!,
+                  );
+
+                  if (viewModel.errorMessage != null && mounted) {
+                    ToastCustom.show(
+                      context: context,
+                      title: viewModel.errorTitle ?? 'Error',
+                      description: viewModel.errorMessage!,
+                      type: ToastificationType.error,
+                    );
+                    viewModel.clearError();
+                  } else if (viewModel.user != null && mounted) {
+                    context.read<HomeViewModel>().setUser(viewModel.user!);
+                    ToastCustom.show(
+                      context: context,
+                      title: 'Registration successful!',
+                      type: ToastificationType.success,
+                    );
+                    context.goNamed('home');
+                  }
+                }
+              },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:eventorize_app/core/exceptions/exceptions.dart';
 import 'package:eventorize_app/data/models/user.dart';
 import 'package:eventorize_app/data/repositories/user_repository.dart';
+import 'package:eventorize_app/data/api/secure_storage_service.dart';
 
 class RegisterViewModel extends ChangeNotifier {
   final UserRepository _userRepository;
@@ -38,8 +39,43 @@ class RegisterViewModel extends ChangeNotifier {
       if (_errorState.user == null || token == null) {
         throw Exception('Registration failed: Invalid response');
       }
+      await SecureStorageService.saveToken(token);
     } catch (e) {
       ErrorHandler.handleError(e, 'Registration failed', _errorState);
+      notifyListeners();
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> googleSSOAndroid({
+    required String googleId,
+    required String displayName,
+    required String email,
+    required String picture,
+  }) async {
+    _isLoading = true;
+    ErrorHandler.clearError(_errorState);
+    _errorState.user = null;
+    notifyListeners();
+
+    try {
+      final result = await _userRepository.googleSSOAndroid(
+        googleId: googleId,
+        displayName: displayName,
+        email: email,
+        picture: picture,
+      );
+      _errorState.user = result['user'] as User?;
+      final token = result['token'] as String?;
+      if (_errorState.user == null || token == null) {
+        throw Exception('Google SSO registration failed: Invalid response');
+      }
+      await SecureStorageService.saveToken(token);
+    } catch (e) {
+      ErrorHandler.handleError(e, 'Google SSO registration failed', _errorState);
       notifyListeners();
       rethrow;
     } finally {
