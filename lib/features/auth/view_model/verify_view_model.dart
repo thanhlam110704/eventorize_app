@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:eventorize_app/core/exceptions/exceptions.dart';
+import 'package:eventorize_app/core/utils/exceptions.dart';
 import 'package:eventorize_app/data/models/user.dart';
 import 'package:eventorize_app/data/repositories/user_repository.dart';
 

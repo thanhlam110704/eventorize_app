@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:eventorize_app/core/exceptions/exceptions.dart';
+import 'package:eventorize_app/common/services/secure_storage.dart';
+import 'package:eventorize_app/core/utils/exceptions.dart';
 import 'package:eventorize_app/data/models/user.dart';
 import 'package:eventorize_app/data/repositories/user_repository.dart';
-import 'package:eventorize_app/data/api/secure_storage_service.dart';
 
 class RegisterViewModel extends ChangeNotifier {
   final UserRepository _userRepository;
@@ -39,7 +39,7 @@ class RegisterViewModel extends ChangeNotifier {
       if (_errorState.user == null || token == null) {
         throw Exception('Registration failed: Invalid response');
       }
-      await SecureStorageService.saveToken(token);
+      await SecureStorage.saveToken(token);
     } catch (e) {
       ErrorHandler.handleError(e, 'Registration failed', _errorState);
       notifyListeners();
@@ -73,7 +73,7 @@ class RegisterViewModel extends ChangeNotifier {
       if (_errorState.user == null || token == null) {
         throw Exception('Google SSO registration failed: Invalid response');
       }
-      await SecureStorageService.saveToken(token);
+      await SecureStorage.saveToken(token);
     } catch (e) {
       ErrorHandler.handleError(e, 'Google SSO registration failed', _errorState);
       notifyListeners();

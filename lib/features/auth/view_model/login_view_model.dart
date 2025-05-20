@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:eventorize_app/core/exceptions/exceptions.dart';
+import 'package:eventorize_app/common/services/secure_storage.dart';
+import 'package:eventorize_app/core/utils/exceptions.dart';
 import 'package:eventorize_app/data/models/user.dart';
 import 'package:eventorize_app/data/repositories/user_repository.dart';
-import 'package:eventorize_app/data/api/secure_storage_service.dart';
 
 class LoginViewModel extends ChangeNotifier {
   final UserRepository _userRepository;
@@ -61,7 +61,7 @@ class LoginViewModel extends ChangeNotifier {
         throw Exception('$errorPrefix: Invalid response');
       }
 
-      await SecureStorageService.saveToken(token);
+      await SecureStorage.saveToken(token);
     } catch (e) {
       ErrorHandler.handleError(e, errorPrefix, _errorState);
       notifyListeners();

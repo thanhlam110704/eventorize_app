@@ -6,10 +6,10 @@ import 'package:eventorize_app/features/auth/view/register_page.dart';
 import 'package:eventorize_app/features/auth/view/splashscreen_page.dart';
 import 'package:eventorize_app/features/auth/view/verify_page.dart';
 import 'package:eventorize_app/features/auth/view/account_page.dart';
-
+import 'package:eventorize_app/features/auth/view/detail_profile_page.dart';
 class AppRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: '/register',
+    initialLocation: '/splashscreen',
     routes: [
       GoRoute(
         path: '/splashscreen',
@@ -17,9 +17,9 @@ class AppRouter {
         builder: (context, state) => const SplashScreenPage(),
       ),
       GoRoute(
-        path: '/account',
-        name: 'account',
-        builder: (context, state) => const AccountPage(),
+        path: '/register',
+        name: 'register',
+        builder: (context, state) => const RegisterPage(),
       ),
       GoRoute(
         path: '/login',
@@ -27,10 +27,16 @@ class AppRouter {
         builder: (context, state) => const LoginPage(),
       ),
       GoRoute(
-        path: '/register',
-        name: 'register',
-        builder: (context, state) => const RegisterPage(),
+        path: '/account',
+        name: 'account',
+        builder: (context, state) => const AccountPage(),
       ),
+      GoRoute(
+        path: '/detail-profile',
+        name: 'detail-profile',
+        builder: (context, state) => const DetailProfilePage(),
+      ),
+      
       GoRoute(
       path: '/verify-code',
       name: 'verify-code',

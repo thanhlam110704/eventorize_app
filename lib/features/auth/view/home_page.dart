@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
-import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
 import 'package:eventorize_app/common/widgets/toast_custom.dart';
 import 'package:toastification/toastification.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -19,13 +20,13 @@ class HomePageState extends State<HomePage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (context.mounted) {
-        context.read<HomeViewModel>().checkSession();
+        context.read<SessionManager>().checkSession();
       }
     });
   }
 
-  Future<void> _handleLogout(BuildContext context, HomeViewModel viewModel) async {
-    await viewModel.logout();
+  Future<void> _handleLogout(BuildContext context, SessionManager sessionManager) async {
+    await sessionManager.logout();
     if (context.mounted) {
       ToastCustom.show(
         context: context,
@@ -52,41 +53,41 @@ class HomePageState extends State<HomePage> {
       ),
       body: SafeArea(
         child: Center(
-          child: Consumer<HomeViewModel>(
-            builder: (context, viewModel, child) {
-              if (viewModel.errorMessage != null && mounted) {
+          child: Consumer<SessionManager>(
+            builder: (context, sessionManager, child) {
+              if (sessionManager.errorMessage != null && mounted) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (mounted) {
                     ToastCustom.show(
                       context: context,
-                      title: 'Error',
-                      description: viewModel.errorMessage!,
+                      title: sessionManager.errorTitle ?? 'Error',
+                      description: sessionManager.errorMessage!,
                       type: ToastificationType.error,
                     );
-                    viewModel.clearError();
-                    if (!viewModel.isLoggingOut && viewModel.user == null) {
+                    sessionManager.clearError();
+                    if (!sessionManager.isLoading && sessionManager.user == null) {
                       context.pushReplacementNamed('login');
                     }
                   }
                 });
               }
-              if (viewModel.isCheckingSession || viewModel.isLoading || viewModel.isLoggingOut) {
+              if (sessionManager.isCheckingSession || sessionManager.isLoading) {
                 return const Center(child: CircularProgressIndicator());
               }
-              if (viewModel.user == null) {
-                return const SizedBox.shrink(); // Không chuyển hướng ở đây
+              if (sessionManager.user == null) {
+                return const SizedBox.shrink();
               }
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Welcome, ${viewModel.user!.fullname}!',
+                    'Welcome, ${sessionManager.user!.fullname}!',
                     style: AppTextStyles.title,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    'Email: ${viewModel.user!.email}',
+                    'Email: ${sessionManager.user!.email}',
                     style: AppTextStyles.text,
                   ),
                   const SizedBox(height: 40),
@@ -94,7 +95,7 @@ class HomePageState extends State<HomePage> {
                     width: screenSize.width * 0.8,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: viewModel.isLoading ? null : () => _handleLogout(context, viewModel),
+                      onPressed: sessionManager.isLoading ? null : () => _handleLogout(context, sessionManager),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         shape: RoundedRectangleBorder(

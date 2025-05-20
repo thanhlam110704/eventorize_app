@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:eventorize_app/data/models/user.dart';
 import 'package:eventorize_app/core/constants/api_url.dart';
-import 'package:eventorize_app/common/network/dio_client.dart';
-import 'package:eventorize_app/data/api/secure_storage_service.dart';
+import 'package:eventorize_app/common/services/dio_client.dart';
+import 'package:eventorize_app/common/services/secure_storage.dart';
 
 class UserApi {
   final DioClient _dioClient;
@@ -55,7 +55,7 @@ class UserApi {
     }
     final token = data['access_token'] as String? ??
         (throw Exception('Registration failed: Missing token'));
-    await SecureStorageService.saveToken(token);
+    await SecureStorage.saveToken(token);
 
     return {
       'user': User.fromJson(data),
@@ -85,7 +85,7 @@ class UserApi {
       }
       final token = data['access_token'] as String? ??
           (throw Exception('Google SSO failed: Missing token'));
-      await SecureStorageService.saveToken(token);
+      await SecureStorage.saveToken(token);
 
       return {
         'user': User.fromJson(data),
@@ -167,7 +167,7 @@ class UserApi {
     }
     final token = data['access_token'] as String? ??
         (throw Exception('Login failed: Missing token'));
-    await SecureStorageService.saveToken(token);
+    await SecureStorage.saveToken(token);
     return {
       'user': User.fromJson(data),
       'token': token,
@@ -175,7 +175,7 @@ class UserApi {
   }
 
   Future<void> logout() async {
-    await SecureStorageService.clearAll();
+    await SecureStorage.clearAll();
   }
 
   Future<User> getMe({String? fields}) async {

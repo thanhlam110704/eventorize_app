@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/widgets/custom_field_input.dart';
 import 'package:eventorize_app/common/widgets/toast_custom.dart';
 import 'package:eventorize_app/features/auth/view_model/login_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/data/api/google_signin_api.dart';
@@ -55,14 +55,14 @@ class LoginPageState extends State<LoginPage> {
         password: passwordController.text.trim(),
       );
       if (mounted && viewModel.user != null) {
-        context.read<HomeViewModel>().setUser(viewModel.user!);
+        context.read<SessionManager>().setUser(viewModel.user!);
         ToastCustom.show(
           context: context,
           title: 'Login successful!',
           description: 'Welcome, ${viewModel.user!.fullname}!',
           type: ToastificationType.success,
         );
-        context.goNamed('home');
+        context.goNamed('account');
       }
     }
   }
@@ -96,7 +96,6 @@ class LoginPageState extends State<LoginPage> {
                 SingleChildScrollView(
                   child: Container(
                     width: screenSize.width,
-                    height: screenSize.height,
                     color: AppColors.background,
                     padding: EdgeInsets.fromLTRB(
                       isSmallScreen ? 16 : 24,
@@ -283,14 +282,14 @@ class LoginPageState extends State<LoginPage> {
                     );
                     viewModel.clearError();
                   } else if (viewModel.user != null && mounted) {
-                    context.read<HomeViewModel>().setUser(viewModel.user!);
+                    context.read<SessionManager>().setUser(viewModel.user!);
                     ToastCustom.show(
                       context: context,
                       title: 'Login successful!',
                       description: 'Welcome, ${viewModel.user!.fullname}!',
                       type: ToastificationType.success,
                     );
-                    context.goNamed('home');
+                    context.goNamed('account');
                   }
                 }
               },

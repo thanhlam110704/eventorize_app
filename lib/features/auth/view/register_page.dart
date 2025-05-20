@@ -4,12 +4,12 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:toastification/toastification.dart';
+import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/widgets/custom_field_input.dart';
 import 'package:eventorize_app/common/widgets/toast_custom.dart';
 import 'package:eventorize_app/features/auth/view_model/register_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
 import 'package:eventorize_app/data/api/google_signin_api.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -66,6 +66,7 @@ class RegisterPageState extends State<RegisterPage> {
         password: passwordController.text.trim(),
       );
       if (mounted && viewModel.user != null) {
+        context.read<SessionManager>().setUser(viewModel.user!);
         ToastCustom.show(
           context: context,
           title: 'Registration successful!',
@@ -110,7 +111,6 @@ class RegisterPageState extends State<RegisterPage> {
                 SingleChildScrollView(
                   child: Container(
                     width: screenSize.width,
-                    height: screenSize.height,
                     color: AppColors.background,
                     padding: EdgeInsets.fromLTRB(
                       isSmallScreen ? 16 : 24,
@@ -325,13 +325,13 @@ class RegisterPageState extends State<RegisterPage> {
                     );
                     viewModel.clearError();
                   } else if (viewModel.user != null && mounted) {
-                    context.read<HomeViewModel>().setUser(viewModel.user!);
+                    context.read<SessionManager>().setUser(viewModel.user!);
                     ToastCustom.show(
                       context: context,
                       title: 'Registration successful!',
                       type: ToastificationType.success,
                     );
-                    context.goNamed('home');
+                    context.goNamed('account');
                   }
                 }
               },

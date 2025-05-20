@@ -4,7 +4,7 @@ import 'colors.dart';
 class AppTextStyles {
   static const TextStyle title = TextStyle(
     fontFamily: 'Roboto',
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w700,
     fontSize: 36,
     color: AppColors.black,
   );

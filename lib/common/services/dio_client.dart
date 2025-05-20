@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:eventorize_app/core/constants/api_url.dart';
-import 'package:eventorize_app/common/network/interceptors.dart';
-import 'package:eventorize_app/core/exceptions/exceptions.dart';
+import 'package:eventorize_app/common/services/interceptors.dart';
+import 'package:eventorize_app/core/utils/exceptions.dart';
 
 class DioClient {
   final Dio _dio;
@@ -9,7 +9,7 @@ class DioClient {
   DioClient() : _dio = Dio() {
     _dio.options.baseUrl = ApiUrl.baseUrlBE;
     _dio.options.connectTimeout = const Duration(seconds: 5);
-    _dio.options.receiveTimeout = const Duration(seconds: 15);
+    _dio.options.receiveTimeout = const Duration(seconds: 10);
 
     _dio.interceptors.addAll([
       LoggerInterceptor(),
@@ -23,7 +23,6 @@ class DioClient {
             final statusCode = e.response!.statusCode;
             final data = e.response!.data;
 
-            // Parse backend error into CustomException
             if (data is Map<String, dynamic>) {
               return handler.reject(
                 DioException(
@@ -35,7 +34,6 @@ class DioClient {
               );
             }
 
-            // Handle common HTTP error cases
             String detail = data is Map<String, dynamic> && data['message'] != null
                 ? data['message'] as String
                 : 'An unknown error occurred';

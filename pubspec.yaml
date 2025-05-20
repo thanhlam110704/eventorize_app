@@ -14,6 +14,7 @@ dependencies:
   equatable: ^2.0.5
   get_it: ^7.7.0 
   intl: ^0.20.2
+  shared_preferences: ^2.2.3
   floor: ^1.5.0
   flutter_hooks: ^0.21.0
   cached_network_image: ^3.4.1 
@@ -53,6 +54,12 @@ flutter:
     - family: Roboto
       fonts:
         - asset: assets/fonts/Roboto-VariableFont_wdth,wght.ttf
+        - asset: assets/fonts/Roboto-Black.ttf
+          weight: 900
+        - asset: assets/fonts/Roboto-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Roboto-SemiBold.ttf
+          weight: 600
         - asset: assets/fonts/Roboto-Italic-VariableFont_wdth,wght.ttf
           style: italic
 

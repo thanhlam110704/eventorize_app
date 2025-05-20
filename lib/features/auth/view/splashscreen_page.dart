@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
-import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
 
 class SplashScreenPage extends StatefulWidget {
   const SplashScreenPage({super.key});
@@ -27,10 +27,10 @@ class SplashScreenPageState extends State<SplashScreenPage> {
   }
 
   Future<void> _checkSession(BuildContext context) async {
-    final viewModel = context.read<HomeViewModel>();
-    await viewModel.checkSession();
+    final sessionManager = context.read<SessionManager>();
+    await sessionManager.checkSession();
     if (context.mounted) {
-      if (viewModel.user != null) {
+      if (sessionManager.user != null) {
         context.pushReplacementNamed('home');
       } else {
         context.pushReplacementNamed('login');
@@ -48,8 +48,8 @@ class SplashScreenPageState extends State<SplashScreenPage> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Container(
-            width: screenSize.width,
             height: screenSize.height,
+            width: screenSize.width,
             padding: EdgeInsets.fromLTRB(
               isSmallScreen ? 16 : 24,
               isSmallScreen ? 40 : 80,

@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:eventorize_app/core/configs/theme/text_styles.dart';
-import 'package:eventorize_app/core/configs/theme/colors.dart';
+import 'package:provider/provider.dart';
+import 'package:toastification/toastification.dart';
+import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/common/widgets/bottom_nav_bar.dart';
+import 'package:eventorize_app/common/widgets/toast_custom.dart';
+import 'package:eventorize_app/core/configs/theme/colors.dart';
+import 'package:eventorize_app/core/configs/theme/text_styles.dart';
+import 'package:eventorize_app/data/models/user.dart';
 
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
@@ -14,14 +19,24 @@ class AccountPage extends StatefulWidget {
 class AccountPageState extends State<AccountPage> {
   static const smallScreenThreshold = 640.0;
   static const maxContentWidth = 600.0;
-  
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.mounted) {
+        context.read<SessionManager>().checkSession();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.width <= smallScreenThreshold;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           child: buildMainContainer(isSmallScreen, screenSize),
@@ -44,7 +59,6 @@ class AccountPageState extends State<AccountPage> {
   Widget buildMainContainer(bool isSmallScreen, Size screenSize) {
     return Container(
       width: screenSize.width,
-      height: screenSize.height,
       color: AppColors.background,
       padding: EdgeInsets.fromLTRB(
         isSmallScreen ? 16 : 24,
@@ -55,15 +69,43 @@ class AccountPageState extends State<AccountPage> {
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: maxContentWidth),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              buildHeader(),
-              const SizedBox(height: 20),
-              buildUserCard(),
-              const SizedBox(height: 30),
-              buildPreferences(),
-            ],
+          child: Consumer<SessionManager>(
+            builder: (context, sessionManager, child) {
+              if (sessionManager.errorMessage != null && mounted) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    ToastCustom.show(
+                      context: context,
+                      title: sessionManager.errorTitle ?? 'Error',
+                      description: sessionManager.errorMessage!,
+                      type: ToastificationType.error,
+                    );
+                    sessionManager.clearError();
+                    if (!sessionManager.isLoading && sessionManager.user == null) {
+                      context.pushReplacementNamed('login');
+                    }
+                  }
+                });
+              }
+              if (sessionManager.isCheckingSession || sessionManager.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              
+              final user = context.read<SessionManager>().user;
+              if (user == null) {
+                return const SizedBox.shrink();
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  buildHeader(),
+                  const SizedBox(height: 15),
+                  buildUserCard(user),
+                  const SizedBox(height: 25),
+                  buildSetting(context, sessionManager),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -73,20 +115,22 @@ class AccountPageState extends State<AccountPage> {
   Widget buildHeader() {
     return Text(
       'Account',
-      style: AppTextStyles.title.copyWith(fontSize: 28),
+      style: AppTextStyles.title.copyWith(fontSize: 36, fontWeight: FontWeight.w700),
     );
   }
 
-  Widget buildUserCard() {
-    final String initials = 'LT';
-    final String name = 'Lâm Tuấn Thành';
-    final String email = 'ltthanh@1107@gmail.com';
+  Widget buildUserCard(User user) {
+    final String initials = user.fullname.isNotEmpty
+        ? user.fullname.split(' ').map((e) => e[0]).take(2).join()
+        : 'N/A';
+    final String name = user.fullname;
+    final String email = user.email;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
             color: Colors.black12,
@@ -99,21 +143,25 @@ class AccountPageState extends State<AccountPage> {
         children: [
           CircleAvatar(
             radius: 34,
-            backgroundColor: Colors.black,
-            child: Text(
-              initials,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-              ),
-            ),
+            backgroundColor: user.avatar == null ? Colors.black : null,
+            backgroundImage: user.avatar != null ? NetworkImage(user.avatar!) : null,
+            child: user.avatar == null
+                ? Text(
+                    initials,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                    ),
+                  )
+                : null,
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: AppTextStyles.text),
+                Text(name, style: AppTextStyles.text.copyWith(
+                      fontWeight: FontWeight.w700)),
                 const SizedBox(height: 4),
                 Text(email, style: AppTextStyles.text),
                 const SizedBox(height: 12),
@@ -121,10 +169,10 @@ class AccountPageState extends State<AccountPage> {
                   width: double.infinity,
                   child: OutlinedButton(
                     onPressed: () {
-                      context.goNamed("detail-info");
+                      context.goNamed("detail-profile");
                     },
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.black), // black border
+                      side: const BorderSide(color: Colors.black),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -132,7 +180,7 @@ class AccountPageState extends State<AccountPage> {
                     child: Text(
                       'Detail profile',
                       style: AppTextStyles.text.copyWith(
-                        fontWeight: FontWeight.w600, // bold text
+                      fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
@@ -144,62 +192,129 @@ class AccountPageState extends State<AccountPage> {
       ),
     );
   }
-  Widget buildPreferences() {
+
+  Widget buildSetting(BuildContext context, SessionManager sessionManager) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Preferences',
-          style: AppTextStyles.title.copyWith(fontSize: 20),
+          'Settings',
+          style: AppTextStyles.title.copyWith(fontSize: 20, fontWeight:FontWeight.w700),
         ),
-        const SizedBox(height: 20),
-        buildPreferenceItem(
-          icon: Icons.location_on_outlined,
+        const SizedBox(height: 10),
+        buildSettingItem(
+          icon: Icons.location_on,
           title: 'Location',
           onTap: () {},
+          iconColor: Colors.black,
+          textColor: Colors.black,
+          showTrailing: true,
         ),
         buildDivider(),
-        buildPreferenceItem(
+        const SizedBox(height: 20),
+        buildSettingItem(
           icon: Icons.apartment_outlined,
           title: 'Organization',
           onTap: () {},
+          iconColor: Colors.black,
+          textColor: Colors.black,
+          showTrailing: true,
         ),
         buildDivider(),
-        buildPreferenceItem(
-          icon: Icons.settings_outlined,
-          title: 'Settings',
+        const SizedBox(height: 20),
+        buildSettingItem(
+          icon: Icons.account_circle,
+          title: 'Linked accounts',
           onTap: () {},
+          iconColor: Colors.black,
+          textColor: Colors.black,
+          showTrailing: true,
         ),
         buildDivider(),
-        buildPreferenceItem(
-          icon: Icons.logout,
-          title: 'Log out',
-          onTap: () {},
+        const SizedBox(height: 125),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: () async {
+              await sessionManager.logout();
+              if (context.mounted) {
+                ToastCustom.show(
+                  context: context,
+                  title: 'Logged out successfully!',
+                  type: ToastificationType.success,
+                );
+                context.pushReplacementNamed('login');
+              }
+            },
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Colors.red),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.logout,
+                  color: Colors.red,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Log out',
+                  style: AppTextStyles.text.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.red,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-        buildDivider(),
+        const SizedBox(height: 10),
+        Center(
+          child: Text(
+            'Version 1.0.0',
+            style: AppTextStyles.text.copyWith(
+              fontSize: 12,
+              color: Colors.black54,
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  Widget buildPreferenceItem({required IconData icon, required String title, required VoidCallback onTap}) {
+  Widget buildSettingItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    required Color iconColor,
+    required Color textColor,
+    required bool showTrailing,
+  }) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: Icon(icon, color: Colors.black87),
+      leading: Icon(icon, color: iconColor),
       title: Text(
         title,
-        style: AppTextStyles.text.copyWith(fontWeight: FontWeight.w600),
+        style: AppTextStyles.text.copyWith(
+          fontWeight: FontWeight.w600,
+          color: textColor,
+        ),
       ),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: showTrailing ? const Icon(Icons.chevron_right, size: 15, color: AppColors.darkGrey,) : null,
       onTap: onTap,
     );
   }
 
   Widget buildDivider() {
     return const Divider(
-      thickness: 1,
+      thickness: 0.5,
       height: 1,
-      color: Colors.black12,
+      color: Color(0xFF9B9B9B), 
     );
   }
-  
 }

@@ -15,4 +15,9 @@ class ApiUrl {
   static String get googleSSOAndroid => '/v1/auth/google/android';
   static const String verifyEmail = '/v1/auth/verify-email';
   static const String resendVerificationEmail = '/v1/auth/resend-verification-email';
-} 
+
+  // New endpoints
+  static String get getProvinces => '/v1/locations/province';
+  static String get getDistricts => '/v1/locations/districts';
+  static String get getWards => '/v1/locations/wards';
+}

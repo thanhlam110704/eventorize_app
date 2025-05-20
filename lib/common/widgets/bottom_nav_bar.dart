@@ -17,7 +17,6 @@ class _BottomNavBarState extends State<BottomNavBar> {
       currentIndex = index;
     });
     
-    // Navigation for each index
     switch (index) {
       case 0:
         context.goNamed("home");
