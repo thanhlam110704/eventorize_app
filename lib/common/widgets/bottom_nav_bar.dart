@@ -12,7 +12,7 @@ class BottomNavBar extends StatelessWidget {
     int currentIndex = 0;
     if (location.contains('/home')) {
       currentIndex = 0;
-    } else if (location.contains('/favorites')) {
+    } else if (location.contains('/saved')) {
       currentIndex = 1;
     } else if (location.contains('/tickets')) {
       currentIndex = 2;
@@ -33,7 +33,7 @@ class BottomNavBar extends StatelessWidget {
             context.go('/home');
             break;
           case 1:
-            context.go('/favorites');
+            context.go('/saved');
             break;
           case 2:
             context.go('/tickets');

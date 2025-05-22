@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/widgets/bottom_nav_bar.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
@@ -48,7 +49,7 @@ class AccountPageState extends State<AccountPage> {
       color: AppColors.background,
       padding: EdgeInsets.fromLTRB(
         isSmallScreen ? 16 : 24,
-        isSmallScreen ? 40 : 80,
+        isSmallScreen ? 20 : 40,
         isSmallScreen ? 16 : 24,
         isSmallScreen ? 24 : 32,
       ),
@@ -73,7 +74,7 @@ class AccountPageState extends State<AccountPage> {
   Widget buildHeader() {
     return Text(
       'Account',
-      style: AppTextStyles.title.copyWith(fontSize: 28),
+      style: AppTextStyles.title.copyWith(fontSize: 36),
     );
   }
 
@@ -82,29 +83,25 @@ class AccountPageState extends State<AccountPage> {
     final String name = 'Lâm Tuấn Thành';
     final String email = 'ltthanh@1107@gmail.com';
 
-    return Container(
+    return SizedBox(
+    height: 180,
+    child: Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         children: [
           CircleAvatar(
-            radius: 34,
+            radius: 50,
             backgroundColor: Colors.black,
             child: Text(
               initials,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 22,
+                fontSize: 32,
+                fontWeight: FontWeight.w600
               ),
             ),
           ),
@@ -113,7 +110,10 @@ class AccountPageState extends State<AccountPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: AppTextStyles.text),
+                Text(name, style: AppTextStyles.text.copyWith(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                )),
                 const SizedBox(height: 4),
                 Text(email, style: AppTextStyles.text),
                 const SizedBox(height: 12),
@@ -124,7 +124,10 @@ class AccountPageState extends State<AccountPage> {
                       context.goNamed("detail-info");
                     },
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.black), // black border
+                      side: const BorderSide(
+                        color: Colors.black,
+                        width: 2,
+                      ), 
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -142,6 +145,7 @@ class AccountPageState extends State<AccountPage> {
           ),
         ],
       ),
+    )
     );
   }
   
@@ -150,79 +154,114 @@ class AccountPageState extends State<AccountPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Setting',
-          style: AppTextStyles.title.copyWith(fontSize: 20),
+          'Settings',
+          style: AppTextStyles.title.copyWith(fontSize: 22),
         ),
         const SizedBox(height: 20),
         buildPreferenceItem(
-          icon: Icons.location_on_outlined,
+          icon: MdiIcons.mapMarker,
           title: 'Location',
           onTap: () {},
         ),
         buildDivider(),
+        const SizedBox(height: 20),
         buildPreferenceItem(
-          icon: Icons.apartment_outlined,
+          icon: MdiIcons.domain,
           title: 'Organization',
           onTap: () {},
         ),
         buildDivider(),
+        const SizedBox(height: 20),
         buildPreferenceItem(
-          icon: Icons.account_circle,
+          icon: MdiIcons.accountCircle,
           title: 'Linked accounts',
           onTap: () {},
         ),
         buildDivider(),
+        const SizedBox(height: 60),
         buildLogoutItem(),
-        buildDivider(),
+        const SizedBox(height: 5),
       ],
     );
   }
 
-  Widget buildLogoutItem() {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(Icons.logout, color: Colors.red),
-      title: Row(
-        children: [
-         Text(
-            'Log out',
-            style: AppTextStyles.text.copyWith(
-              fontWeight: FontWeight.w600,
-              color: Colors.red,
+  Widget buildPreferenceItem({required IconData icon, required String title, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: Colors.black87),
+            const SizedBox(width: 8), 
+            Expanded(
+              child: Text(
+                title,
+                style: AppTextStyles.text.copyWith(fontWeight: FontWeight.w600),
+              ),
             ),
-          ),
-          const Spacer(),
-          Text(
-            'Version 1.0.0',
-            style: AppTextStyles.text.copyWith(
-              fontSize: 12,
-              color: Colors.grey,
-            ),
-          ),
-        ],
+            const Icon(Icons.chevron_right),
+          ],
+        ),
       ),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: () {},
     );
   }
 
-  Widget buildPreferenceItem({required IconData icon, required String title, required VoidCallback onTap}) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(icon, color: Colors.black87),
-      title: Text(
-        title,
-        style: AppTextStyles.text.copyWith(fontWeight: FontWeight.w600),
-      ),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: onTap,
-    );
+  Widget buildLogoutItem() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: () {
+              // todo: logout
+            },
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.red,
+              side: BorderSide(color: Color(0xFFEC0303)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+             padding: EdgeInsets.symmetric(vertical: 14),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.only(right: 16), 
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.logout, color: Color(0xFFEC0303)),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Log out',
+                    style: AppTextStyles.text.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFFEC0303),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),  
+        Center(
+          child: Text(
+            'Version 1.0.0',
+            style: AppTextStyles.text.copyWith(
+              fontSize: 12,
+            ),
+          ),
+        ),
+      ],  
+    );  
   }
 
   Widget buildDivider() {
     return const Divider(
+      height: 0,
       thickness: 1,
-      height: 1,
       color: Colors.black12,
     );
   }

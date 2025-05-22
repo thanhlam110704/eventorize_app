@@ -100,18 +100,22 @@ class DetailprofilePageState extends State<DetailprofilePage> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
+          height: 30,
+          width: 30,
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.white,
+            border: Border.all(color: Colors.black12),
             borderRadius: BorderRadius.circular(10),
           ),
           child: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back, size: 20),
+            padding: EdgeInsets.zero,
             onPressed: () => Navigator.pop(context),
           ),
         ),
         const Expanded(
           child: Padding(
-            padding: EdgeInsets.only(right: 40), // balances the icon width visually
+            padding: EdgeInsets.only(right: 45), 
             child: Center(
               child: Text(
                 "Detail info",
@@ -126,6 +130,8 @@ class DetailprofilePageState extends State<DetailprofilePage> {
 
   Widget buildAvatar() {
     return Center(
+      child: Padding(
+      padding: const EdgeInsets.only(right: 5),
       child: Column(
         children: [
           const CircleAvatar(
@@ -135,8 +141,8 @@ class DetailprofilePageState extends State<DetailprofilePage> {
               "LT",
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+                fontSize: 36,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -164,6 +170,7 @@ class DetailprofilePageState extends State<DetailprofilePage> {
           ),
         ],
       ),
+      )
     );
   }
 

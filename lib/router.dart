@@ -8,15 +8,21 @@ import 'package:eventorize_app/features/auth/view/verify_page.dart';
 import 'package:eventorize_app/features/auth/view/account_page.dart';
 import 'package:eventorize_app/features/auth/view/eventdetail_page.dart';
 import 'package:eventorize_app/features/auth/view/detailprofile_page.dart';
+import 'package:eventorize_app/features/auth/view/saved_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: '/register',
+    initialLocation: '/event-detail',
     routes: [
       GoRoute(
         path: '/splashscreen',
         name: 'splashscreen',
         builder: (context, state) => const SplashScreenPage(),
+      ),
+      GoRoute(
+        path: '/saved',
+        name: 'saved',
+        builder: (context, state) => const SavedPage(),
       ),
       GoRoute(
         path: '/event-detail',

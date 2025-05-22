@@ -52,6 +52,12 @@ flutter:
     - family: Roboto
       fonts:
         - asset: assets/fonts/Roboto-VariableFont_wdth,wght.ttf
+        - asset: assets/fonts/Roboto-Black.ttf
+          weight: 900
+        - asset: assets/fonts/Roboto-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Roboto-SemiBold.ttf
+          weight: 600
         - asset: assets/fonts/Roboto-Italic-VariableFont_wdth,wght.ttf
           style: italic
 
@@ -76,4 +82,7 @@ flutter:
   assets:
   - assets/icons/logo_google.png
   - .env/dev.env
+  - assets/icons/event.png
   - assets/images/verify.png
+  - assets/images/event1.png
+  - assets/images/fpt.png
