@@ -15,7 +15,7 @@ class DetailProfileViewModel extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  bool _isDataLoaded = false; // Thêm trạng thái xác nhận dữ liệu đã tải
+  bool _isDataLoaded = false; 
   bool get isDataLoaded => _isDataLoaded;
 
   User? user;
@@ -74,7 +74,7 @@ class DetailProfileViewModel extends ChangeNotifier {
 
     _isLoading = false;
     if (_errorState.errorMessage == null && _provinces.isNotEmpty) {
-      _isDataLoaded = true; // Đặt là true khi dữ liệu tỉnh/thành tải thành công
+      _isDataLoaded = true; 
     }
     notifyListeners();
   }
@@ -101,7 +101,7 @@ class DetailProfileViewModel extends ChangeNotifier {
 
     _isLoading = false;
     if (_errorState.errorMessage == null && _districts.isNotEmpty) {
-      // Không cần đặt _isDataLoaded lại ở đây, vì nó đã được xử lý trong _loadLocationData
+      
     }
     notifyListeners();
   }
@@ -127,7 +127,7 @@ class DetailProfileViewModel extends ChangeNotifier {
 
     _isLoading = false;
     if (_errorState.errorMessage == null && _wards.isNotEmpty) {
-      // Không cần đặt _isDataLoaded lại ở đây, vì nó đã được xử lý trong _loadLocationData
+     
     }
     notifyListeners();
   }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:toastification/toastification.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/common/widgets/bottom_nav_bar.dart';
 import 'package:eventorize_app/common/widgets/toast_custom.dart';
@@ -88,10 +90,10 @@ class AccountPageState extends State<AccountPage> {
                 });
               }
               if (sessionManager.isCheckingSession || sessionManager.isLoading) {
-                return const Center(child: CircularProgressIndicator());
+                return buildSkeletonUI(isSmallScreen, screenSize);
               }
-              
-              final user = context.read<SessionManager>().user;
+
+              final user = sessionManager.user;
               if (user == null) {
                 return const SizedBox.shrink();
               }
@@ -109,6 +111,138 @@ class AccountPageState extends State<AccountPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget buildSkeletonUI(bool isSmallScreen, Size screenSize) {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            height: 36,
+            width: 150,
+            color: Colors.white,
+          ),
+          const SizedBox(height: 15),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 68,
+                  height: 68,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        height: 20,
+                        width: 120,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        height: 16,
+                        width: 200,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        height: 36,
+                        width: double.infinity,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 25),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 20,
+                width: 100,
+                color: Colors.white,
+              ),
+              const SizedBox(height: 10),
+              buildSkeletonSettingItem(),
+              const Divider(
+                thickness: 0.5,
+                height: 1,
+                color: Colors.white,
+              ),
+              const SizedBox(height: 20),
+              buildSkeletonSettingItem(),
+              const Divider(
+                thickness: 0.5,
+                height: 1,
+                color: Colors.white,
+              ),
+              const SizedBox(height: 20),
+              buildSkeletonSettingItem(),
+              const Divider(
+                thickness: 0.5,
+                height: 1,
+                color: Colors.white,
+              ),
+              const SizedBox(height: 125),
+              Container(
+                height: 48,
+                width: double.infinity,
+                color: Colors.white,
+              ),
+              const SizedBox(height: 10),
+              Center(
+                child: Container(
+                  height: 12,
+                  width: 80,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildSkeletonSettingItem() {
+    return Row(
+      children: [
+        Container(
+          width: 24,
+          height: 24,
+          color: Colors.white,
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Container(
+            height: 20,
+            color: Colors.white,
+          ),
+        ),
+        Container(
+          width: 15,
+          height: 15,
+          color: Colors.white,
+        ),
+      ],
     );
   }
 
@@ -141,35 +275,56 @@ class AccountPageState extends State<AccountPage> {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 34,
-            backgroundColor: user.avatar == null ? Colors.black : null,
-            backgroundImage: user.avatar != null ? NetworkImage(user.avatar!) : null,
-            child: user.avatar == null
-                ? Text(
-                    initials,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                    ),
-                  )
-                : null,
+          CachedNetworkImage(
+            imageUrl: user.avatar ?? '',
+            imageBuilder: (context, imageProvider) => CircleAvatar(
+              radius: 34,
+              backgroundImage: imageProvider,
+            ),
+            placeholder: (context, url) => Shimmer.fromColors(
+              baseColor: Colors.grey[300]!,
+              highlightColor: Colors.grey[100]!,
+              child: Container(
+                width: 68,
+                height: 68,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+            errorWidget: (context, url, error) => CircleAvatar(
+              radius: 34,
+              backgroundColor: Colors.grey[300],
+              child: Text(
+                initials,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                ),
+              ),
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: AppTextStyles.text.copyWith(
-                      fontWeight: FontWeight.w700)),
+                Text(
+                  name,
+                  style: AppTextStyles.text.copyWith(fontWeight: FontWeight.w700),
+                ),
                 const SizedBox(height: 4),
-                Text(email, style: AppTextStyles.text),
+                Text(
+                  email,
+                  style: AppTextStyles.text,
+                ),
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
                     onPressed: () {
-                      context.goNamed("detail-profile");
+                      context.pushNamed("detail-profile");
                     },
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.black),
@@ -180,7 +335,7 @@ class AccountPageState extends State<AccountPage> {
                     child: Text(
                       'Detail profile',
                       style: AppTextStyles.text.copyWith(
-                      fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
@@ -199,7 +354,7 @@ class AccountPageState extends State<AccountPage> {
       children: [
         Text(
           'Settings',
-          style: AppTextStyles.title.copyWith(fontSize: 20, fontWeight:FontWeight.w700),
+          style: AppTextStyles.title.copyWith(fontSize: 20, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 10),
         buildSettingItem(
@@ -305,7 +460,9 @@ class AccountPageState extends State<AccountPage> {
           color: textColor,
         ),
       ),
-      trailing: showTrailing ? const Icon(Icons.chevron_right, size: 15, color: AppColors.darkGrey,) : null,
+      trailing: showTrailing
+          ? const Icon(Icons.chevron_right, size: 15, color: AppColors.darkGrey)
+          : null,
       onTap: onTap,
     );
   }
@@ -314,7 +471,7 @@ class AccountPageState extends State<AccountPage> {
     return const Divider(
       thickness: 0.5,
       height: 1,
-      color: Color(0xFF9B9B9B), 
+      color: Color(0xFF9B9B9B),
     );
   }
 }

@@ -64,7 +64,7 @@ class ErrorHandler {
     } else {
       state.errorMessage = error.toString().startsWith(errorPrefix)
           ? error.toString()
-          : 'An unexpected error occurred';
+          : 'An unexpected error occurred.';
     }
     state.isSuccess = false;
     state.user = null;
