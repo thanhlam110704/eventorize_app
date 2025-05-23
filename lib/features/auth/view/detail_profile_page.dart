@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart'; 
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:toastification/toastification.dart'; 
+import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/common/widgets/labeled_input.dart';
-import 'package:eventorize_app/common/widgets/toast_custom.dart'; 
+import 'package:eventorize_app/common/widgets/toast_custom.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/data/models/user.dart';
 import 'package:eventorize_app/features/auth/view_model/detail_profile_view_model.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class DetailProfilePage extends StatefulWidget {
   const DetailProfilePage({super.key});
@@ -51,16 +52,30 @@ class DetailProfilePageState extends State<DetailProfilePage> {
 
     return Consumer<DetailProfileViewModel>(
       builder: (context, viewModel, child) {
-        if (viewModel.errorMessage != null && mounted) {
+        if (viewModel.isUpdateSuccessful && mounted) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
+            if (mounted && viewModel.isUpdateSuccessful) {
               ToastCustom.show(
                 context: context,
-                title: 'Error',
+                title: 'Update successful!',
+                description: 'Your profile has been updated, ${viewModel.user!.fullname}!',
+                type: ToastificationType.success,
+              );
+              viewModel.clearUpdateStatus();
+              viewModel.clearError();
+            }
+          });
+        }
+        else if (viewModel.errorMessage != null && mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && viewModel.errorMessage != null) {
+              ToastCustom.show(
+                context: context,
+                title: viewModel.errorTitle ?? 'Error',
                 description: viewModel.errorMessage!,
                 type: ToastificationType.error,
               );
-              viewModel.clearError(); 
+              viewModel.clearError();
             }
           });
         }
@@ -70,10 +85,22 @@ class DetailProfilePageState extends State<DetailProfilePage> {
         }
         return Scaffold(
           backgroundColor: AppColors.white,
-          body: SafeArea(
-            child: SingleChildScrollView(
-              child: buildMainContainer(isSmallScreen, screenSize, viewModel),
-            ),
+          body: Stack(
+            children: [
+              SingleChildScrollView(
+                child: buildMainContainer(isSmallScreen, screenSize, viewModel),
+              ),
+              if (viewModel.isLoading)
+                Container(
+                  color: Colors.black.withAlpha(128),
+                  child: const Center(
+                    child: SpinKitFadingCircle(
+                      color: AppColors.primary,
+                      size: 50.0,
+                    ),
+                  ),
+                ),
+            ],
           ),
         );
       },
@@ -89,7 +116,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
             width: screenSize.width,
             color: Colors.white,
             padding: EdgeInsets.fromLTRB(
-              isSmallScreen ? 16 : 24,
+              isSmallScreen ?16 : 24,
               isSmallScreen ? 40 : 80,
               isSmallScreen ? 16 : 24,
               isSmallScreen ? 24 : 32,
@@ -201,7 +228,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
           child: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
-              context.pop(); 
+              context.pop();
             },
           ),
         ),
@@ -224,7 +251,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
     if (user == null) return const SizedBox.shrink();
     final String initials = user.fullname.isNotEmpty
         ? user.fullname.split(' ').map((e) => e[0]).take(2).join()
-        : 'N/A'; 
+        : 'N/A';
 
     return Center(
       child: Column(

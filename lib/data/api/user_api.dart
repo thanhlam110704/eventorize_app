@@ -257,7 +257,7 @@ class UserApi {
         if (instagram != null) 'instagram': instagram,
       },
     );
-    return User.fromJson(response.data['data']);
+    return User.fromJson(response.data);
   }
 
   Future<void> deleteUser(String id) async {

@@ -15,8 +15,11 @@ class DetailProfileViewModel extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  bool _isDataLoaded = false; 
+  bool _isDataLoaded = false;
   bool get isDataLoaded => _isDataLoaded;
+
+  bool _isUpdateSuccessful = false;
+  bool get isUpdateSuccessful => _isUpdateSuccessful;
 
   User? user;
   final fullnameController = TextEditingController();
@@ -74,7 +77,7 @@ class DetailProfileViewModel extends ChangeNotifier {
 
     _isLoading = false;
     if (_errorState.errorMessage == null && _provinces.isNotEmpty) {
-      _isDataLoaded = true; 
+      _isDataLoaded = true;
     }
     notifyListeners();
   }
@@ -100,9 +103,6 @@ class DetailProfileViewModel extends ChangeNotifier {
     );
 
     _isLoading = false;
-    if (_errorState.errorMessage == null && _districts.isNotEmpty) {
-      
-    }
     notifyListeners();
   }
 
@@ -126,9 +126,6 @@ class DetailProfileViewModel extends ChangeNotifier {
     );
 
     _isLoading = false;
-    if (_errorState.errorMessage == null && _wards.isNotEmpty) {
-     
-    }
     notifyListeners();
   }
 
@@ -163,32 +160,36 @@ class DetailProfileViewModel extends ChangeNotifier {
     if (userId == null || userId.isEmpty) {
       _errorState.errorTitle = 'Error';
       _errorState.errorMessage = 'User ID is missing. Please try again.';
+      _isUpdateSuccessful = false;
       notifyListeners();
       return;
     }
 
     _isLoading = true;
+    _isUpdateSuccessful = false;
     ErrorHandler.clearError(_errorState);
     notifyListeners();
 
     await _executeApiCall(
-      () => userRepository.editUser(
-        userId,
-        fullname: fullnameController.text,
-        phone: phoneController.text,
-        city: selectedCity,
-        district: selectedDistrict,
-        ward: selectedWard,
-      ),
-      'Failed to update profile',
-      (_) {
-        final sessionManager = context.read<SessionManager>();
-        sessionManager.updateUser();
-        user = sessionManager.user;
-        notifyListeners();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated successfully!')),
+      () async {
+        final updatedUser = await userRepository.editUser(
+          userId,
+          fullname: fullnameController.text,
+          phone: phoneController.text,
+          city: selectedCity,
+          district: selectedDistrict,
+          ward: selectedWard,
         );
+        return updatedUser;
+      },
+      'Failed to update profile',
+      (updatedUser) {
+        final sessionManager = context.read<SessionManager>();
+        sessionManager.setUser(updatedUser as User);
+        user = updatedUser;
+        _isUpdateSuccessful = true;
+        ErrorHandler.clearError(_errorState);
+        notifyListeners();
       },
     );
 
@@ -206,12 +207,19 @@ class DetailProfileViewModel extends ChangeNotifier {
       onSuccess(result);
     } catch (e) {
       ErrorHandler.handleError(e, errorPrefix, _errorState);
+      _isUpdateSuccessful = false;
       notifyListeners();
+      rethrow;
     }
   }
 
   void clearError() {
     ErrorHandler.clearError(_errorState);
+    notifyListeners();
+  }
+
+  void clearUpdateStatus() {
+    _isUpdateSuccessful = false;
     notifyListeners();
   }
 

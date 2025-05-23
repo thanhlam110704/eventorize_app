@@ -54,20 +54,18 @@ class ErrorHandler {
     ErrorState state,
   ) {
     state.errorTitle = 'Error';
-    if (error is DioException && error.error is CustomException) {
-      final customError = error.error as CustomException;
-      state.errorTitle = 'Error ${customError.status}';
-      state.errorMessage = customError.detail;
-    } else if (error is DioException) {
-      state.errorMessage =
-          error.response?.data?['detail'] ?? '$errorPrefix. Please try again.';
-    } else {
-      state.errorMessage = error.toString().startsWith(errorPrefix)
-          ? error.toString()
-          : 'An unexpected error occurred.';
-    }
     state.isSuccess = false;
-    state.user = null;
+    if (error is DioException) {
+      if (error.error is CustomException) {
+        final customError = error.error as CustomException;
+        state.errorTitle = 'Error ${customError.status}';
+        state.errorMessage = customError.detail;
+      } else {
+        state.errorMessage = error.response?.data?['detail'] ?? '$errorPrefix. Please try again.';
+      }
+    } else {
+      state.errorMessage = '$errorPrefix: ${error.toString()}';
+    }
   }
 
   static void clearError(ErrorState state) {
