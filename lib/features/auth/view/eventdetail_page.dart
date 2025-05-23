@@ -47,7 +47,6 @@ class EventDetailPageState extends State<EventDetailPage>{
     );
   }
 
-
   Widget buildMainContainer(bool isSmallScreen, Size screenSize) {
     return Container(
       width: screenSize.width,
@@ -122,7 +121,9 @@ class EventDetailPageState extends State<EventDetailPage>{
             fontWeight: FontWeight.bold,
           ),
         ),  
+
         const SizedBox(height: 4),
+
         Text(
           "Mastering Vendor Development & The Service Provider Lifecycle",
           style: TextStyle(
@@ -149,7 +150,9 @@ class EventDetailPageState extends State<EventDetailPage>{
               fontWeight: FontWeight.w700,
             ),
           ),
+
           const SizedBox(height: 8),
+
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -157,7 +160,9 @@ class EventDetailPageState extends State<EventDetailPage>{
                 margin: const EdgeInsets.only(top: 1),
                 child: const Icon(Icons.location_on, size: 24),
               ),
+
               const SizedBox(width: 8),
+
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -182,7 +187,9 @@ class EventDetailPageState extends State<EventDetailPage>{
                             "Show map",
                             style: AppTextStyles.text.copyWith(color: AppColors.linkBlue, fontSize: 14, fontWeight: FontWeight.w700),
                           ),
+
                           const SizedBox(width: 4),
+
                           Icon(
                             MdiIcons.chevronDown,
                             size: 14,
@@ -196,7 +203,9 @@ class EventDetailPageState extends State<EventDetailPage>{
               ),
             ],
           ),
+
           const SizedBox(height: 12),
+
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -204,7 +213,9 @@ class EventDetailPageState extends State<EventDetailPage>{
                 margin: const EdgeInsets.only(bottom: 4),
                 child: const Icon(Icons.calendar_today, size: 24),
               ),
+
               const SizedBox(width: 8),
+
               Expanded(
                 child: Text(
                   "Friday, Jan 10, 6:00 - Monday, Jan 13, 8:00",
@@ -213,7 +224,9 @@ class EventDetailPageState extends State<EventDetailPage>{
               ),
             ],
           ),
+
           const SizedBox(height: 12),
+
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -237,7 +250,6 @@ class EventDetailPageState extends State<EventDetailPage>{
     );
   }
 
-
   Widget buildEventDescription() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -255,7 +267,9 @@ class EventDetailPageState extends State<EventDetailPage>{
           "The event will gather migration agencies, immigration attorneys, global service providers, regional centers, project developers and investors from across the world.",
           style: AppTextStyles.text.copyWith(fontSize: 14, color: Color(0xFF9B9B9B)),
         ),
+
         const SizedBox(height: 9),
+
         GestureDetector(
           onTap: () {
             // to do
@@ -361,6 +375,7 @@ class EventDetailPageState extends State<EventDetailPage>{
             fontWeight: FontWeight.w700,
           ),
         ),
+
         const SizedBox(height: 16),
 
         GridView.builder(
@@ -440,7 +455,9 @@ class EventDetailPageState extends State<EventDetailPage>{
               ),
             ],
           ),
+
           const SizedBox(width: 12),
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -454,7 +471,9 @@ class EventDetailPageState extends State<EventDetailPage>{
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
+
                 const SizedBox(height: 4),
+
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start, 
                   children: [
@@ -462,7 +481,9 @@ class EventDetailPageState extends State<EventDetailPage>{
                       padding: const EdgeInsets.only(top: 2), 
                       child: Icon(Icons.calendar_today, size: 14, color: Colors.black),
                     ),
+
                     const SizedBox(width: 4),
+
                     Expanded(
                       child: Text(
                         'Friday, Jan 10, 6:00 - Monday, Jan 13, 8:00',
@@ -474,7 +495,9 @@ class EventDetailPageState extends State<EventDetailPage>{
                     ),
                  ],
                 ),
+
                 const SizedBox(height: 2),
+
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -549,15 +572,275 @@ class EventDetailPageState extends State<EventDetailPage>{
               ),
             ),
             onPressed: () {
-              // TODO: Handle ticket action
+              showDialog(
+                context: context,
+                barrierDismissible: true,
+                builder: (context) => const TicketDialog(),
+              );
             },
             child: const Text(
               "Get tickets", 
               style: TextStyle(
-              fontFamily: 'Roboto',
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
+                fontFamily: 'Roboto',
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
               )
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TicketDialog extends StatefulWidget {
+  const TicketDialog({super.key});
+
+  @override
+  State<TicketDialog> createState() => _TicketDialogState();
+}
+
+class _TicketDialogState extends State<TicketDialog> {
+  int nonMemberCount = 0;
+  int vipCount = 1;
+  final int vipPrice = 150000;
+
+  @override
+  Widget build(BuildContext context) {
+    int total = vipCount * vipPrice;
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(16),
+      child: Center(
+        child: UnconstrainedBox(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 350, maxHeight: 500),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            const Text(
+                              "Tickets",
+                              style: TextStyle(
+                                fontFamily: 'Roboto',
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+
+                            const Spacer(),
+
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                border: Border.all(color: Colors.black26),
+                                borderRadius: BorderRadius.circular(10), 
+                              ),
+                              child: IconButton(
+                                icon: const Icon(Icons.close, size: 24, color: Colors.black),
+                                padding: EdgeInsets.zero,
+                                splashRadius: 20,
+                                onPressed: () => Navigator.of(context).pop(),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        buildTicketOption(
+                          "Non - Member",
+                          "Free\nSales end on Feb 26, 2025",
+                          0,
+                          nonMemberCount,
+                          () => setState(() => nonMemberCount++),
+                          () => setState(() =>
+                              nonMemberCount = nonMemberCount > 0
+                                  ? nonMemberCount - 1
+                                  : 0),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        buildTicketOption(
+                          "VIP",
+                          "150.000 VND",
+                          vipPrice,
+                          vipCount,
+                          () => setState(() => vipCount++),
+                          () => setState(() =>
+                              vipCount = vipCount > 0 ? vipCount - 1 : 0),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const Divider(height: 1, thickness: 1, color: Colors.black12),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Total",
+                              style: AppTextStyles.text.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              "${total.toString().replaceAllMapped(RegExp(r"(\d)(?=(\d{3})+(?!\d))"), (match) => "${match[1]}.")} VND",
+                              style: AppTextStyles.text.copyWith(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        ElevatedButton(
+                          onPressed: () {
+                            // Checkout logic
+                          },
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(48),
+                            backgroundColor: const Color(0xFFEC0303),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)
+                            ),
+                          ),
+                          child: const Text(
+                            "Check out",
+                            style: TextStyle(
+                              fontFamily: 'Roboto',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildTicketOption(
+    String title,
+    String subtitle,
+    int price,
+    int count,
+    VoidCallback onIncrement,
+    VoidCallback onDecrement,
+  ) {
+    final parts = subtitle.split('\n'); 
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.black12),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: AppTextStyles.text.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                Row(
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE7DCDC),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.remove, size: 14),
+                        color: Colors.black87,
+                        onPressed: onDecrement,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text("$count", style: AppTextStyles.text.copyWith(fontWeight: FontWeight.w600)),
+                    ),
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2176AE),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.add, size: 14),
+                        color: Colors.white,
+                        onPressed: onIncrement,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ),
+
+          const Divider(height: 0, thickness: 1, color: Colors.black12),
+          const SizedBox(height: 10), 
+          
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  parts[0],
+                  style: AppTextStyles.text.copyWith(fontSize: 13, fontWeight: FontWeight.w600),
+                ),  
+                if (parts.length > 1) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    parts[1],
+                    style: AppTextStyles.text.copyWith(fontSize: 13),
+                  ),
+                ],
+              ],
             ),
           ),
         ],
