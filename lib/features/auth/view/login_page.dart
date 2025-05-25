@@ -73,7 +73,7 @@ class LoginPageState extends State<LoginPage> {
     final isSmallScreen = screenSize.width <= smallScreenThreshold;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.greyBackground,
       body: SafeArea(
         child: Consumer<LoginViewModel>(
           builder: (context, viewModel, child) {
@@ -96,7 +96,7 @@ class LoginPageState extends State<LoginPage> {
                 SingleChildScrollView(
                   child: Container(
                     width: screenSize.width,
-                    color: AppColors.background,
+                    color: AppColors.greyBackground,
                     padding: EdgeInsets.fromLTRB(
                       isSmallScreen ? 16 : 24,
                       isSmallScreen ? 40 : 80,
@@ -140,10 +140,7 @@ class LoginPageState extends State<LoginPage> {
                                           ),
                                           child: Text(
                                             'Log in',
-                                            style: AppTextStyles.text.copyWith(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w600,
-                                            ),
+                                            style: AppTextStyles.button,
                                           ),
                                         ),
                                       ),
@@ -187,9 +184,7 @@ class LoginPageState extends State<LoginPage> {
       padding: const EdgeInsets.only(left: 13, top: 40),
       child: Text(
         'eventorize',
-        style: AppTextStyles.logo.copyWith(
-          fontWeight: FontWeight.w900,
-        ),
+        style: AppTextStyles.logo,
       ),
     );
   }
@@ -311,10 +306,10 @@ class LoginPageState extends State<LoginPage> {
             const SizedBox(width: 11),
             Text(
               'Continue with Google',
-              style: AppTextStyles.text.copyWith(
-                fontWeight: FontWeight.w600,
+              style: AppTextStyles.button.copyWith(
+                color: AppColors.black,
+                ),
               ),
-            ),
           ],
         ),
       ),

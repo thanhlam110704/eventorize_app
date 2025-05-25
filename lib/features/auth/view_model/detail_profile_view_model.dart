@@ -18,8 +18,22 @@ class DetailProfileViewModel extends ChangeNotifier {
   bool _isDataLoaded = false;
   bool get isDataLoaded => _isDataLoaded;
 
+  bool _isInitialLoad = true;
+  bool get isInitialLoad => _isInitialLoad;
+
   bool _isUpdateSuccessful = false;
   bool get isUpdateSuccessful => _isUpdateSuccessful;
+
+  bool _isLoadingCity = false;
+  bool get isLoadingCity => _isLoadingCity;
+
+  bool _isLoadingDistrict = false;
+  bool get isLoadingDistrict => _isLoadingDistrict;
+
+  bool _isLoadingWard = false;
+  bool get isLoadingWard => _isLoadingWard;
+
+  bool get isLoadingAnyLocation => _isLoadingCity || _isLoadingDistrict || _isLoadingWard;
 
   User? user;
   final fullnameController = TextEditingController();
@@ -45,6 +59,9 @@ class DetailProfileViewModel extends ChangeNotifier {
   DetailProfileViewModel(this.userRepository, this.locationRepository);
 
   Future<void> loadUser(User? accountUser) async {
+    _isInitialLoad = true;
+    notifyListeners();
+
     user = accountUser;
     if (user != null) {
       fullnameController.text = user!.fullname;
@@ -55,11 +72,13 @@ class DetailProfileViewModel extends ChangeNotifier {
       selectedWard = user!.ward;
     }
     await _loadLocationData();
+
+    _isInitialLoad = false;
     notifyListeners();
   }
 
   Future<void> _loadLocationData() async {
-    _isLoading = true;
+    _isLoadingCity = true;
     ErrorHandler.clearError(_errorState);
     notifyListeners();
 
@@ -75,10 +94,7 @@ class DetailProfileViewModel extends ChangeNotifier {
       },
     );
 
-    _isLoading = false;
-    if (_errorState.errorMessage == null && _provinces.isNotEmpty) {
-      _isDataLoaded = true;
-    }
+    _isLoadingCity = false;
     notifyListeners();
   }
 
@@ -86,7 +102,7 @@ class DetailProfileViewModel extends ChangeNotifier {
     if (provinceName == null) return;
     final province = _provinces.firstWhere((p) => p.name == provinceName, orElse: () => _provinces[0]);
 
-    _isLoading = true;
+    _isLoadingDistrict = true;
     ErrorHandler.clearError(_errorState);
     notifyListeners();
 
@@ -102,7 +118,7 @@ class DetailProfileViewModel extends ChangeNotifier {
       },
     );
 
-    _isLoading = false;
+    _isLoadingDistrict = false;
     notifyListeners();
   }
 
@@ -110,7 +126,7 @@ class DetailProfileViewModel extends ChangeNotifier {
     if (districtName == null) return;
     final district = _districts.firstWhere((d) => d.name == districtName, orElse: () => _districts[0]);
 
-    _isLoading = true;
+    _isLoadingWard = true;
     ErrorHandler.clearError(_errorState);
     notifyListeners();
 
@@ -122,10 +138,14 @@ class DetailProfileViewModel extends ChangeNotifier {
         if (selectedWard == null && _wards.isNotEmpty) {
           selectedWard = _wards[0].name;
         }
+        // Set _isDataLoaded only after all data is loaded
+        if (_provinces.isNotEmpty && _districts.isNotEmpty && _wards.isNotEmpty && _errorState.errorMessage == null) {
+          _isDataLoaded = true;
+        }
       },
     );
 
-    _isLoading = false;
+    _isLoadingWard = false;
     notifyListeners();
   }
 
@@ -134,6 +154,8 @@ class DetailProfileViewModel extends ChangeNotifier {
       selectedCity = city;
       selectedDistrict = null;
       selectedWard = null;
+      _isLoadingDistrict = true;
+      _isLoadingWard = true;
       _loadDistricts(city);
     }
     notifyListeners();
@@ -143,6 +165,7 @@ class DetailProfileViewModel extends ChangeNotifier {
     if (district != selectedDistrict) {
       selectedDistrict = district;
       selectedWard = null;
+      _isLoadingWard = true;
       _loadWards(district);
     }
     notifyListeners();
@@ -184,11 +207,17 @@ class DetailProfileViewModel extends ChangeNotifier {
       },
       'Failed to update profile',
       (updatedUser) {
-        final sessionManager = context.read<SessionManager>();
-        sessionManager.setUser(updatedUser as User);
-        user = updatedUser;
-        _isUpdateSuccessful = true;
-        ErrorHandler.clearError(_errorState);
+        try {
+          final sessionManager = context.read<SessionManager>();
+          sessionManager.setUser(updatedUser as User);
+          user = updatedUser;
+          _isUpdateSuccessful = true;
+          ErrorHandler.clearError(_errorState);
+        } catch (e) {
+          _errorState.errorTitle = 'Error';
+          _errorState.errorMessage = 'Failed to access session manager: $e';
+          _isUpdateSuccessful = false;
+        }
         notifyListeners();
       },
     );

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:eventorize_app/core/configs/theme/colors.dart';
 
 class BottomNavBar extends StatefulWidget {
-  const BottomNavBar({super.key});
+  final Color? backgroundColor; 
+
+  const BottomNavBar({super.key, this.backgroundColor});
 
   @override
   State<BottomNavBar> createState() => _BottomNavBarState();
@@ -16,7 +19,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
     setState(() {
       currentIndex = index;
     });
-    
+
     switch (index) {
       case 0:
         context.goNamed("home");
@@ -28,7 +31,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
         context.goNamed("tickets");
         break;
       case 3:
-        context.goNamed("account"); 
+        context.goNamed("account");
         break;
     }
   }
@@ -38,11 +41,13 @@ class _BottomNavBarState extends State<BottomNavBar> {
     return BottomNavigationBar(
       currentIndex: currentIndex,
       type: BottomNavigationBarType.fixed,
-      selectedItemColor: Colors.lightBlue,
-      unselectedItemColor: Colors.black,
+      selectedItemColor: AppColors.primary, 
+      unselectedItemColor: AppColors.black, 
+      backgroundColor: widget.backgroundColor ?? AppColors.white, 
       showSelectedLabels: false,
       showUnselectedLabels: false,
       onTap: onTabTapped,
+      elevation: 8, // Bóng nhẹ để nổi bật
       items: [
         BottomNavigationBarItem(
           icon: Icon(MdiIcons.homeOutline),

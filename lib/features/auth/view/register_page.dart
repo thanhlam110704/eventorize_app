@@ -88,7 +88,7 @@ class RegisterPageState extends State<RegisterPage> {
     final isSmallScreen = screenSize.width <= smallScreenThreshold;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.greyBackground,
       body: SafeArea(
         child: Consumer<RegisterViewModel>(
           builder: (context, viewModel, child) {
@@ -111,7 +111,7 @@ class RegisterPageState extends State<RegisterPage> {
                 SingleChildScrollView(
                   child: Container(
                     width: screenSize.width,
-                    color: AppColors.background,
+                    color: AppColors.greyBackground,
                     padding: EdgeInsets.fromLTRB(
                       isSmallScreen ? 16 : 24,
                       isSmallScreen ? 40 : 80,

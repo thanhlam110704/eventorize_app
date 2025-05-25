@@ -47,12 +47,12 @@ class AccountPageState extends State<AccountPage> {
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Divider(
+          Divider(
             height: 1,
-            thickness: 1,
-            color: Colors.black12,
+            thickness: 0.5,
+            color: AppColors.grey,
           ),
-          const BottomNavBar(),
+          const BottomNavBar(backgroundColor: AppColors.greyBackground),
         ],
       ),
     );
@@ -61,7 +61,7 @@ class AccountPageState extends State<AccountPage> {
   Widget buildMainContainer(bool isSmallScreen, Size screenSize) {
     return Container(
       width: screenSize.width,
-      color: AppColors.background,
+      color: AppColors.greyBackground,
       padding: EdgeInsets.fromLTRB(
         isSmallScreen ? 16 : 24,
         isSmallScreen ? 40 : 80,
@@ -116,21 +116,21 @@ class AccountPageState extends State<AccountPage> {
 
   Widget buildSkeletonUI(bool isSmallScreen, Size screenSize) {
     return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
+      baseColor: AppColors.shimmerBase,
+      highlightColor: AppColors.shimmerHighlight,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             height: 36,
             width: 150,
-            color: Colors.white,
+            color: AppColors.skeleton,
           ),
           const SizedBox(height: 15),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.white,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
@@ -140,7 +140,7 @@ class AccountPageState extends State<AccountPage> {
                   height: 68,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.black,
+                    color: AppColors.skeleton,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -151,19 +151,19 @@ class AccountPageState extends State<AccountPage> {
                       Container(
                         height: 20,
                         width: 120,
-                        color: Colors.white,
+                        color: AppColors.skeleton,
                       ),
                       const SizedBox(height: 4),
                       Container(
                         height: 16,
                         width: 200,
-                        color: Colors.white,
+                        color: AppColors.skeleton,
                       ),
                       const SizedBox(height: 12),
                       Container(
                         height: 36,
                         width: double.infinity,
-                        color: Colors.white,
+                        color: AppColors.skeleton,
                       ),
                     ],
                   ),
@@ -178,41 +178,41 @@ class AccountPageState extends State<AccountPage> {
               Container(
                 height: 20,
                 width: 100,
-                color: Colors.white,
+                color: AppColors.skeleton,
               ),
               const SizedBox(height: 10),
               buildSkeletonSettingItem(),
-              const Divider(
+              Divider(
                 thickness: 0.5,
                 height: 1,
-                color: Colors.white,
+                color: AppColors.grey,
               ),
               const SizedBox(height: 20),
               buildSkeletonSettingItem(),
-              const Divider(
+              Divider(
                 thickness: 0.5,
                 height: 1,
-                color: Colors.white,
+                color: AppColors.grey,
               ),
               const SizedBox(height: 20),
               buildSkeletonSettingItem(),
-              const Divider(
+              Divider(
                 thickness: 0.5,
                 height: 1,
-                color: Colors.white,
+                color: AppColors.grey,
               ),
               const SizedBox(height: 125),
               Container(
                 height: 48,
                 width: double.infinity,
-                color: Colors.white,
+                color: AppColors.skeleton,
               ),
               const SizedBox(height: 10),
               Center(
                 child: Container(
                   height: 12,
                   width: 80,
-                  color: Colors.white,
+                  color: AppColors.skeleton,
                 ),
               ),
             ],
@@ -228,19 +228,19 @@ class AccountPageState extends State<AccountPage> {
         Container(
           width: 24,
           height: 24,
-          color: Colors.white,
+          color: AppColors.skeleton,
         ),
         const SizedBox(width: 16),
         Expanded(
           child: Container(
             height: 20,
-            color: Colors.white,
+            color: AppColors.skeleton,
           ),
         ),
         Container(
           width: 15,
           height: 15,
-          color: Colors.white,
+          color: AppColors.skeleton,
         ),
       ],
     );
@@ -249,7 +249,7 @@ class AccountPageState extends State<AccountPage> {
   Widget buildHeader() {
     return Text(
       'Account',
-      style: AppTextStyles.title.copyWith(fontSize: 36, fontWeight: FontWeight.w700),
+      style: AppTextStyles.title,
     );
   }
 
@@ -263,13 +263,13 @@ class AccountPageState extends State<AccountPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: Colors.black12,
+            color: AppColors.grey,
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -282,26 +282,23 @@ class AccountPageState extends State<AccountPage> {
               backgroundImage: imageProvider,
             ),
             placeholder: (context, url) => Shimmer.fromColors(
-              baseColor: Colors.grey[300]!,
-              highlightColor: Colors.grey[100]!,
+              baseColor: AppColors.shimmerBase,
+              highlightColor: AppColors.shimmerHighlight,
               child: Container(
                 width: 68,
                 height: 68,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.black,
+                  color: AppColors.skeleton,
                 ),
               ),
             ),
             errorWidget: (context, url, error) => CircleAvatar(
               radius: 34,
-              backgroundColor: Colors.grey[300],
+              backgroundColor: AppColors.shimmerBase,
               child: Text(
                 initials,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                ),
+                style: AppTextStyles.avatarInitials,
               ),
             ),
           ),
@@ -327,16 +324,14 @@ class AccountPageState extends State<AccountPage> {
                       context.pushNamed("detail-profile");
                     },
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.black),
+                      side: const BorderSide(color: AppColors.black),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                     child: Text(
                       'Detail profile',
-                      style: AppTextStyles.text.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: AppTextStyles.text.copyWith(fontWeight: FontWeight.w700),
                     ),
                   ),
                 ),
@@ -354,15 +349,15 @@ class AccountPageState extends State<AccountPage> {
       children: [
         Text(
           'Settings',
-          style: AppTextStyles.title.copyWith(fontSize: 20, fontWeight: FontWeight.w700),
+          style: AppTextStyles.sectionTitle,
         ),
         const SizedBox(height: 10),
         buildSettingItem(
-          icon: Icons.location_on,
+          icon: Icons.location_on_outlined,
           title: 'Location',
           onTap: () {},
-          iconColor: Colors.black,
-          textColor: Colors.black,
+          iconColor: AppColors.black,
+          textColor: AppColors.black,
           showTrailing: true,
         ),
         buildDivider(),
@@ -371,18 +366,18 @@ class AccountPageState extends State<AccountPage> {
           icon: Icons.apartment_outlined,
           title: 'Organization',
           onTap: () {},
-          iconColor: Colors.black,
-          textColor: Colors.black,
+          iconColor: AppColors.black,
+          textColor: AppColors.black,
           showTrailing: true,
         ),
         buildDivider(),
         const SizedBox(height: 20),
         buildSettingItem(
-          icon: Icons.account_circle,
+          icon: Icons.account_circle_outlined,
           title: 'Linked accounts',
           onTap: () {},
-          iconColor: Colors.black,
-          textColor: Colors.black,
+          iconColor: AppColors.black,
+          textColor: AppColors.black,
           showTrailing: true,
         ),
         buildDivider(),
@@ -402,7 +397,7 @@ class AccountPageState extends State<AccountPage> {
               }
             },
             style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Colors.red),
+              side: const BorderSide(color: AppColors.red),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -413,7 +408,7 @@ class AccountPageState extends State<AccountPage> {
               children: [
                 const Icon(
                   Icons.logout,
-                  color: Colors.red,
+                  color: AppColors.red,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
@@ -421,7 +416,7 @@ class AccountPageState extends State<AccountPage> {
                   'Log out',
                   style: AppTextStyles.text.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: Colors.red,
+                    color: AppColors.red,
                   ),
                 ),
               ],
@@ -432,10 +427,7 @@ class AccountPageState extends State<AccountPage> {
         Center(
           child: Text(
             'Version 1.0.0',
-            style: AppTextStyles.text.copyWith(
-              fontSize: 12,
-              color: Colors.black54,
-            ),
+            style: AppTextStyles.subtitle.copyWith(color: AppColors.mutedText),
           ),
         ),
       ],
@@ -468,10 +460,10 @@ class AccountPageState extends State<AccountPage> {
   }
 
   Widget buildDivider() {
-    return const Divider(
+    return Divider(
       thickness: 0.5,
       height: 1,
-      color: Color(0xFF9B9B9B),
+      color: AppColors.grey,
     );
   }
 }

@@ -42,7 +42,7 @@ class HomePageState extends State<HomePage> {
     final screenSize = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.greyBackground,
       appBar: AppBar(
         title: Text(
           'Eventorize Home',
