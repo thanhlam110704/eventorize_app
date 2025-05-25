@@ -353,7 +353,7 @@ class AccountPageState extends State<AccountPage> {
         ),
         const SizedBox(height: 10),
         buildSettingItem(
-          icon: Icons.location_on_outlined,
+          icon: Icons.location_on,
           title: 'Location',
           onTap: () {},
           iconColor: AppColors.black,
@@ -373,7 +373,7 @@ class AccountPageState extends State<AccountPage> {
         buildDivider(),
         const SizedBox(height: 20),
         buildSettingItem(
-          icon: Icons.account_circle_outlined,
+          icon: Icons.account_circle,
           title: 'Linked accounts',
           onTap: () {},
           iconColor: AppColors.black,
