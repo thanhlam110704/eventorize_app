@@ -116,9 +116,11 @@ class EventDetailPageState extends State<EventDetailPage>{
       children: [
         Text(
           "Friday, January 10, 6:00",
-          style: AppTextStyles.text.copyWith(
+          style: TextStyle(
+            fontFamily: 'Roboto',
+            fontSize: 16,
             color: Colors.red,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w500,
           ),
         ),  
 
@@ -171,6 +173,9 @@ class EventDetailPageState extends State<EventDetailPage>{
                       "53 Nguyen Co Thach, Thu Duc, Ho Chi Minh City",
                       style: AppTextStyles.text,
                     ),
+                    
+                    const SizedBox(height: 4),
+
                     TextButton(
                       onPressed: () {
                         // TODO: Show map
@@ -302,7 +307,7 @@ class EventDetailPageState extends State<EventDetailPage>{
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
           decoration: BoxDecoration(
-            color: const Color(0xFFEEE4E4),
+            color: const Color(0xFFE8E1E1),
           ),
           child: Row(
             children: [
@@ -393,7 +398,7 @@ class EventDetailPageState extends State<EventDetailPage>{
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               decoration: BoxDecoration(
-                color: const Color(0xFFEEE4E4),
+                color: const Color(0xFFE8E1E1),
                 borderRadius: BorderRadius.circular(20),
               ),
               alignment: Alignment.center,
