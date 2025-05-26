@@ -45,8 +45,7 @@ class SessionManager extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _userRepository.logout();
-      await SecureStorage.clearAll();
+      await SecureStorage.clearToken();
       _user = null;
     } catch (e) {
       ErrorHandler.handleError(e, 'Logout failed', _errorState);
@@ -60,21 +59,6 @@ class SessionManager extends ChangeNotifier {
   void setUser(User user) {
     _user = user;
     notifyListeners();
-  }
-
-  Future<void> updateUser() async {
-    _isLoading = true;
-    notifyListeners();
-
-    try {
-      final refreshedUser = await _userRepository.getMe();
-      _user = refreshedUser;
-    } catch (e) {
-      ErrorHandler.handleError(e, 'Failed to refresh user data', _errorState);
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
   }
 
   void clearError() {

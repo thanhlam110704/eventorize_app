@@ -133,7 +133,7 @@ class VerificationCodePageState extends State<VerificationCodePage> {
     final isSmallScreen = screenSize.width <= smallScreenThreshold;
 
     return Scaffold(
-      backgroundColor: AppColors.greyBackground,
+      backgroundColor: AppColors.defaultBackground,
       body: SafeArea(
         child: Consumer<VerifyViewModel>(
           builder: (context, viewModel, child) {
@@ -177,7 +177,7 @@ class VerificationCodePageState extends State<VerificationCodePage> {
   Widget buildMainContainer(bool isSmallScreen, Size screenSize, VerifyViewModel viewModel) {
     return Container(
       width: screenSize.width,
-      color: AppColors.greyBackground,
+      color: AppColors.defaultBackground,
       padding: EdgeInsets.fromLTRB(
         isSmallScreen ? 16 : 24,
         isSmallScreen ? 40 : 80,

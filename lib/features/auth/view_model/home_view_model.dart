@@ -1,71 +1,66 @@
 import 'package:flutter/foundation.dart';
-import 'package:eventorize_app/common/services/secure_storage.dart';
 import 'package:eventorize_app/core/utils/exceptions.dart';
+import 'package:eventorize_app/data/models/event.dart';
 import 'package:eventorize_app/data/models/user.dart';
-import 'package:eventorize_app/data/repositories/user_repository.dart';
+import 'package:eventorize_app/data/repositories/event_repository.dart';
+import 'package:eventorize_app/common/services/session_manager.dart';
 
 class HomeViewModel extends ChangeNotifier {
-  final UserRepository _userRepository;
+  final EventRepository _eventRepository;
+  final SessionManager _sessionManager; 
   final ErrorState _errorState = ErrorState();
 
-  HomeViewModel(this._userRepository);
-
-  bool _isLoading = false;
-  bool _isCheckingSession = false;
-  bool _isLoggingOut = false;
-
-  bool get isLoading => _isLoading;
-  bool get isCheckingSession => _isCheckingSession;
-  bool get isLoggingOut => _isLoggingOut;
-  String? get errorMessage => _errorState.errorMessage;
-  String? get errorTitle => _errorState.errorTitle;
-  User? get user => _errorState.user;
-
-  Future<void> checkSession() async {
-    _isCheckingSession = true;
-    ErrorHandler.clearError(_errorState);
-    _errorState.user = null;
-    notifyListeners();
-
-    try {
-      final token = await SecureStorage.getToken();
-      if (token == null) {
-        throw Exception('No token found');
-      }
-      _errorState.user = await _userRepository.getMe();
-    } catch (e) {
-      ErrorHandler.handleError(e, 'Session check failed', _errorState);
-      notifyListeners();
-      rethrow;
-    } finally {
-      _isCheckingSession = false;
-      notifyListeners();
-    }
+  HomeViewModel(this._eventRepository, this._sessionManager) {
+    fetchEvents();
   }
 
-  Future<void> logout() async {
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+
+  String? get errorMessage => _errorState.errorMessage;
+  String? get errorTitle => _errorState.errorTitle;
+  User? get user => _sessionManager.user;
+
+  List<Event> _events = [];
+  List<Event> get events => _events;
+
+  int _totalEvents = 0;
+  int get totalEvents => _totalEvents;
+
+  Future<void> fetchEvents({
+    int page = 1,
+    int limit = 10,
+    String? query,
+    String? search,
+    String? fields,
+    String? sortBy,
+    String? orderBy,
+  }) async {
     _isLoading = true;
-    _isLoggingOut = true;
     ErrorHandler.clearError(_errorState);
+    _events = [];
     notifyListeners();
 
     try {
-      await _userRepository.logout();
-      await SecureStorage.clearAll();
-      _errorState.user = null;
+      final result = await _eventRepository.getAll(
+        page: page,
+        limit: limit,
+        query: query,
+        search: search,
+        fields: fields,
+        sortBy: sortBy,
+        orderBy: orderBy,
+      );
+      _events = result['data'] as List<Event>;
+      _totalEvents = result['total'] as int;
     } catch (e) {
-      ErrorHandler.handleError(e, 'Logout failed', _errorState);
+      ErrorHandler.handleError(e, 'Failed to load events', _errorState);
+      notifyListeners();
       rethrow;
     } finally {
       _isLoading = false;
-      _isLoggingOut = false;
       notifyListeners();
     }
-  }
-
-  void setUser(User user) {
-    _errorState.user = user;
-    notifyListeners();
   }
 
   void clearError() {

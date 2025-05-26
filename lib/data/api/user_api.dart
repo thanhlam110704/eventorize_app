@@ -174,9 +174,6 @@ class UserApi {
     };
   }
 
-  Future<void> logout() async {
-    await SecureStorage.clearAll();
-  }
 
   Future<User> getMe({String? fields}) async {
     final response = await _dioClient.get(

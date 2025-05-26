@@ -39,7 +39,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
       if (context.mounted) {
         final viewModel = context.read<DetailProfileViewModel>();
         final sessionManager = context.read<SessionManager>();
-        await viewModel.loadUser(sessionManager.user);
+        await viewModel.loadUser(sessionManager.user); // Gọi loadUser để tải location data
       }
     });
     _scrollController.addListener(() {
@@ -128,16 +128,16 @@ class DetailProfilePageState extends State<DetailProfilePage> {
                           width: double.infinity,
                           height: 0.5,
                           decoration: BoxDecoration(
-                          color: AppColors.grey.withAlpha((0.5 * 255).toInt()),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.grey.withAlpha((0.6 * 255).toInt()),
-                              blurRadius: 3,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
+                            color: AppColors.grey.withAlpha((0.5 * 255).toInt()),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.grey.withAlpha((0.6 * 255).toInt()),
+                                blurRadius: 3,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
                     ],
                   ),
                   Expanded(
@@ -148,7 +148,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
                   ),
                 ],
               ),
-              if (viewModel.isLoading || (viewModel.isLoadingAnyLocation && !viewModel.isInitialLoad))
+              if (viewModel.isLoading || (viewModel.isLoadingAnyLocation ))
                 Container(
                   color: Colors.black.withValues(alpha: 0.5),
                   child: const Center(

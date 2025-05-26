@@ -25,11 +25,6 @@ class AccountPageState extends State<AccountPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (context.mounted) {
-        context.read<SessionManager>().checkSession();
-      }
-    });
   }
 
   @override
@@ -52,7 +47,7 @@ class AccountPageState extends State<AccountPage> {
             thickness: 0.5,
             color: AppColors.grey,
           ),
-          const BottomNavBar(backgroundColor: AppColors.greyBackground),
+          const BottomNavBar(backgroundColor: AppColors.defaultBackground),
         ],
       ),
     );
@@ -61,7 +56,7 @@ class AccountPageState extends State<AccountPage> {
   Widget buildMainContainer(bool isSmallScreen, Size screenSize) {
     return Container(
       width: screenSize.width,
-      color: AppColors.greyBackground,
+      color: AppColors.defaultBackground,
       padding: EdgeInsets.fromLTRB(
         isSmallScreen ? 16 : 24,
         isSmallScreen ? 40 : 80,

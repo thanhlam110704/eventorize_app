@@ -12,13 +12,6 @@ class AccountViewModel extends ChangeNotifier {
   String? get errorTitle => _errorState.errorTitle;
   User? get user => _sessionManager.user;
 
-  Future<void> loadUser() async {
-    if (_sessionManager.user == null) {
-      await _sessionManager.checkSession();
-    }
-    notifyListeners();
-  }
-
   Future<void> logout() async {
     ErrorHandler.clearError(_errorState);
     try {

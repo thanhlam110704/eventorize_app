@@ -3,23 +3,29 @@ import 'package:go_router/go_router.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 
-class BottomNavBar extends StatefulWidget {
-  final Color? backgroundColor; 
+class BottomNavBar extends StatelessWidget {
+  final Color? backgroundColor;
 
   const BottomNavBar({super.key, this.backgroundColor});
 
-  @override
-  State<BottomNavBar> createState() => _BottomNavBarState();
-}
+  // Ánh xạ route name với index
+  int _getCurrentIndex(BuildContext context) {
+    final String? currentRoute = GoRouterState.of(context).name;
+    switch (currentRoute) {
+      case 'home':
+        return 0;
+      case 'favorites':
+        return 1;
+      case 'tickets':
+        return 2;
+      case 'account':
+        return 3;
+      default:
+        return 0; 
+    }
+  }
 
-class _BottomNavBarState extends State<BottomNavBar> {
-  int currentIndex = 3;
-
-  void onTabTapped(int index) {
-    setState(() {
-      currentIndex = index;
-    });
-
+  void _onTabTapped(int index, BuildContext context) {
     switch (index) {
       case 0:
         context.goNamed("home");
@@ -38,16 +44,18 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   @override
   Widget build(BuildContext context) {
+    final int currentIndex = _getCurrentIndex(context);
+
     return BottomNavigationBar(
       currentIndex: currentIndex,
       type: BottomNavigationBarType.fixed,
-      selectedItemColor: AppColors.primary, 
-      unselectedItemColor: AppColors.black, 
-      backgroundColor: widget.backgroundColor ?? AppColors.white, 
+      selectedItemColor: AppColors.primary,
+      unselectedItemColor: AppColors.black,
+      backgroundColor: backgroundColor ?? AppColors.white,
       showSelectedLabels: false,
       showUnselectedLabels: false,
-      onTap: onTabTapped,
-      elevation: 8, // Bóng nhẹ để nổi bật
+      onTap: (index) => _onTabTapped(index, context),
+      elevation: 8,
       items: [
         BottomNavigationBarItem(
           icon: Icon(MdiIcons.homeOutline),

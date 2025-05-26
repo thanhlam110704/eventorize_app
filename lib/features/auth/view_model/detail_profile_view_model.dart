@@ -18,12 +18,6 @@ class DetailProfileViewModel extends ChangeNotifier {
   bool _isDataLoaded = false;
   bool get isDataLoaded => _isDataLoaded;
 
-  bool _isInitialLoad = true;
-  bool get isInitialLoad => _isInitialLoad;
-
-  bool _isUpdateSuccessful = false;
-  bool get isUpdateSuccessful => _isUpdateSuccessful;
-
   bool _isLoadingCity = false;
   bool get isLoadingCity => _isLoadingCity;
 
@@ -34,6 +28,9 @@ class DetailProfileViewModel extends ChangeNotifier {
   bool get isLoadingWard => _isLoadingWard;
 
   bool get isLoadingAnyLocation => _isLoadingCity || _isLoadingDistrict || _isLoadingWard;
+
+  bool _isUpdateSuccessful = false;
+  bool get isUpdateSuccessful => _isUpdateSuccessful;
 
   User? user;
   final fullnameController = TextEditingController();
@@ -59,22 +56,23 @@ class DetailProfileViewModel extends ChangeNotifier {
   DetailProfileViewModel(this.userRepository, this.locationRepository);
 
   Future<void> loadUser(User? accountUser) async {
-    _isInitialLoad = true;
-    notifyListeners();
+    if (accountUser == null) {
+      _errorState.errorTitle = 'Error';
+      _errorState.errorMessage = 'User data is missing. Please log in again.';
+      _isDataLoaded = false;
+      notifyListeners();
+      return;
+    }
 
     user = accountUser;
-    if (user != null) {
-      fullnameController.text = user!.fullname;
-      emailController.text = user!.email;
-      phoneController.text = user!.phone ?? '';
-      selectedCity = user!.city;
-      selectedDistrict = user!.district;
-      selectedWard = user!.ward;
-    }
-    await _loadLocationData();
+    fullnameController.text = user!.fullname;
+    emailController.text = user!.email;
+    phoneController.text = user!.phone ?? '';
+    selectedCity = user!.city;
+    selectedDistrict = user!.district;
+    selectedWard = user!.ward;
 
-    _isInitialLoad = false;
-    notifyListeners();
+    await _loadLocationData();
   }
 
   Future<void> _loadLocationData() async {
@@ -138,7 +136,6 @@ class DetailProfileViewModel extends ChangeNotifier {
         if (selectedWard == null && _wards.isNotEmpty) {
           selectedWard = _wards[0].name;
         }
-        // Set _isDataLoaded only after all data is loaded
         if (_provinces.isNotEmpty && _districts.isNotEmpty && _wards.isNotEmpty && _errorState.errorMessage == null) {
           _isDataLoaded = true;
         }

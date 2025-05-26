@@ -42,9 +42,6 @@ class UserRepository {
     );
   }
 
-  Future<void> logout() async {
-    await _userApi.logout();
-  }
 
   Future<Map<String, dynamic>> checkHealth() async {
     return await _userApi.checkHealth();

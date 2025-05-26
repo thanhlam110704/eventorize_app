@@ -62,7 +62,7 @@ class LoginPageState extends State<LoginPage> {
           description: 'Welcome, ${viewModel.user!.fullname}!',
           type: ToastificationType.success,
         );
-        context.goNamed('account');
+        context.goNamed('home');
       }
     }
   }
@@ -73,7 +73,7 @@ class LoginPageState extends State<LoginPage> {
     final isSmallScreen = screenSize.width <= smallScreenThreshold;
 
     return Scaffold(
-      backgroundColor: AppColors.greyBackground,
+      backgroundColor: AppColors.defaultBackground,
       body: SafeArea(
         child: Consumer<LoginViewModel>(
           builder: (context, viewModel, child) {
@@ -96,7 +96,7 @@ class LoginPageState extends State<LoginPage> {
                 SingleChildScrollView(
                   child: Container(
                     width: screenSize.width,
-                    color: AppColors.greyBackground,
+                    color: AppColors.defaultBackground,
                     padding: EdgeInsets.fromLTRB(
                       isSmallScreen ? 16 : 24,
                       isSmallScreen ? 40 : 80,
@@ -284,7 +284,7 @@ class LoginPageState extends State<LoginPage> {
                       description: 'Welcome, ${viewModel.user!.fullname}!',
                       type: ToastificationType.success,
                     );
-                    context.goNamed('account');
+                    context.goNamed('home');
                   }
                 }
               },

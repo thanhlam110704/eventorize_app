@@ -31,6 +31,8 @@ dependencies:
   toastification: ^2.0.0
   google_sign_in: 6.3.0
   shimmer: ^3.0.0
+  image_picker: ^1.1.2
+  
   
 
 dev_dependencies:
@@ -86,5 +88,8 @@ flutter:
 
   assets:
   - assets/icons/logo_google.png
-  - .env/dev.env
   - assets/images/verify.png
+  - assets/icons/logo_e.png
+  - assets/images/event.png
+  - .env/dev.env
+ 
