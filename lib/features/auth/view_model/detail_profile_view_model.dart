@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:get_it/get_it.dart';
 import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/data/models/location.dart';
 import 'package:eventorize_app/data/models/user.dart';
 import 'package:eventorize_app/data/repositories/location_repository.dart';
 import 'package:eventorize_app/data/repositories/user_repository.dart';
 import 'package:eventorize_app/core/utils/exceptions.dart';
+import 'package:eventorize_app/common/services/location_cache.dart';
 
 class DetailProfileViewModel extends ChangeNotifier {
   final UserRepository userRepository;
   final LocationRepository locationRepository;
+  final LocationCache _locationCache = GetIt.instance<LocationCache>();
   final ErrorState _errorState = ErrorState();
 
   bool _isLoading = false;
@@ -37,14 +40,9 @@ class DetailProfileViewModel extends ChangeNotifier {
   final emailController = TextEditingController();
   final phoneController = TextEditingController();
 
-  List<Province> _provinces = [];
-  List<Province> get provinces => _provinces;
-
-  List<District> _districts = [];
-  List<District> get districts => _districts;
-
-  List<Ward> _wards = [];
-  List<Ward> get wards => _wards;
+  List<Province> get provinces => _locationCache.provinces;
+  List<District> get districts => _locationCache.getDistricts(_getProvinceCode(selectedCity));
+  List<Ward> get wards => _locationCache.getWards(_getDistrictCode(selectedDistrict));
 
   String? selectedCity;
   String? selectedDistrict;
@@ -80,70 +78,106 @@ class DetailProfileViewModel extends ChangeNotifier {
     ErrorHandler.clearError(_errorState);
     notifyListeners();
 
-    await _executeApiCall(
-      () => locationRepository.getProvinces(),
-      'Failed to load provinces',
-      (data) {
-        _provinces = data as List<Province>;
-        if (selectedCity == null && _provinces.isNotEmpty) {
-          selectedCity = _provinces[0].name;
-        }
-        _loadDistricts(selectedCity);
-      },
-    );
+   
+    if (_locationCache.provinces.isEmpty) {
+      await _executeApiCall(
+        () => locationRepository.getProvinces(),
+        'Failed to load provinces',
+        (data) {
+          _locationCache.setProvinces(data as List<Province>);
+          if (selectedCity == null && provinces.isNotEmpty) {
+            selectedCity = provinces[0].name;
+          }
+        },
+      );
+    } else if (selectedCity == null && provinces.isNotEmpty) {
+      selectedCity = provinces[0].name;
+    }
 
+    await _loadDistricts(selectedCity);
     _isLoadingCity = false;
     notifyListeners();
   }
 
   Future<void> _loadDistricts(String? provinceName) async {
     if (provinceName == null) return;
-    final province = _provinces.firstWhere((p) => p.name == provinceName, orElse: () => _provinces[0]);
+    final provinceCode = _getProvinceCode(provinceName);
 
     _isLoadingDistrict = true;
     ErrorHandler.clearError(_errorState);
     notifyListeners();
 
-    await _executeApiCall(
-      () => locationRepository.getDistricts(provinceCode: province.code.toString()),
-      'Failed to load districts',
-      (data) {
-        _districts = data as List<District>;
-        if (selectedDistrict == null && _districts.isNotEmpty) {
-          selectedDistrict = _districts[0].name;
-        }
-        _loadWards(selectedDistrict);
-      },
-    );
+    // Load districts from cache or API
+    if (_locationCache.getDistricts(provinceCode).isEmpty) {
+      await _executeApiCall(
+        () => locationRepository.getDistricts(provinceCode: provinceCode),
+        'Failed to load districts',
+        (data) {
+          _locationCache.setDistricts(provinceCode, data as List<District>);
+          if (selectedDistrict == null && districts.isNotEmpty) {
+            selectedDistrict = districts[0].name;
+          }
+        },
+      );
+    } else if (selectedDistrict == null && districts.isNotEmpty) {
+      selectedDistrict = districts[0].name;
+    }
 
+    await _loadWards(selectedDistrict);
     _isLoadingDistrict = false;
     notifyListeners();
   }
 
   Future<void> _loadWards(String? districtName) async {
     if (districtName == null) return;
-    final district = _districts.firstWhere((d) => d.name == districtName, orElse: () => _districts[0]);
+    final districtCode = _getDistrictCode(districtName);
 
     _isLoadingWard = true;
     ErrorHandler.clearError(_errorState);
     notifyListeners();
 
-    await _executeApiCall(
-      () => locationRepository.getWards(districtCode: district.code.toString()),
-      'Failed to load wards',
-      (data) {
-        _wards = data as List<Ward>;
-        if (selectedWard == null && _wards.isNotEmpty) {
-          selectedWard = _wards[0].name;
-        }
-        if (_provinces.isNotEmpty && _districts.isNotEmpty && _wards.isNotEmpty && _errorState.errorMessage == null) {
-          _isDataLoaded = true;
-        }
-      },
-    );
+    // Load wards from cache or API
+    if (_locationCache.getWards(districtCode).isEmpty) {
+      await _executeApiCall(
+        () => locationRepository.getWards(districtCode: districtCode),
+        'Failed to load wards',
+        (data) {
+          _locationCache.setWards(districtCode, data as List<Ward>);
+          if (selectedWard == null && wards.isNotEmpty) {
+            selectedWard = wards[0].name;
+          }
+          if (provinces.isNotEmpty && districts.isNotEmpty && wards.isNotEmpty && _errorState.errorMessage == null) {
+            _isDataLoaded = true;
+          }
+        },
+      );
+    } else if (selectedWard == null && wards.isNotEmpty) {
+      selectedWard = wards[0].name;
+      if (provinces.isNotEmpty && districts.isNotEmpty && wards.isNotEmpty && _errorState.errorMessage == null) {
+        _isDataLoaded = true;
+      }
+    }
 
     _isLoadingWard = false;
     notifyListeners();
+  }
+
+  String _getProvinceCode(String? provinceName) {
+    if (provinceName == null) return '';
+    final province = provinces.firstWhere(
+      (p) => p.name == provinceName,
+      orElse: () => provinces.isNotEmpty ? provinces[0] : Province(),
+    );
+    return province.code?.toString() ?? '';
+  }
+
+  String _getDistrictCode(String? districtName) {
+    if (districtName == null) return '';
+    final district = districts.firstWhere(
+      (d) => d.name == districtName,
+      orElse: () => districts.isNotEmpty ? districts[0] : District(),
+    );
+    return district.code?.toString() ?? '';
   }
 
   void setCity(String? city) {

@@ -17,6 +17,7 @@ import 'package:eventorize_app/data/repositories/user_repository.dart';
 import 'package:eventorize_app/data/repositories/location_repository.dart';
 import 'package:eventorize_app/data/repositories/event_repository.dart';
 import 'package:get_it/get_it.dart';
+import 'package:eventorize_app/common/services/location_cache.dart'; 
 
 void setupDependencies() {
   final getIt = GetIt.instance;
@@ -28,6 +29,7 @@ void setupDependencies() {
   getIt.registerSingleton<EventApi>(EventApi(getIt<DioClient>()));
   getIt.registerSingleton<EventRepository>(EventRepository(getIt<EventApi>()));
   getIt.registerSingleton<SessionManager>(SessionManager(getIt<UserRepository>()));
+  getIt.registerSingleton<LocationCache>(LocationCache());
 }
 
 Future<void> main() async {
@@ -68,7 +70,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<HomeViewModel>(
           create: (_) => HomeViewModel(
             GetIt.instance<EventRepository>(),
-            GetIt.instance<SessionManager>()
+            GetIt.instance<SessionManager>(),
+            GetIt.instance<LocationRepository>(),
           ),
         ),
       ],

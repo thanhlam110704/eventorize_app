@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart'; 
 import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/common/widgets/bottom_nav_bar.dart';
@@ -33,82 +34,101 @@ class HomePageState extends State<HomePage> {
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.width <= smallScreenThreshold;
 
-    return Scaffold(
-      backgroundColor: AppColors.whiteBackground,
-      body: SafeArea(
-        child: Consumer2<SessionManager, HomeViewModel>(
-          builder: (context, sessionManager, viewModel, child) {
-            // Handle session errors
-            if (sessionManager.errorMessage != null) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  ToastCustom.show(
-                    context: context,
-                    title: sessionManager.errorTitle ?? 'Error',
-                    description: sessionManager.errorMessage!,
-                    type: ToastificationType.error,
-                  );
-                  sessionManager.clearError();
-                  if (!sessionManager.isLoading &&
-                      !sessionManager.isCheckingSession &&
-                      sessionManager.user == null) {
-                    context.pushReplacementNamed('login');
-                  }
-                }
-              });
+    return Consumer2<SessionManager, HomeViewModel>(
+      builder: (context, sessionManager, viewModel, child) {
+        if (sessionManager.errorMessage != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              ToastCustom.show(
+                context: context,
+                title: sessionManager.errorTitle ?? 'Error',
+                description: sessionManager.errorMessage!,
+                type: ToastificationType.error,
+              );
+              sessionManager.clearError();
+              if (!sessionManager.isLoading &&
+                  !sessionManager.isCheckingSession &&
+                  sessionManager.user == null) {
+                context.pushReplacementNamed('login');
+              }
             }
+          });
+        }
 
-            // Handle event errors
-            if (viewModel.errorMessage != null) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  ToastCustom.show(
-                    context: context,
-                    title: viewModel.errorTitle ?? 'Error',
-                    description: viewModel.errorMessage!,
-                    type: ToastificationType.error,
-                  );
-                  viewModel.clearError();
-                }
-              });
+        if (viewModel.errorMessage != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              ToastCustom.show(
+                context: context,
+                title: viewModel.errorTitle ?? 'Error',
+                description: viewModel.errorMessage!,
+                type: ToastificationType.error,
+              );
+              viewModel.clearError();
             }
+          });
+        }
 
-            return Stack(
-              children: [
-                SingleChildScrollView(
+        return Stack(
+          children: [
+            Scaffold(
+              backgroundColor: AppColors.whiteBackground,
+              body: SafeArea(
+                child: SingleChildScrollView(
                   child: buildMainContainer(isSmallScreen, screenSize, sessionManager, viewModel),
                 ),
-                if (sessionManager.isCheckingSession || viewModel.isLoading)
-                  Container(
-                    color: Colors.black.withAlpha(128),
-                    child: const Center(
-                      child: SpinKitFadingCircle(
-                        color: AppColors.primary,
-                        size: 50.0,
-                      ),
+              ),
+              bottomNavigationBar: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Colors.black12,
+                  ),
+                  const BottomNavBar(),
+                ],
+              ),
+            ),
+            if (sessionManager.isCheckingSession || viewModel.isLoading)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withAlpha(128),
+                  child: const Center(
+                    child: SpinKitFadingCircle(
+                      color: AppColors.primary,
+                      size: 50.0,
                     ),
                   ),
-              ],
-            );
-          },
-        ),
-      ),
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Divider(
-            height: 1,
-            thickness: 1,
-            color: Colors.black12,
-          ),
-          const BottomNavBar(),
-        ],
-      ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
   Widget buildMainContainer(
       bool isSmallScreen, Size screenSize, SessionManager sessionManager, HomeViewModel viewModel) {
+    if (viewModel.isLoading) {
+      return Container(
+        width: screenSize.width,
+        color: AppColors.whiteBackground,
+        padding: EdgeInsets.fromLTRB(
+          isSmallScreen ? 16 : 24,
+          isSmallScreen ? 20 : 40,
+          isSmallScreen ? 16 : 24,
+          isSmallScreen ? 24 : 32,
+        ),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: maxContentWidth),
+            child: buildSkeleton(),
+          ),
+        ),
+      );
+    }
+
     return Container(
       width: screenSize.width,
       color: AppColors.whiteBackground,
@@ -137,6 +157,63 @@ class HomePageState extends State<HomePage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget buildSkeletonBox(double width, double height) {
+    return Shimmer.fromColors(
+      baseColor: AppColors.shimmerBase,
+      highlightColor: AppColors.shimmerHighlight,
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: AppColors.skeleton,
+          borderRadius: BorderRadius.circular(4),
+        ),
+      ),
+    );
+  }
+
+  Widget buildSkeleton() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        buildSkeletonBox(double.infinity, 60),
+        const SizedBox(height: 16),
+        buildSkeletonBox(150, 24),
+        const SizedBox(height: 16),
+        buildSkeletonBox(340, 35),
+        const SizedBox(height: 24),
+        buildSkeletonBox(200, 24),
+        const SizedBox(height: 16),
+        Column(
+          children: List.generate(2, (index) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                buildSkeletonBox(120, 120),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      buildSkeletonBox(double.infinity, 20),
+                      const SizedBox(height: 8),
+                      buildSkeletonBox(150, 16),
+                      const SizedBox(height: 8),
+                      buildSkeletonBox(100, 16),
+                      const SizedBox(height: 8),
+                      buildSkeletonBox(80, 16),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          )),
+        ),
+      ],
     );
   }
 
@@ -194,46 +271,75 @@ class HomePageState extends State<HomePage> {
   }
 
   Widget buildLocationSelector() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+    return Consumer<HomeViewModel>(
+      builder: (context, viewModel, child) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.location_on, color: Colors.red),
-            const SizedBox(width: 4),
-            DropdownButton<String>(
-              value: 'Ho Chi Minh City',
-              underline: const SizedBox(),
-              style: const TextStyle(
-                color: Colors.blue,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-              items: <String>[
-                'Ho Chi Minh City',
-                'Hanoi',
-                'Da Nang',
-                'Can Tho',
-              ].map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                // Handle location change
-              },
-              icon: const Icon(Icons.keyboard_arrow_down),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.location_on,
+                  color: Colors.red,
+                  size: 24,
+                ),
+                const SizedBox(width: 2),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 150),
+                  child: DropdownButtonFormField<String>(
+                    value: viewModel.selectedCity,
+                    items: viewModel.provinces.map((province) {
+                      return DropdownMenuItem(
+                        value: province.name,
+                        child: Text(
+                          province.name ?? '',
+                          style: const TextStyle(
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: viewModel.isLoadingCity ? null : viewModel.setCity,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 2, vertical: 0),
+                    ),
+                    isExpanded: true,
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                    validator: (value) => value == null ? 'Please select a city' : null,
+                    icon: const Padding(
+                      padding: EdgeInsets.only(right: 2.0),
+                      child: Icon(
+                        Icons.arrow_drop_down,
+                        color: Colors.blue,
+                        size: 24,
+                      ),
+                    ),
+                    itemHeight: 48,
+                    menuMaxHeight: 200,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            const Divider(
+              height: 1,
+              thickness: 0.5,
+              color: AppColors.grey,
+              indent: 0,
+              endIndent: 10,
             ),
           ],
-        ),
-        const SizedBox(height: 2),
-        Container(
-          height: 1,
-          width: 150,
-          color: Colors.blue,
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -274,7 +380,7 @@ class HomePageState extends State<HomePage> {
   Widget buildTrendingHeader() {
     return const Text(
       'Top Trending in Ho Chi Minh City',
-      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
     );
   }
 
@@ -306,31 +412,22 @@ class HomePageState extends State<HomePage> {
           Stack(
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: event.thumbnail != null
-                    ? CachedNetworkImage(
-                        imageUrl: event.thumbnail!,
-                        height: 107,
-                        width: 107,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => const Center(
-                          child: CircularProgressIndicator(
-                            color: AppColors.primary,
-                          ),
-                        ),
-                        errorWidget: (context, url, error) => Image.asset(
-                          'assets/images/event.png',
-                          height: 107,
-                          width: 107,
-                          fit: BoxFit.cover,
-                        ),
-                      )
-                    : Image.asset(
-                        'assets/images/event.png',
-                        height: 107,
-                        width: 107,
-                        fit: BoxFit.cover,
-                      ),
+                borderRadius: BorderRadius.circular(5),
+                child: CachedNetworkImage(
+                  imageUrl: event.thumbnail ?? '',
+                  height: 120,
+                  width: 120,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => const Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.error, color: Colors.red),
+                  ),
+                ),
               ),
               Positioned(
                 top: 4,
@@ -358,20 +455,36 @@ class HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  event.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
+                    Expanded(
+                      child: Text(
+                        event.title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 18,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(
+                      Icons.favorite_border,
+                      color: Colors.black,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.calendar_today,
+                      size: 14,
+                      color: Colors.black,
+                    ),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
@@ -381,47 +494,54 @@ class HomePageState extends State<HomePage> {
                         ),
                         style: const TextStyle(
                           fontSize: 12,
-                          color: Colors.grey,
+                          color: AppColors.mutedText,
                         ),
-                        maxLines: 2,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const Icon(Icons.location_on, size: 14, color: Colors.grey),
+                    const Icon(
+                      Icons.location_on,
+                      size: 14,
+                      color: Colors.black,
+                    ),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
                         event.address ?? 'No address provided',
                         style: const TextStyle(
                           fontSize: 12,
-                          color: Colors.grey,
+                          color: AppColors.mutedText,
                         ),
-                        maxLines: 2,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const Icon(Icons.people, size: 14, color: Colors.grey),
+                    const Icon(
+                      Icons.people,
+                      size: 14,
+                      color: Colors.black,
+                    ),
                     const SizedBox(width: 4),
                     const Text(
-                      '2.9k attendees', 
+                      '2.9k attendees',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey,
+                        color: AppColors.mutedText,
                       ),
                     ),
-                    const Spacer(),
-                    const Icon(Icons.favorite_border),
                   ],
                 ),
               ],

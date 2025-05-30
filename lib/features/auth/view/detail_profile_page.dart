@@ -39,7 +39,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
       if (context.mounted) {
         final viewModel = context.read<DetailProfileViewModel>();
         final sessionManager = context.read<SessionManager>();
-        await viewModel.loadUser(sessionManager.user); // Gọi loadUser để tải location data
+        await viewModel.loadUser(sessionManager.user);
       }
     });
     _scrollController.addListener(() {
@@ -669,20 +669,14 @@ class DetailProfilePageState extends State<DetailProfilePage> {
               },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.red,
-          disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
-          disabledForegroundColor: AppColors.white.withValues(alpha: 0.38),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(vertical: 12),
         ),
-        child: viewModel.isLoading || viewModel.isLoadingAnyLocation
-            ? const SpinKitFadingCircle(
-                color: AppColors.white,
-                size: 24.0,
-              )
-            : Text(
-                "Update Detail Info",
-                style: AppTextStyles.button,
-              ),
+        child:
+          Text(
+              "Update Detail Info",
+              style: AppTextStyles.button,
+            ),
       ),
     );
   }

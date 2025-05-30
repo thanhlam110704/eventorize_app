@@ -15,7 +15,7 @@ class Event extends Equatable {
   final String? ward;
   final String? city;
   final String? country;
-  final DateTime createdAt;
+  final DateTime? createdAt;
   final String? createdBy;
   final DateTime? updatedAt;
   final String? updatedBy;
@@ -37,7 +37,7 @@ class Event extends Equatable {
     this.ward,
     this.city,
     this.country,
-    required this.createdAt,
+    this.createdAt,
     this.createdBy,
     this.updatedAt,
     this.updatedBy,
@@ -57,19 +57,15 @@ class Event extends Equatable {
       link: json['link'] as String?,
       isOnline: json['is_online'] as bool,
       address: json['address'] as String?,
-      district: json['district'] as String?,
-      ward: json['ward'] as String?,
-      city: json['city'] as String?,
-      country: json['country'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      district: json['district'] == 'string' ? null : json['district'] as String?,
+      ward: json['ward'] == 'string' ? null : json['ward'] as String?,
+      city: json['city'] == 'string' ? null : json['city'] as String?,
+      country: json['country'] == 'string' ? null : json['country'] as String?,
+      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : null,
       createdBy: json['created_by'] as String?,
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'] as String)
-          : null,
+      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'] as String) : null,
       updatedBy: json['updated_by'] as String?,
-      deletedAt: json['deleted_at'] != null
-          ? DateTime.parse(json['deleted_at'] as String)
-          : null,
+      deletedAt: json['deleted_at'] != null ? DateTime.parse(json['deleted_at'] as String) : null,
       deletedBy: json['deleted_by'] as String?,
     );
   }
@@ -90,7 +86,7 @@ class Event extends Equatable {
       'ward': ward,
       'city': city,
       'country': country,
-      'created_at': createdAt.toIso8601String(),
+      'created_at': createdAt?.toIso8601String(),
       'created_by': createdBy,
       'updated_at': updatedAt?.toIso8601String(),
       'updated_by': updatedBy,
