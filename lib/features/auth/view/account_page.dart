@@ -18,13 +18,29 @@ class AccountPage extends StatefulWidget {
   AccountPageState createState() => AccountPageState();
 }
 
-class AccountPageState extends State<AccountPage> {
+class AccountPageState extends State<AccountPage> with SingleTickerProviderStateMixin {
   static const smallScreenThreshold = 640.0;
   static const maxContentWidth = 600.0;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
+    // Khởi tạo AnimationController cho hiệu ứng chuyển đổi
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   @override
@@ -84,23 +100,19 @@ class AccountPageState extends State<AccountPage> {
                   }
                 });
               }
-              if (sessionManager.isCheckingSession || sessionManager.isLoading) {
-                return buildSkeletonUI(isSmallScreen, screenSize);
-              }
 
-              final user = sessionManager.user;
-              if (user == null) {
-                return const SizedBox.shrink();
-              }
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  buildHeader(),
-                  const SizedBox(height: 15),
-                  buildUserCard(user),
-                  const SizedBox(height: 25),
-                  buildSetting(context, sessionManager),
-                ],
+              // Sử dụng AnimatedSwitcher để chuyển đổi mượt mà giữa skeleton và giao diện chính
+              return AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: child,
+                  );
+                },
+                child: sessionManager.isCheckingSession || sessionManager.isLoading
+                    ? buildSkeletonUI(isSmallScreen, screenSize)
+                    : buildContent(sessionManager.user, context, sessionManager),
               );
             },
           ),
@@ -109,17 +121,43 @@ class AccountPageState extends State<AccountPage> {
     );
   }
 
+  Widget buildContent(User? user, BuildContext context, SessionManager sessionManager) {
+    if (user == null) {
+      return const SizedBox.shrink();
+    }
+    // Bắt đầu hiệu ứng fade khi dữ liệu tải xong
+    _animationController.forward();
+    return FadeTransition(
+      key: const ValueKey('content'),
+      opacity: _fadeAnimation,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          buildHeader(),
+          const SizedBox(height: 15),
+          buildUserCard(user),
+          const SizedBox(height: 25),
+          buildSetting(context, sessionManager),
+        ],
+      ),
+    );
+  }
+
   Widget buildSkeletonUI(bool isSmallScreen, Size screenSize) {
     return Shimmer.fromColors(
       baseColor: AppColors.shimmerBase,
       highlightColor: AppColors.shimmerHighlight,
+      period: const Duration(milliseconds: 1500), // Tăng thời gian hiệu ứng để mượt hơn
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             height: 36,
             width: 150,
-            color: AppColors.skeleton,
+            decoration: BoxDecoration(
+              color: AppColors.skeleton,
+              borderRadius: BorderRadius.circular(4), // Bo góc để khớp với giao diện thật
+            ),
           ),
           const SizedBox(height: 15),
           Container(
@@ -146,19 +184,28 @@ class AccountPageState extends State<AccountPage> {
                       Container(
                         height: 20,
                         width: 120,
-                        color: AppColors.skeleton,
+                        decoration: BoxDecoration(
+                          color: AppColors.skeleton,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Container(
                         height: 16,
                         width: 200,
-                        color: AppColors.skeleton,
+                        decoration: BoxDecoration(
+                          color: AppColors.skeleton,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ),
                       const SizedBox(height: 12),
                       Container(
                         height: 36,
                         width: double.infinity,
-                        color: AppColors.skeleton,
+                        decoration: BoxDecoration(
+                          color: AppColors.skeleton,
+                          borderRadius: BorderRadius.circular(8), // Khớp với nút thật
+                        ),
                       ),
                     ],
                   ),
@@ -173,41 +220,38 @@ class AccountPageState extends State<AccountPage> {
               Container(
                 height: 20,
                 width: 100,
-                color: AppColors.skeleton,
+                decoration: BoxDecoration(
+                  color: AppColors.skeleton,
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
               const SizedBox(height: 10),
               buildSkeletonSettingItem(),
-              Divider(
-                thickness: 0.5,
-                height: 1,
-                color: AppColors.grey,
-              ),
+              buildDivider(),
               const SizedBox(height: 20),
               buildSkeletonSettingItem(),
-              Divider(
-                thickness: 0.5,
-                height: 1,
-                color: AppColors.grey,
-              ),
+              buildDivider(),
               const SizedBox(height: 20),
               buildSkeletonSettingItem(),
-              Divider(
-                thickness: 0.5,
-                height: 1,
-                color: AppColors.grey,
-              ),
+              buildDivider(),
               const SizedBox(height: 125),
               Container(
                 height: 48,
                 width: double.infinity,
-                color: AppColors.skeleton,
+                decoration: BoxDecoration(
+                  color: AppColors.skeleton,
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               const SizedBox(height: 10),
               Center(
                 child: Container(
                   height: 12,
                   width: 80,
-                  color: AppColors.skeleton,
+                  decoration: BoxDecoration(
+                    color: AppColors.skeleton,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
                 ),
               ),
             ],
@@ -223,19 +267,28 @@ class AccountPageState extends State<AccountPage> {
         Container(
           width: 24,
           height: 24,
-          color: AppColors.skeleton,
+          decoration: BoxDecoration(
+            color: AppColors.skeleton,
+            borderRadius: BorderRadius.circular(4),
+          ),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: Container(
             height: 20,
-            color: AppColors.skeleton,
+            decoration: BoxDecoration(
+              color: AppColors.skeleton,
+              borderRadius: BorderRadius.circular(4),
+            ),
           ),
         ),
         Container(
           width: 15,
           height: 15,
-          color: AppColors.skeleton,
+          decoration: BoxDecoration(
+            color: AppColors.skeleton,
+            borderRadius: BorderRadius.circular(4),
+          ),
         ),
       ],
     );
@@ -262,7 +315,7 @@ class AccountPageState extends State<AccountPage> {
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: AppColors.grey,
+            color: AppColors.grey.withOpacity(0.2), // Giảm độ đậm của shadow để nhẹ hơn
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -296,6 +349,9 @@ class AccountPageState extends State<AccountPage> {
                 style: AppTextStyles.avatarInitials,
               ),
             ),
+            memCacheHeight: 136, // Tối ưu kích thước bộ nhớ cache
+            memCacheWidth: 136,
+            fadeInDuration: const Duration(milliseconds: 200), // Giảm thời gian fade để nhanh hơn
           ),
           const SizedBox(width: 16),
           Expanded(

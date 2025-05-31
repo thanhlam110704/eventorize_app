@@ -13,18 +13,16 @@ class HomeViewModel extends ChangeNotifier {
   final EventRepository _eventRepository;
   final SessionManager _sessionManager;
   final LocationRepository _locationRepository;
-  final LocationCache _locationCache = GetIt.instance<LocationCache>(); 
+  final LocationCache _locationCache = GetIt.instance<LocationCache>();
   final ErrorState _errorState = ErrorState();
-
-  HomeViewModel(this._eventRepository, this._sessionManager, this._locationRepository) {
-    fetchEvents();
-    loadLocationData(); 
-  }
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  bool _isLoadingCity = false; 
+  bool _isInitialLoad = true; 
+  bool get isInitialLoad => _isInitialLoad;
+
+  bool _isLoadingCity = false;
   bool get isLoadingCity => _isLoadingCity;
 
   String? get errorMessage => _errorState.errorMessage;
@@ -43,6 +41,11 @@ class HomeViewModel extends ChangeNotifier {
   set selectedCity(String? city) {
     _selectedCity = city;
     notifyListeners();
+  }
+
+  HomeViewModel(this._eventRepository, this._sessionManager, this._locationRepository) {
+    fetchEvents();
+    loadLocationData();
   }
 
   Future<void> fetchEvents({
@@ -74,9 +77,9 @@ class HomeViewModel extends ChangeNotifier {
     } catch (e) {
       ErrorHandler.handleError(e, 'Failed to load events', _errorState);
       notifyListeners();
-      rethrow;
     } finally {
       _isLoading = false;
+      _isInitialLoad = false; 
       notifyListeners();
     }
   }
@@ -92,7 +95,7 @@ class HomeViewModel extends ChangeNotifier {
         _locationCache.setProvinces(provinces);
       }
       if (_selectedCity == null && provinces.isNotEmpty) {
-        _selectedCity = provinces[0].name; 
+        _selectedCity = provinces[0].name;
       }
     } catch (e) {
       ErrorHandler.handleError(e, 'Failed to load provinces', _errorState);
@@ -105,7 +108,7 @@ class HomeViewModel extends ChangeNotifier {
   void setCity(String? city) {
     if (city != _selectedCity) {
       _selectedCity = city;
-      fetchEvents(query: 'city=$city'); 
+      fetchEvents(query: 'city=$city');
       notifyListeners();
     }
   }

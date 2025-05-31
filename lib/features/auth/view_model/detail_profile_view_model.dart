@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:get_it/get_it.dart';
+import 'package:dio/dio.dart';
 import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/data/models/location.dart';
 import 'package:eventorize_app/data/models/user.dart';
@@ -8,6 +9,7 @@ import 'package:eventorize_app/data/repositories/location_repository.dart';
 import 'package:eventorize_app/data/repositories/user_repository.dart';
 import 'package:eventorize_app/core/utils/exceptions.dart';
 import 'package:eventorize_app/common/services/location_cache.dart';
+import 'dart:io';
 
 class DetailProfileViewModel extends ChangeNotifier {
   final UserRepository userRepository;
@@ -29,6 +31,9 @@ class DetailProfileViewModel extends ChangeNotifier {
 
   bool _isLoadingWard = false;
   bool get isLoadingWard => _isLoadingWard;
+
+  bool _isUploadingAvatar = false;
+  bool get isUploadingAvatar => _isUploadingAvatar;
 
   bool get isLoadingAnyLocation => _isLoadingCity || _isLoadingDistrict || _isLoadingWard;
 
@@ -78,106 +83,93 @@ class DetailProfileViewModel extends ChangeNotifier {
     ErrorHandler.clearError(_errorState);
     notifyListeners();
 
-   
     if (_locationCache.provinces.isEmpty) {
       await _executeApiCall(
-        () => locationRepository.getProvinces(),
-        'Failed to load provinces',
-        (data) {
+        apiCall: () => locationRepository.getProvinces(),
+        errorPrefix: 'Failed to load provinces',
+        onSuccess: (data) {
           _locationCache.setProvinces(data as List<Province>);
-          if (selectedCity == null && provinces.isNotEmpty) {
-            selectedCity = provinces[0].name;
-          }
+          selectedCity ??= provinces.isNotEmpty ? provinces[0].name : null;
         },
       );
-    } else if (selectedCity == null && provinces.isNotEmpty) {
-      selectedCity = provinces[0].name;
+    } else {
+      selectedCity ??= provinces.isNotEmpty ? provinces[0].name : null;
     }
 
-    await _loadDistricts(selectedCity);
+    await _loadDistricts();
     _isLoadingCity = false;
     notifyListeners();
   }
 
-  Future<void> _loadDistricts(String? provinceName) async {
-    if (provinceName == null) return;
-    final provinceCode = _getProvinceCode(provinceName);
-
+  Future<void> _loadDistricts() async {
+    if (selectedCity == null) return;
     _isLoadingDistrict = true;
     ErrorHandler.clearError(_errorState);
     notifyListeners();
 
-    // Load districts from cache or API
+    final provinceCode = _getProvinceCode(selectedCity);
     if (_locationCache.getDistricts(provinceCode).isEmpty) {
       await _executeApiCall(
-        () => locationRepository.getDistricts(provinceCode: provinceCode),
-        'Failed to load districts',
-        (data) {
+        apiCall: () => locationRepository.getDistricts(provinceCode: provinceCode),
+        errorPrefix: 'Failed to load districts',
+        onSuccess: (data) {
           _locationCache.setDistricts(provinceCode, data as List<District>);
-          if (selectedDistrict == null && districts.isNotEmpty) {
-            selectedDistrict = districts[0].name;
-          }
+          selectedDistrict ??= districts.isNotEmpty ? districts[0].name : null;
         },
       );
-    } else if (selectedDistrict == null && districts.isNotEmpty) {
-      selectedDistrict = districts[0].name;
+    } else {
+      selectedDistrict ??= districts.isNotEmpty ? districts[0].name : null;
     }
 
-    await _loadWards(selectedDistrict);
+    await _loadWards();
     _isLoadingDistrict = false;
     notifyListeners();
   }
 
-  Future<void> _loadWards(String? districtName) async {
-    if (districtName == null) return;
-    final districtCode = _getDistrictCode(districtName);
-
+  Future<void> _loadWards() async {
+    if (selectedDistrict == null) return;
     _isLoadingWard = true;
     ErrorHandler.clearError(_errorState);
     notifyListeners();
 
-    // Load wards from cache or API
+    final districtCode = _getDistrictCode(selectedDistrict);
     if (_locationCache.getWards(districtCode).isEmpty) {
       await _executeApiCall(
-        () => locationRepository.getWards(districtCode: districtCode),
-        'Failed to load wards',
-        (data) {
+        apiCall: () => locationRepository.getWards(districtCode: districtCode),
+        errorPrefix: 'Failed to load wards',
+        onSuccess: (data) {
           _locationCache.setWards(districtCode, data as List<Ward>);
-          if (selectedWard == null && wards.isNotEmpty) {
-            selectedWard = wards[0].name;
-          }
-          if (provinces.isNotEmpty && districts.isNotEmpty && wards.isNotEmpty && _errorState.errorMessage == null) {
-            _isDataLoaded = true;
-          }
+          selectedWard ??= wards.isNotEmpty ? wards[0].name : null;
+          _updateDataLoadedStatus();
         },
       );
-    } else if (selectedWard == null && wards.isNotEmpty) {
-      selectedWard = wards[0].name;
-      if (provinces.isNotEmpty && districts.isNotEmpty && wards.isNotEmpty && _errorState.errorMessage == null) {
-        _isDataLoaded = true;
-      }
+    } else {
+      selectedWard ??= wards.isNotEmpty ? wards[0].name : null;
+      _updateDataLoadedStatus();
     }
 
     _isLoadingWard = false;
     notifyListeners();
   }
 
+  void _updateDataLoadedStatus() {
+    _isDataLoaded = provinces.isNotEmpty && districts.isNotEmpty && wards.isNotEmpty && _errorState.errorMessage == null;
+  }
+
   String _getProvinceCode(String? provinceName) {
     if (provinceName == null) return '';
-    final province = provinces.firstWhere(
+    return provinces.firstWhere(
       (p) => p.name == provinceName,
       orElse: () => provinces.isNotEmpty ? provinces[0] : Province(),
-    );
-    return province.code?.toString() ?? '';
+    ).code?.toString() ?? '';
   }
 
   String _getDistrictCode(String? districtName) {
     if (districtName == null) return '';
-    final district = districts.firstWhere(
+    return districts.firstWhere(
       (d) => d.name == districtName,
       orElse: () => districts.isNotEmpty ? districts[0] : District(),
-    );
-    return district.code?.toString() ?? '';
+    ).code?.toString() ?? '';
   }
 
   void setCity(String? city) {
@@ -187,7 +179,7 @@ class DetailProfileViewModel extends ChangeNotifier {
       selectedWard = null;
       _isLoadingDistrict = true;
       _isLoadingWard = true;
-      _loadDistricts(city);
+      _loadDistricts();
     }
     notifyListeners();
   }
@@ -197,7 +189,7 @@ class DetailProfileViewModel extends ChangeNotifier {
       selectedDistrict = district;
       selectedWard = null;
       _isLoadingWard = true;
-      _loadWards(district);
+      _loadWards();
     }
     notifyListeners();
   }
@@ -225,22 +217,18 @@ class DetailProfileViewModel extends ChangeNotifier {
     notifyListeners();
 
     await _executeApiCall(
-      () async {
-        final updatedUser = await userRepository.editUser(
-          userId,
-          fullname: fullnameController.text,
-          phone: phoneController.text,
-          city: selectedCity,
-          district: selectedDistrict,
-          ward: selectedWard,
-        );
-        return updatedUser;
-      },
-      'Failed to update profile',
-      (updatedUser) {
+      apiCall: () => userRepository.editUser(
+        userId,
+        fullname: fullnameController.text,
+        phone: phoneController.text,
+        city: selectedCity,
+        district: selectedDistrict,
+        ward: selectedWard,
+      ),
+      errorPrefix: 'Failed to update profile',
+      onSuccess: (updatedUser) {
         try {
-          final sessionManager = context.read<SessionManager>();
-          sessionManager.setUser(updatedUser as User);
+          context.read<SessionManager>().setUser(updatedUser as User);
           user = updatedUser;
           _isUpdateSuccessful = true;
           ErrorHandler.clearError(_errorState);
@@ -249,7 +237,6 @@ class DetailProfileViewModel extends ChangeNotifier {
           _errorState.errorMessage = 'Failed to access session manager: $e';
           _isUpdateSuccessful = false;
         }
-        notifyListeners();
       },
     );
 
@@ -257,21 +244,52 @@ class DetailProfileViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _executeApiCall(
-    Future<dynamic> Function() apiCall,
-    String errorPrefix,
-    void Function(dynamic data) onSuccess,
-  ) async {
+  Future<void> uploadAvatar(BuildContext context, File imageFile) async {
+    _isUploadingAvatar = true;
+    _isUpdateSuccessful = false;
+    ErrorHandler.clearError(_errorState);
+    notifyListeners();
+
+    await _executeApiCall(
+      apiCall: () async {
+        final multipartFile = await MultipartFile.fromFile(imageFile.path, filename: imageFile.path.split('/').last);
+        return userRepository.editAvatar(file: multipartFile);
+      },
+      errorPrefix: 'Failed to upload avatar',
+      onSuccess: (updatedUser) {
+        try {
+          context.read<SessionManager>().setUser(updatedUser as User);
+          user = updatedUser;
+          _isUpdateSuccessful = true;
+          ErrorHandler.clearError(_errorState);
+        } catch (e) {
+          _isUpdateSuccessful = false;
+          rethrow;
+        }
+      },
+    );
+
+    _isUploadingAvatar = false;
+    notifyListeners();
+  }
+
+  Future<void> _executeApiCall({
+    required Future<dynamic> Function() apiCall,
+    required String errorPrefix,
+    required void Function(dynamic data) onSuccess,
+  }) async {
+    final errorState = ErrorState();
     try {
       final result = await apiCall();
       onSuccess(result);
     } catch (e) {
-      ErrorHandler.handleError(e, errorPrefix, _errorState);
+      ErrorHandler.handleError(e, errorPrefix, errorState);
       _isUpdateSuccessful = false;
       notifyListeners();
       rethrow;
     }
   }
+
 
   void clearError() {
     ErrorHandler.clearError(_errorState);
