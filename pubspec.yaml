@@ -34,6 +34,7 @@ dependencies:
   image_picker: ^1.1.2
   
   
+  
 
 dev_dependencies:
   flutter_test:
@@ -91,6 +92,6 @@ flutter:
   - assets/images/verify.png
   - assets/icons/logo_e.png
   - assets/images/event.png
-  - assets/images/no_data.png
+  - assets/icons/no_data.svg
   - .env/dev.env
  

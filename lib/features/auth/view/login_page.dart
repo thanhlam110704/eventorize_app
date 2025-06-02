@@ -42,34 +42,31 @@ class LoginPageState extends State<LoginPage> {
   }
 
   Future<void> handleLogin(LoginViewModel viewModel) async {
-    bool isValid = true;
-    if (emailInputKey.currentState != null) {
-      isValid &= emailInputKey.currentState!.validate();
-    }
-    if (passwordInputKey.currentState != null) {
-      isValid &= passwordInputKey.currentState!.validate();
-    }
-    if (isValid) {
-      try {
-        final result = await viewModel.login(
-          email: emailController.text.trim(),
-          password: passwordController.text.trim(),
-        );
-        if (mounted) {
-          await context.read<SessionManager>().setUserFromToken(result['token']);
-          ToastCustom.show(
-            context: context,
-            title: 'Login successful!',
-            description: 'Welcome, ${result['user'].fullname}!',
-            type: ToastificationType.success,
-          );
-          context.goNamed('home');
-        }
-      } catch (e) {
-        // Lỗi đã được xử lý trong LoginViewModel
-      }
-    }
+  bool isValid = true;
+  if (emailInputKey.currentState != null) {
+    isValid &= emailInputKey.currentState!.validate();
   }
+  if (passwordInputKey.currentState != null) {
+    isValid &= passwordInputKey.currentState!.validate();
+  }
+  if (isValid) {
+    final result = await viewModel.login(
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
+    );
+    if (mounted) {
+      await context.read<SessionManager>().setUserFromToken(result['token']);
+      if (!mounted) return; 
+      ToastCustom.show(
+        context: context,
+        title: 'Login successful!',
+        description: 'Welcome, ${result['user'].fullname}!',
+        type: ToastificationType.success,
+      );
+      context.goNamed('home');
+    } 
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -251,7 +248,6 @@ class LoginPageState extends State<LoginPage> {
             ? null
             : () async {
                 final googleUser = await GoogleSignInApi.signIn();
-                
                 if (googleUser == null) {
                   if (mounted) {
                     ToastCustom.show(
@@ -264,32 +260,33 @@ class LoginPageState extends State<LoginPage> {
                   return;
                 }
 
-                if (mounted) {
-                  final result = await viewModel.googleSSOAndroid(
-                    googleId: googleUser['google_id']!,
-                    displayName: googleUser['fullname']!,
-                    email: googleUser['email']!,
-                    picture: googleUser['avatar']!,
+                final result = await viewModel.googleSSOAndroid(
+                  googleId: googleUser['google_id']!,
+                  displayName: googleUser['fullname']!,
+                  email: googleUser['email']!,
+                  picture: googleUser['avatar']!,
+                );
+
+                if (!mounted) return;
+
+                if (viewModel.errorMessage != null) {
+                  ToastCustom.show(
+                    context: context,
+                    title: viewModel.errorTitle ?? 'Error',
+                    description: viewModel.errorMessage!,
+                    type: ToastificationType.error,
                   );
-                  
-                  if (viewModel.errorMessage != null && mounted) {
-                    ToastCustom.show(
-                      context: context,
-                      title: viewModel.errorTitle ?? 'Error',
-                      description: viewModel.errorMessage!,
-                      type: ToastificationType.error,
-                    );
-                    viewModel.clearError();
-                  } else if (mounted) {
-                    await context.read<SessionManager>().setUserFromToken(result['token']);
-                    ToastCustom.show(
-                      context: context,
-                      title: 'Login successful!',
-                      description: 'Welcome, ${result['user'].fullname}!',
-                      type: ToastificationType.success,
-                    );
-                    context.goNamed('home');
-                  }
+                  viewModel.clearError();
+                } else {
+                  await context.read<SessionManager>().setUserFromToken(result['token']);
+                  if (!mounted) return;
+                  ToastCustom.show(
+                    context: context,
+                    title: 'Login successful!',
+                    description: 'Welcome, ${result['user'].fullname}!',
+                    type: ToastificationType.success,
+                  );
+                  context.goNamed('home');
                 }
               },
         style: ElevatedButton.styleFrom(
