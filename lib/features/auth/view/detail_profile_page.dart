@@ -43,6 +43,9 @@ class DetailProfilePageState extends State<DetailProfilePage> {
   }
 
   void _handleScroll() {
+    final viewModel = context.read<DetailProfileViewModel>();
+    if (!viewModel.isDataLoaded) return; 
+
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 100), () {
       _showDividerNotifier.value = _scrollController.offset > 0;
@@ -145,26 +148,26 @@ class DetailProfilePageState extends State<DetailProfilePage> {
   }
 
   Widget _buildSkeletonTopBar(bool isSmallScreen, bool isShortScreen) {
-  return Padding(
-    padding: EdgeInsets.fromLTRB(
-      isSmallScreen ? 16 : 24,
-      isShortScreen ? 24 : isSmallScreen ? 40 : 80,
-      isSmallScreen ? 16 : 24,
-      0,
-    ),
-    child: Shimmer.fromColors(
-      baseColor: AppColors.shimmerBase,
-      highlightColor: AppColors.shimmerHighlight,
-      child: Container(
-        height: 56,
-        decoration: BoxDecoration(
-          color: AppColors.skeleton,
-          borderRadius: BorderRadius.circular(8),
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        isSmallScreen ? 16 : 24,
+        isShortScreen ? 24 : isSmallScreen ? 40 : 80,
+        isSmallScreen ? 16 : 24,
+        0,
+      ),
+      child: Shimmer.fromColors(
+        baseColor: AppColors.shimmerBase,
+        highlightColor: AppColors.shimmerHighlight,
+        child: Container(
+          height: 56,
+          decoration: BoxDecoration(
+            color: AppColors.skeleton,
+            borderRadius: BorderRadius.circular(8),
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildDivider() {
     return Container(
@@ -181,8 +184,8 @@ class DetailProfilePageState extends State<DetailProfilePage> {
         ],
       ),
       child: Divider(
-        color: Colors.transparent, 
-        thickness: 1.5, 
+        color: Colors.transparent,
+        thickness: 1.5,
       ),
     );
   }

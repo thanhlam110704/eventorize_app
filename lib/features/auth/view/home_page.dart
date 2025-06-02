@@ -64,7 +64,7 @@ class HomePageState extends State<HomePage> {
               bottomNavigationBar: const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Divider(height: 1, thickness: 0.5, color: Colors.black12),
+                  Divider(height: 0.5, thickness: 0.5, color: AppColors.grey),
                   BottomNavBar(),
                 ],
               ),
@@ -552,7 +552,7 @@ class HomePageState extends State<HomePage> {
                     SizedBox(width: 4),
                     Text(
                       '2.9k attendees',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                      style: TextStyle(fontSize: 12, color: AppColors.mutedText),
                     ),
                   ],
                 ),
