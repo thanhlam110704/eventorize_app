@@ -16,14 +16,14 @@ class HomeViewModel extends ChangeNotifier {
   final LocationCache _locationCache = GetIt.instance<LocationCache>();
   final ErrorState _errorState = ErrorState();
 
-  bool _isLoading = false;
+  bool _isLoading = true; 
   bool get isLoading => _isLoading;
 
   bool _isInitialLoad = true; 
   bool get isInitialLoad => _isInitialLoad;
 
-  bool _isLoadingCity = false;
-  bool get isLoadingCity => _isLoadingCity;
+  bool _isDataLoaded = false; 
+  bool get isDataLoaded => _isDataLoaded;
 
   String? get errorMessage => _errorState.errorMessage;
   String? get errorTitle => _errorState.errorTitle;
@@ -44,8 +44,37 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   HomeViewModel(this._eventRepository, this._sessionManager, this._locationRepository) {
-    fetchEvents();
-    loadLocationData();
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    _isLoading = true;
+    _isInitialLoad = true;
+    ErrorHandler.clearError(_errorState);
+    notifyListeners();
+
+    try {
+      await _loadInitialLocationData();
+      await fetchEvents(search: _selectedCity, page: 1, limit: 10);
+      _updateDataLoadedStatus();
+      _isInitialLoad = false;
+    } catch (e) {
+      ErrorHandler.handleError(e, 'Failed to initialize data', _errorState);
+      _isDataLoaded = false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _loadInitialLocationData() async {
+    if (_locationCache.provinces.isEmpty) {
+      final provinces = await _locationRepository.getProvinces();
+      _locationCache.setProvinces(provinces);
+    }
+    if (_selectedCity == null && provinces.isNotEmpty) {
+      _selectedCity = provinces[0].name;
+    }
   }
 
   Future<void> fetchEvents({
@@ -59,7 +88,6 @@ class HomeViewModel extends ChangeNotifier {
   }) async {
     _isLoading = true;
     ErrorHandler.clearError(_errorState);
-    _events = [];
     notifyListeners();
 
     try {
@@ -73,19 +101,19 @@ class HomeViewModel extends ChangeNotifier {
         orderBy: orderBy,
       );
       _events = result['data'] as List<Event>;
-      _totalEvents = result['total'] as int;
+      _totalEvents = result['total'] as int; 
+      _updateDataLoadedStatus();
     } catch (e) {
       ErrorHandler.handleError(e, 'Failed to load events', _errorState);
-      notifyListeners();
+      _isDataLoaded = false;
     } finally {
       _isLoading = false;
-      _isInitialLoad = false; 
       notifyListeners();
     }
   }
 
   Future<void> loadLocationData() async {
-    _isLoadingCity = true;
+    _isLoading = true;
     ErrorHandler.clearError(_errorState);
     notifyListeners();
 
@@ -97,19 +125,25 @@ class HomeViewModel extends ChangeNotifier {
       if (_selectedCity == null && provinces.isNotEmpty) {
         _selectedCity = provinces[0].name;
       }
+      _updateDataLoadedStatus();
     } catch (e) {
       ErrorHandler.handleError(e, 'Failed to load provinces', _errorState);
+      _isDataLoaded = false;
     } finally {
-      _isLoadingCity = false;
+      _isLoading = false;
       notifyListeners();
     }
   }
 
-  void setCity(String? city) {
+  void _updateDataLoadedStatus() {
+    _isDataLoaded = provinces.isNotEmpty && _errorState.errorMessage == null;
+  }
+
+  Future<void> setCity(String? city) async {
     if (city != _selectedCity) {
       _selectedCity = city;
-      fetchEvents(query: 'city=$city');
       notifyListeners();
+      await fetchEvents(search: city); 
     }
   }
 

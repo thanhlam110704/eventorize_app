@@ -91,5 +91,6 @@ flutter:
   - assets/images/verify.png
   - assets/icons/logo_e.png
   - assets/images/event.png
+  - assets/images/no_data.png
   - .env/dev.env
  

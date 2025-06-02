@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:eventorize_app/common/services/secure_storage.dart';
 import 'package:eventorize_app/core/utils/exceptions.dart';
 import 'package:eventorize_app/data/models/user.dart';
 import 'package:eventorize_app/data/repositories/user_repository.dart';
@@ -16,23 +15,23 @@ class LoginViewModel extends ChangeNotifier {
   String? get errorTitle => _errorState.errorTitle;
   User? get user => _errorState.user;
 
-  Future<void> login({
+  Future<Map<String, dynamic>> login({
     required String email,
     required String password,
   }) async {
-    await _executeLogin(
+    return await _executeLogin(
       () => _userRepository.login(email: email, password: password),
       'Login failed',
     );
   }
 
-  Future<void> googleSSOAndroid({
+  Future<Map<String, dynamic>> googleSSOAndroid({
     required String googleId,
     required String displayName,
     required String email,
     required String picture,
   }) async {
-    await _executeLogin(
+    return await _executeLogin(
       () => _userRepository.googleSSOAndroid(
         googleId: googleId,
         displayName: displayName,
@@ -43,7 +42,7 @@ class LoginViewModel extends ChangeNotifier {
     );
   }
 
-  Future<void> _executeLogin(
+  Future<Map<String, dynamic>> _executeLogin(
     Future<Map<String, dynamic>> Function() loginFn,
     String errorPrefix,
   ) async {
@@ -61,7 +60,7 @@ class LoginViewModel extends ChangeNotifier {
         throw Exception('$errorPrefix: Invalid response');
       }
 
-      await SecureStorage.saveToken(token);
+      return {'user': _errorState.user, 'token': token};
     } catch (e) {
       ErrorHandler.handleError(e, errorPrefix, _errorState);
       notifyListeners();

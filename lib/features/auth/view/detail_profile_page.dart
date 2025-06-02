@@ -145,42 +145,26 @@ class DetailProfilePageState extends State<DetailProfilePage> {
   }
 
   Widget _buildSkeletonTopBar(bool isSmallScreen, bool isShortScreen) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        isSmallScreen ? 16 : 24,
-        isShortScreen ? 24 : isSmallScreen ? 40 : 80,
-        isSmallScreen ? 16 : 24,
-        0,
-      ),
-      child: Shimmer.fromColors(
-        baseColor: AppColors.shimmerBase,
-        highlightColor: AppColors.shimmerHighlight,
-        child: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.skeleton,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Container(
-                height: 20,
-                decoration: BoxDecoration(
-                  color: AppColors.skeleton,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-            ),
-            const SizedBox(width: 32), // Dự phòng không gian cho các nút khác nếu có
-          ],
+  return Padding(
+    padding: EdgeInsets.fromLTRB(
+      isSmallScreen ? 16 : 24,
+      isShortScreen ? 24 : isSmallScreen ? 40 : 80,
+      isSmallScreen ? 16 : 24,
+      0,
+    ),
+    child: Shimmer.fromColors(
+      baseColor: AppColors.shimmerBase,
+      highlightColor: AppColors.shimmerHighlight,
+      child: Container(
+        height: 56,
+        decoration: BoxDecoration(
+          color: AppColors.skeleton,
+          borderRadius: BorderRadius.circular(8),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildDivider() {
     return Container(
@@ -220,7 +204,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
       backgroundColor: AppColors.white,
       body: Column(
         children: [
-          _buildSkeletonTopBar(isSmallScreen, isShortScreen), // Sử dụng skeleton cho TopNavBar
+          _buildSkeletonTopBar(isSmallScreen, isShortScreen),
           ValueListenableBuilder<bool>(
             valueListenable: _showDividerNotifier,
             builder: (context, showDivider, _) {

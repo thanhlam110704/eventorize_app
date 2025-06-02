@@ -31,6 +31,27 @@ class HomePageState extends State<HomePage> {
         _handleSessionErrors(context, sessionManager);
         _handleViewModelErrors(context, viewModel);
 
+        if (sessionManager.isCheckingSession) {
+          return Scaffold(
+            backgroundColor: AppColors.whiteBackground,
+            body: _buildLoadingOverlay(),
+          );
+        }
+
+        if (!sessionManager.isLoading && !sessionManager.isCheckingSession && sessionManager.user == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            context.pushReplacementNamed('login');
+          });
+          return Scaffold(
+            backgroundColor: AppColors.whiteBackground,
+            body: _buildLoadingOverlay(),
+          );
+        }
+
+        if (!viewModel.isDataLoaded) {
+          return _buildSkeletonUI(isSmallScreen, screenSize);
+        }
+
         return Stack(
           children: [
             Scaffold(
@@ -43,12 +64,12 @@ class HomePageState extends State<HomePage> {
               bottomNavigationBar: const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Divider(height: 1.5, thickness: 1.5, color: Colors.black12),
+                  Divider(height: 1, thickness: 0.5, color: Colors.black12),
                   BottomNavBar(),
                 ],
               ),
             ),
-            if ((sessionManager.isCheckingSession || viewModel.isLoading) && !viewModel.isInitialLoad)
+            if (viewModel.isLoading && !viewModel.isInitialLoad)
               _buildLoadingOverlay(),
           ],
         );
@@ -101,39 +122,20 @@ class HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildMainContainer(
-      bool isSmallScreen, Size screenSize, SessionManager sessionManager, HomeViewModel viewModel) {
-    if (viewModel.isLoading && viewModel.isInitialLoad) {
-      return _buildSkeletonContainer(isSmallScreen, screenSize);
-    }
-
-    return Container(
-      width: screenSize.width,
-      color: AppColors.whiteBackground,
-      padding: EdgeInsets.fromLTRB(
-        isSmallScreen ? 16 : 24,
-        isSmallScreen ? 20 : 40,
-        isSmallScreen ? 16 : 24,
-        isSmallScreen ? 24 : 32,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSearchHeader(),
-              const SizedBox(height: 16),
-              _buildLocationSelector(viewModel),
-              const SizedBox(height: 16),
-              _buildCategoryChips(),
-              const SizedBox(height: 24),
-              _buildTrendingHeader(),
-              const SizedBox(height: 16),
-              _buildEventList(viewModel),
-            ],
-          ),
+  Widget _buildSkeletonUI(bool isSmallScreen, Size screenSize) {
+    return Scaffold(
+      backgroundColor: AppColors.whiteBackground,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: _buildSkeletonContainer(isSmallScreen, screenSize),
         ),
+      ),
+      bottomNavigationBar: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Divider(height: 1.5, thickness: 1.5, color: Colors.black12),
+          BottomNavBar(),
+        ],
       ),
     );
   }
@@ -176,17 +178,17 @@ class HomePageState extends State<HomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSkeletonBox(double.infinity, 60),
+        _buildSkeletonBox(double.infinity, 60), 
         const SizedBox(height: 16),
-        _buildSkeletonBox(150, 24),
+        _buildSkeletonBox(176, 48),
         const SizedBox(height: 16),
-        _buildSkeletonBox(340, 35),
+        _buildSkeletonBox(double.infinity, 35), 
         const SizedBox(height: 24),
-        _buildSkeletonBox(200, 24),
+        _buildSkeletonBox(200, 20), 
         const SizedBox(height: 16),
         Column(
           children: List.generate(
-            2,
+            4,
             (_) => Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Row(
@@ -199,11 +201,11 @@ class HomePageState extends State<HomePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildSkeletonBox(double.infinity, 20),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 4),
                         _buildSkeletonBox(150, 16),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 4),
                         _buildSkeletonBox(100, 16),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 4),
                         _buildSkeletonBox(80, 16),
                       ],
                     ),
@@ -214,6 +216,39 @@ class HomePageState extends State<HomePage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildMainContainer(
+      bool isSmallScreen, Size screenSize, SessionManager sessionManager, HomeViewModel viewModel) {
+    return Container(
+      width: screenSize.width,
+      color: AppColors.whiteBackground,
+      padding: EdgeInsets.fromLTRB(
+        isSmallScreen ? 16 : 24,
+        isSmallScreen ? 20 : 40,
+        isSmallScreen ? 16 : 24,
+        isSmallScreen ? 24 : 32,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSearchHeader(),
+              const SizedBox(height: 16),
+              _buildLocationSelector(viewModel),
+              const SizedBox(height: 16),
+              _buildCategoryChips(),
+              const SizedBox(height: 24),
+              _buildTrendingHeader(),
+              const SizedBox(height: 16),
+              _buildEventList(viewModel),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -281,48 +316,50 @@ class HomePageState extends State<HomePage> {
             const SizedBox(width: 2),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 150),
-              child: DropdownButtonFormField<String>(
-                value: viewModel.selectedCity,
-                items: viewModel.provinces.map((province) {
-                  return DropdownMenuItem(
-                    value: province.name,
-                    child: Text(
-                      province.name ?? '',
+              child: viewModel.provinces.isEmpty
+                  ? const SizedBox.shrink()
+                  : DropdownButtonFormField<String>(
+                      value: viewModel.selectedCity,
+                      items: viewModel.provinces.map((province) {
+                        return DropdownMenuItem(
+                          value: province.name,
+                          child: Text(
+                            province.name ?? '',
+                            style: const TextStyle(
+                              color: Colors.blue,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: viewModel.isLoading ? null : (value) => viewModel.setCity(value),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 2, vertical: 0),
+                      ),
+                      isExpanded: true,
                       style: const TextStyle(
                         color: Colors.blue,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
-                      overflow: TextOverflow.ellipsis,
+                      validator: (value) => value == null ? 'Please select a city' : null,
+                      icon: const Padding(
+                        padding: EdgeInsets.only(right: 2.0),
+                        child: Icon(Icons.arrow_drop_down, color: Colors.blue, size: 24),
+                      ),
+                      itemHeight: 48,
+                      menuMaxHeight: 200,
                     ),
-                  );
-                }).toList(),
-                onChanged: viewModel.isLoadingCity ? null : viewModel.setCity,
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 2, vertical: 0),
-                ),
-                isExpanded: true,
-                style: const TextStyle(
-                  color: Colors.blue,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-                validator: (value) => value == null ? 'Please select a city' : null,
-                icon: const Padding(
-                  padding: EdgeInsets.only(right: 2.0),
-                  child: Icon(Icons.arrow_drop_down, color: Colors.blue, size: 24),
-                ),
-                itemHeight: 48,
-                menuMaxHeight: 200,
-              ),
             ),
           ],
         ),
         const SizedBox(height: 2),
         const Divider(
           height: 1,
-          thickness: 0.5,
+          thickness: 1,
           color: AppColors.grey,
           indent: 0,
           endIndent: 190,
@@ -363,24 +400,36 @@ class HomePageState extends State<HomePage> {
   }
 
   Widget _buildTrendingHeader() {
-    return const Text(
-      'Top Trending in Ho Chi Minh City',
-      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+    return Text(
+      'Top Trending Event In City',
+      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
     );
   }
 
   Widget _buildEventList(HomeViewModel viewModel) {
-    if (viewModel.events.isEmpty && !viewModel.isLoading) {
-      return const Center(
-        child: Text(
-          'No events found.',
-          style: TextStyle(fontSize: 16, color: Colors.grey),
-        ),
-      );
-    }
-
-    return Column(
-      children: viewModel.events.map(_buildEventCard).toList(),
+    return SizedBox(
+      height: 300, 
+      child: viewModel.events.isEmpty && !viewModel.isLoading && viewModel.totalEvents == 0
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'assets/images/no_data.png',
+                    width: 102,
+                    height: 102,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No data',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                ],
+              ),
+            )
+          : Column(
+              children: viewModel.events.map(_buildEventCard).toList(),
+            ),
     );
   }
 
@@ -503,7 +552,7 @@ class HomePageState extends State<HomePage> {
                     SizedBox(width: 4),
                     Text(
                       '2.9k attendees',
-                      style: TextStyle(fontSize: 12, color: AppColors.mutedText),
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
                 ),

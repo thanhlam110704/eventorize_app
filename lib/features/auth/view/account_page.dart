@@ -27,7 +27,6 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
   @override
   void initState() {
     super.initState();
-    // Khởi tạo AnimationController cho hiệu ứng chuyển đổi
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -75,7 +74,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
       color: AppColors.defaultBackground,
       padding: EdgeInsets.fromLTRB(
         isSmallScreen ? 16 : 24,
-        isSmallScreen ? 40 : 80,
+        isSmallScreen ? 20 : 40,
         isSmallScreen ? 16 : 24,
         isSmallScreen ? 24 : 32,
       ),
@@ -101,7 +100,6 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
                 });
               }
 
-              // Sử dụng AnimatedSwitcher để chuyển đổi mượt mà giữa skeleton và giao diện chính
               return AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
                 transitionBuilder: (Widget child, Animation<double> animation) {
@@ -147,7 +145,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
     return Shimmer.fromColors(
       baseColor: AppColors.shimmerBase,
       highlightColor: AppColors.shimmerHighlight,
-      period: const Duration(milliseconds: 1500), // Tăng thời gian hiệu ứng để mượt hơn
+      period: const Duration(milliseconds: 1500), 
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -156,8 +154,9 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
             width: 150,
             decoration: BoxDecoration(
               color: AppColors.skeleton,
-              borderRadius: BorderRadius.circular(4), // Bo góc để khớp với giao diện thật
+              borderRadius: BorderRadius.circular(4),
             ),
+            // Bỏ margin âm, thay bằng SizedBox để điều chỉnh khoảng cách
           ),
           const SizedBox(height: 15),
           Container(
@@ -204,7 +203,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
                         width: double.infinity,
                         decoration: BoxDecoration(
                           color: AppColors.skeleton,
-                          borderRadius: BorderRadius.circular(8), // Khớp với nút thật
+                          borderRadius: BorderRadius.circular(8), 
                         ),
                       ),
                     ],
@@ -315,7 +314,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: AppColors.grey.withOpacity(0.2), // Giảm độ đậm của shadow để nhẹ hơn
+            color: Color.fromRGBO(51, 51, 51, 0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -349,9 +348,9 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
                 style: AppTextStyles.avatarInitials,
               ),
             ),
-            memCacheHeight: 136, // Tối ưu kích thước bộ nhớ cache
+            memCacheHeight: 136, 
             memCacheWidth: 136,
-            fadeInDuration: const Duration(milliseconds: 200), // Giảm thời gian fade để nhanh hơn
+            fadeInDuration: const Duration(milliseconds: 200), 
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -432,7 +431,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
           showTrailing: true,
         ),
         buildDivider(),
-        const SizedBox(height: 125),
+        const SizedBox(height: 135),
         SizedBox(
           width: double.infinity,
           child: OutlinedButton(
