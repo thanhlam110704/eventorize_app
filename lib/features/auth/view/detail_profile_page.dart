@@ -185,7 +185,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
       ),
       child: Divider(
         color: AppColors.grey,
-        thickness: 1.5,
+        thickness: 0.5
       ),
     );
   }
