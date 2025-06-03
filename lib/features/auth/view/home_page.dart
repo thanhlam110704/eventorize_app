@@ -1,18 +1,15 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/common/services/session_manager.dart';
-import 'package:eventorize_app/common/widgets/bottom_nav_bar.dart';
+import 'package:eventorize_app/common/components/bottom_nav_bar.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
-import 'package:eventorize_app/core/utils/datetime_convert.dart';
-import 'package:eventorize_app/data/models/event.dart';
 import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
-import 'package:eventorize_app/common/widgets/toast_custom.dart';
+import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:eventorize_app/common/components/event_list.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -30,7 +27,7 @@ class HomePageState extends State<HomePage> {
     'Art Exhibition',
     'Tech Conference',
     'Food Fair',
-    'Charity Run'
+    'Charity Run',
   ];
   final GlobalKey _searchContainerKey = GlobalKey();
   OverlayEntry? _overlayEntry;
@@ -70,7 +67,23 @@ class HomePageState extends State<HomePage> {
 
   void _showOverlay() {
     _hideOverlay();
-    _overlayEntry = _createOverlayEntry();
+    _overlayEntry = OverlayEntry(
+      builder: (context) => SearchSuggestionsOverlay(
+        searchContainerKey: _searchContainerKey,
+        recentSearches: _recentSearches,
+        suggestions: _suggestions,
+        searchController: _searchController,
+        selectedItem: _selectedItem,
+        onItemSelected: (item) {
+          setState(() {
+            _selectedItem = item;
+            _searchController.text = item;
+            _addRecentSearch(item);
+            _searchFocusNode.unfocus();
+          });
+        },
+      ),
+    );
     Overlay.of(context).insert(_overlayEntry!);
   }
 
@@ -79,104 +92,41 @@ class HomePageState extends State<HomePage> {
     _overlayEntry = null;
   }
 
-  OverlayEntry _createOverlayEntry() {
-    RenderBox? renderBox = _searchContainerKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return OverlayEntry(builder: (_) => const SizedBox.shrink());
+  void _handleSessionErrors(BuildContext context, SessionManager sessionManager) {
+    if (sessionManager.errorMessage != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) { 
+          ToastCustom.show(
+            context: context,
+            title: sessionManager.errorTitle ?? 'Error',
+            description: sessionManager.errorMessage!,
+            type: ToastificationType.error,
+          );
+          sessionManager.clearError();
+          if (!sessionManager.isLoading &&
+              !sessionManager.isCheckingSession &&
+              sessionManager.user == null) {
+            context.pushReplacementNamed('login');
+          }
+        }
+      });
+    }
+  }
 
-    final size = renderBox.size;
-    final offset = renderBox.localToGlobal(Offset.zero);
-
-    final filteredSuggestions = _suggestions
-        .where((suggestion) =>
-            suggestion.toLowerCase().contains(_searchController.text.toLowerCase()))
-        .toList();
-
-    return OverlayEntry(
-      builder: (context) => Positioned(
-        left: offset.dx,
-        top: offset.dy + size.height + 8,
-        width: size.width,
-        child: Material(
-          elevation: 4,
-          borderRadius: BorderRadius.circular(10),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (_recentSearches.isNotEmpty) ...[
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-                    child: Text(
-                      'Recent Searches',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.darkGrey,
-                      ),
-                    ),
-                  ),
-                  ..._recentSearches.map((search) => ListTile(
-                        leading: const Icon(Icons.history, color: AppColors.darkGrey),
-                        title: Text(
-                          search,
-                          style: const TextStyle(color: AppColors.darkGrey),
-                        ),
-                        tileColor: _selectedItem == search ? Colors.blue[200] : null,
-                        onTap: () {
-                          setState(() {
-                            _selectedItem = search;
-                          });
-                          _searchController.text = search;
-                          _addRecentSearch(search);
-                          _searchFocusNode.unfocus();
-                        },
-                      )),
-                ],
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: Text(
-                    'Suggestions',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.darkGrey,
-                    ),
-                  ),
-                ),
-                ...filteredSuggestions.map((suggestion) => ListTile(
-                      leading: const Icon(Icons.search, color: AppColors.darkGrey),
-                      title: Text(
-                        suggestion,
-                        style: const TextStyle(color: AppColors.darkGrey),
-                      ),
-                      tileColor: _selectedItem == suggestion ? Colors.blue[200] : null,
-                      onTap: () {
-                        setState(() {
-                          _selectedItem = suggestion;
-                        });
-                        _searchController.text = suggestion;
-                        _addRecentSearch(suggestion);
-                        _searchFocusNode.unfocus();
-                      },
-                    )),
-                if (filteredSuggestions.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text(
-                      'No suggestions found',
-                      style: TextStyle(color: AppColors.grey),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+  void _handleViewModelErrors(BuildContext context, HomeViewModel viewModel) {
+    if (viewModel.errorMessage != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) { 
+          ToastCustom.show(
+            context: context,
+            title: viewModel.errorTitle ?? 'Error',
+            description: viewModel.errorMessage!,
+            type: ToastificationType.error,
+          );
+          viewModel.clearError();
+        }
+      });
+    }
   }
 
   @override
@@ -190,24 +140,37 @@ class HomePageState extends State<HomePage> {
         _handleViewModelErrors(context, viewModel);
 
         if (sessionManager.isCheckingSession) {
-          return Scaffold(
+          return const Scaffold(
             backgroundColor: AppColors.whiteBackground,
-            body: _buildLoadingOverlay(),
+            body: LoadingOverlay(),
           );
         }
 
-        if (!sessionManager.isLoading && !sessionManager.isCheckingSession && sessionManager.user == null) {
+        if (!sessionManager.isLoading &&
+            !sessionManager.isCheckingSession &&
+            sessionManager.user == null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            context.pushReplacementNamed('login');
+            if (mounted) { 
+              context.pushReplacementNamed('login');
+            }
           });
-          return Scaffold(
+          return const Scaffold(
             backgroundColor: AppColors.whiteBackground,
-            body: _buildLoadingOverlay(),
+            body: LoadingOverlay(),
           );
         }
 
         if (!viewModel.isDataLoaded) {
-          return _buildSkeletonUI(isSmallScreen, screenSize);
+          return SkeletonUI(
+            isSmallScreen: isSmallScreen,
+            screenSize: screenSize,
+            searchHeader: SearchHeader(
+              searchContainerKey: _searchContainerKey,
+              searchFocusNode: _searchFocusNode,
+              searchController: _searchController,
+              onSearchSubmitted: _addRecentSearch,
+            ),
+          );
         }
 
         return Stack(
@@ -216,7 +179,18 @@ class HomePageState extends State<HomePage> {
               backgroundColor: AppColors.whiteBackground,
               body: SafeArea(
                 child: SingleChildScrollView(
-                  child: _buildMainContainer(isSmallScreen, screenSize, sessionManager, viewModel),
+                  child: MainContainer(
+                    isSmallScreen: isSmallScreen,
+                    screenSize: screenSize,
+                    sessionManager: sessionManager,
+                    viewModel: viewModel,
+                    searchHeader: SearchHeader(
+                      searchContainerKey: _searchContainerKey,
+                      searchFocusNode: _searchFocusNode,
+                      searchController: _searchController,
+                      onSearchSubmitted: _addRecentSearch,
+                    ),
+                  ),
                 ),
               ),
               bottomNavigationBar: const Column(
@@ -228,45 +202,19 @@ class HomePageState extends State<HomePage> {
               ),
             ),
             if (viewModel.isLoading && !viewModel.isInitialLoad)
-              _buildLoadingOverlay(),
+              const LoadingOverlay(),
           ],
         );
       },
     );
   }
+}
 
-  void _handleSessionErrors(BuildContext context, SessionManager sessionManager) {
-    if (sessionManager.errorMessage != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ToastCustom.show(
-          context: context,
-          title: sessionManager.errorTitle ?? 'Error',
-          description: sessionManager.errorMessage!,
-          type: ToastificationType.error,
-        );
-        sessionManager.clearError();
-        if (!sessionManager.isLoading && !sessionManager.isCheckingSession && sessionManager.user == null) {
-          context.pushReplacementNamed('login');
-        }
-      });
-    }
-  }
+class LoadingOverlay extends StatelessWidget {
+  const LoadingOverlay({super.key});
 
-  void _handleViewModelErrors(BuildContext context, HomeViewModel viewModel) {
-    if (viewModel.errorMessage != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ToastCustom.show(
-          context: context,
-          title: viewModel.errorTitle ?? 'Error',
-          description: viewModel.errorMessage!,
-          type: ToastificationType.error,
-        );
-        viewModel.clearError();
-      });
-    }
-  }
-
-  Widget _buildLoadingOverlay() {
+  @override
+  Widget build(BuildContext context) {
     return Positioned.fill(
       child: Container(
         color: Colors.black.withAlpha(128),
@@ -279,43 +227,20 @@ class HomePageState extends State<HomePage> {
       ),
     );
   }
+}
 
-  Widget _buildSkeletonUI(bool isSmallScreen, Size screenSize) {
-    return Scaffold(
-      backgroundColor: AppColors.whiteBackground,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: _buildSkeletonContainer(isSmallScreen, screenSize),
-        ),
-      ),
-      bottomNavigationBar: const Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Divider(height: 0.5, thickness: 0.5, color: AppColors.grey),
-          BottomNavBar(),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildSkeletonContainer(bool isSmallScreen, Size screenSize) {
-    return Container(
-      width: screenSize.width,
-      color: AppColors.whiteBackground,
-      padding: EdgeInsets.fromLTRB(
-        isSmallScreen ? 16 : 24,
-        isSmallScreen ? 20 : 40,
-        isSmallScreen ? 16 : 24,
-        isSmallScreen ? 24 : 32,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: _buildSkeleton(),
-        ),
-      ),
-    );
-  }
+class SkeletonUI extends StatelessWidget {
+  final bool isSmallScreen;
+  final Size screenSize;
+  final Widget searchHeader;
+
+  const SkeletonUI({
+    super.key,
+    required this.isSmallScreen,
+    required this.screenSize,
+    required this.searchHeader,
+  });
 
   Widget _buildSkeletonBox(double width, double height) {
     return Shimmer.fromColors(
@@ -336,7 +261,7 @@ class HomePageState extends State<HomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSearchHeader(),
+        searchHeader,
         const SizedBox(height: 16),
         _buildSkeletonBox(176, 48),
         const SizedBox(height: 16),
@@ -377,8 +302,59 @@ class HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildMainContainer(
-      bool isSmallScreen, Size screenSize, SessionManager sessionManager, HomeViewModel viewModel) {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.whiteBackground,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Container(
+            width: screenSize.width,
+            color: AppColors.whiteBackground,
+            padding: EdgeInsets.fromLTRB(
+              isSmallScreen ? 16 : 24,
+              isSmallScreen ? 20 : 40,
+              isSmallScreen ? 16 : 24,
+              isSmallScreen ? 24 : 32,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: _buildSkeleton(),
+              ),
+            ),
+          ),
+        ),
+      ),
+      bottomNavigationBar: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Divider(height: 0.5, thickness: 0.5, color: AppColors.grey),
+          BottomNavBar(),
+        ],
+      ),
+    );
+  }
+}
+
+class MainContainer extends StatelessWidget {
+  final bool isSmallScreen;
+  final Size screenSize;
+  final SessionManager sessionManager;
+  final HomeViewModel viewModel;
+  final Widget searchHeader;
+
+  const MainContainer({
+    super.key,
+    required this.isSmallScreen,
+    required this.screenSize,
+    required this.sessionManager,
+    required this.viewModel,
+    required this.searchHeader,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: screenSize.width,
       color: AppColors.whiteBackground,
@@ -394,36 +370,59 @@ class HomePageState extends State<HomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSearchHeader(),
+              searchHeader,
               const SizedBox(height: 16),
-              _buildLocationSelector(viewModel),
+              LocationSelector(viewModel: viewModel),
               const SizedBox(height: 16),
-              _buildCategoryChips(),
+              const CategoryChips(),
               const SizedBox(height: 24),
-              _buildTrendingHeader(),
+              const TrendingHeader(),
               const SizedBox(height: 16),
-              _buildEventList(viewModel),
+              EventList(
+                events: viewModel.events,
+                isLoading: viewModel.isLoading,
+                totalEvents: viewModel.totalEvents,
+              ),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildSearchHeader() {
-    final bool isSearchActive = _searchFocusNode.hasFocus;
+class SearchHeader extends StatelessWidget {
+  final GlobalKey searchContainerKey;
+  final FocusNode searchFocusNode;
+  final TextEditingController searchController;
+  final ValueChanged<String> onSearchSubmitted;
+
+  const SearchHeader({
+    super.key,
+    required this.searchContainerKey,
+    required this.searchFocusNode,
+    required this.searchController,
+    required this.onSearchSubmitted,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isSearchActive = searchFocusNode.hasFocus;
 
     return Row(
       children: [
-        SizedBox(
+        const SizedBox(
           width: 60,
           height: 60,
-          child: Image.asset('assets/icons/logo_e.png'),
+          child: Image(
+            image: AssetImage('assets/icons/logo_e.png'),
+            fit: BoxFit.contain,
+          ),
         ),
         const SizedBox(width: 8),
         Expanded(
           child: Container(
-            key: _searchContainerKey,
+            key: searchContainerKey,
             height: 44,
             decoration: BoxDecoration(
               color: isSearchActive ? Colors.white : const Color(0xFFF6F6F6),
@@ -443,8 +442,8 @@ class HomePageState extends State<HomePage> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
-                    controller: _searchController,
-                    focusNode: _searchFocusNode,
+                    controller: searchController,
+                    focusNode: searchFocusNode,
                     textAlignVertical: TextAlignVertical.center,
                     style: TextStyle(
                       fontSize: 15,
@@ -460,19 +459,19 @@ class HomePageState extends State<HomePage> {
                       contentPadding: const EdgeInsets.symmetric(vertical: 10),
                     ),
                     onSubmitted: (value) {
-                      _addRecentSearch(value);
-                      _searchFocusNode.unfocus();
+                      onSearchSubmitted(value);
+                      searchFocusNode.unfocus();
                     },
                     onChanged: (value) {
-                      setState(() {});
+                      context.findAncestorStateOfType<HomePageState>()?.setState(() {});
                     },
                   ),
                 ),
                 GestureDetector(
                   onTap: () {
-                    if (_searchController.text.isNotEmpty) {
-                      _addRecentSearch(_searchController.text);
-                      _searchFocusNode.unfocus();
+                    if (searchController.text.isNotEmpty) {
+                      onSearchSubmitted(searchController.text);
+                      searchFocusNode.unfocus();
                     }
                   },
                   child: Container(
@@ -493,8 +492,123 @@ class HomePageState extends State<HomePage> {
       ],
     );
   }
+}
 
-  Widget _buildLocationSelector(HomeViewModel viewModel) {
+class SearchSuggestionsOverlay extends StatelessWidget {
+  final GlobalKey searchContainerKey;
+  final List<String> recentSearches;
+  final List<String> suggestions;
+  final TextEditingController searchController;
+  final String? selectedItem;
+  final ValueChanged<String> onItemSelected;
+
+  const SearchSuggestionsOverlay({
+    super.key,
+    required this.searchContainerKey,
+    required this.recentSearches,
+    required this.suggestions,
+    required this.searchController,
+    required this.selectedItem,
+    required this.onItemSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    RenderBox? renderBox = searchContainerKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return const SizedBox.shrink();
+
+    final size = renderBox.size;
+    final offset = renderBox.localToGlobal(Offset.zero);
+
+    final filteredSuggestions = suggestions
+        .where((suggestion) =>
+            suggestion.toLowerCase().contains(searchController.text.toLowerCase()))
+        .toList();
+
+    return Positioned(
+      left: offset.dx,
+      top: offset.dy + size.height + 8,
+      width: size.width,
+      child: Material(
+        elevation: 4,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (recentSearches.isNotEmpty) ...[
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Text(
+                    'Recent Searches',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.darkGrey,
+                    ),
+                  ),
+                ),
+                ...recentSearches.map(
+                  (search) => ListTile(
+                    leading: const Icon(Icons.history, color: AppColors.darkGrey),
+                    title: Text(
+                      search,
+                      style: const TextStyle(color: AppColors.darkGrey),
+                    ),
+                    tileColor: selectedItem == search ? Colors.blue[200] : null,
+                    onTap: () => onItemSelected(search),
+                  ),
+                ),
+              ],
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Text(
+                  'Suggestions',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.darkGrey,
+                  ),
+                ),
+              ),
+              ...filteredSuggestions.map(
+                (suggestion) => ListTile(
+                  leading: const Icon(Icons.search, color: AppColors.darkGrey),
+                  title: Text(
+                    suggestion,
+                    style: const TextStyle(color: AppColors.darkGrey),
+                  ),
+                  tileColor: selectedItem == suggestion ? Colors.blue[200] : null,
+                  onTap: () => onItemSelected(suggestion),
+                ),
+              ),
+              if (filteredSuggestions.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    'No suggestions found',
+                    style: TextStyle(color: AppColors.grey),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class LocationSelector extends StatelessWidget {
+  final HomeViewModel viewModel;
+
+  const LocationSelector({super.key, required this.viewModel});
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -556,8 +670,13 @@ class HomePageState extends State<HomePage> {
       ],
     );
   }
+}
 
-  Widget _buildCategoryChips() {
+class CategoryChips extends StatelessWidget {
+  const CategoryChips({super.key});
+
+  @override
+  Widget build(BuildContext context) {
     const categories = ['All', 'Music', 'Today', 'Online', 'This Week'];
     return SizedBox(
       height: 35,
@@ -587,167 +706,16 @@ class HomePageState extends State<HomePage> {
       ),
     );
   }
+}
 
-  Widget _buildTrendingHeader() {
-    return Text(
+class TrendingHeader extends StatelessWidget {
+  const TrendingHeader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Text(
       'Top Trending Event In City',
-      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-    );
-  }
-
-  Widget _buildEventList(HomeViewModel viewModel) {
-    return SizedBox(
-      height: 300,
-      child: viewModel.events.isEmpty && !viewModel.isLoading && viewModel.totalEvents == 0
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SvgPicture.asset(
-                    'assets/icons/no_data.svg',
-                    width: 102,
-                    height: 102,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'No data',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                ],
-              ),
-            )
-          : Column(
-              children: viewModel.events.map(_buildEventCard).toList(),
-            ),
-    );
-  }
-
-  Widget _buildEventCard(Event event) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(5),
-                child: CachedNetworkImage(
-                  imageUrl: event.thumbnail ?? '',
-                  height: 120,
-                  width: 120,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Shimmer.fromColors(
-                    baseColor: AppColors.shimmerBase,
-                    highlightColor: AppColors.shimmerHighlight,
-                    child: Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: AppColors.skeleton,
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                    ),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: AppColors.shimmerBase,
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: const Icon(Icons.event, size: 40, color: Colors.grey),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 4,
-                right: 4,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Text(
-                    'Free',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        event.title,
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.favorite_border, color: Colors.black),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.calendar_today, size: 14, color: Colors.black),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        DateTimeConverter.formatDateRange(event.startDate, event.endDate),
-                        style: const TextStyle(fontSize: 12, color: AppColors.mutedText),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.location_on, size: 14, color: Colors.black),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        event.address ?? 'No address provided',
-                        style: const TextStyle(fontSize: 12, color: AppColors.mutedText),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                const Row(
-                  children: [
-                    Icon(Icons.people, size: 14, color: Colors.black),
-                    SizedBox(width: 4),
-                    Text(
-                      '2.9k attendees',
-                      style: TextStyle(fontSize: 12, color: AppColors.mutedText),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
     );
   }
 }

@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/common/services/session_manager.dart';
-import 'package:eventorize_app/common/widgets/toast_custom.dart';
+import 'package:eventorize_app/common/components/toast_custom.dart';
 
 class SessionHandler extends StatelessWidget {
   final Widget child;

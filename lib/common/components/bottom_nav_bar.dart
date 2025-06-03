@@ -8,7 +8,6 @@ class BottomNavBar extends StatelessWidget {
 
   const BottomNavBar({super.key, this.backgroundColor});
 
-  // Ánh xạ route name với index
   int _getCurrentIndex(BuildContext context) {
     final String? currentRoute = GoRouterState.of(context).name;
     switch (currentRoute) {

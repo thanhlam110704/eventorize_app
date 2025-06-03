@@ -5,8 +5,8 @@ import 'package:shimmer/shimmer.dart';
 import 'package:toastification/toastification.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:eventorize_app/common/services/session_manager.dart';
-import 'package:eventorize_app/common/widgets/bottom_nav_bar.dart';
-import 'package:eventorize_app/common/widgets/toast_custom.dart';
+import 'package:eventorize_app/common/components/bottom_nav_bar.dart';
+import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/data/models/user.dart';
@@ -123,7 +123,6 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
     if (user == null) {
       return const SizedBox.shrink();
     }
-    // Bắt đầu hiệu ứng fade khi dữ liệu tải xong
     _animationController.forward();
     return FadeTransition(
       key: const ValueKey('content'),
@@ -156,7 +155,6 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
               color: AppColors.skeleton,
               borderRadius: BorderRadius.circular(4),
             ),
-            // Bỏ margin âm, thay bằng SizedBox để điều chỉnh khoảng cách
           ),
           const SizedBox(height: 15),
           Container(
