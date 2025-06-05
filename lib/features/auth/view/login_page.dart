@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
-import 'package:eventorize_app/common/widgets/custom_field_input.dart';
-import 'package:eventorize_app/common/widgets/toast_custom.dart';
-import 'package:eventorize_app/data/api/secure_storage_service.dart';
+import 'package:eventorize_app/common/components/custom_field_input.dart';
+import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/features/auth/view_model/login_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/verify_view_model.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/data/api/google_signin_api.dart';
@@ -25,7 +23,6 @@ class LoginPageState extends State<LoginPage> {
   static const smallScreenThreshold = 640.0;
   static const maxContentWidth = 600.0;
   static const buttonHeight = 50.0;
-  bool rememberMe = false;
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final formKey = GlobalKey<FormState>();
@@ -35,14 +32,6 @@ class LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    SecureStorageService.getEmail().then((email) {
-      if (email != null) {
-        setState(() {
-          emailController.text = email;
-          rememberMe = true;
-        });
-      }
-    });
   }
 
   @override
@@ -52,12 +41,6 @@ class LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void toggleRememberMe() {
-    setState(() {
-      rememberMe = !rememberMe;
-    });
-  }
- 
   Future<void> handleLogin(LoginViewModel viewModel) async {
     bool isValid = true;
     if (emailInputKey.currentState != null) {
@@ -70,38 +53,16 @@ class LoginPageState extends State<LoginPage> {
       await viewModel.login(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
-        rememberMe: rememberMe,
       );
       if (mounted && viewModel.user != null) {
-        if (viewModel.user!.isVerified) {
-          context.read<HomeViewModel>().setUser(viewModel.user!);
-          ToastCustom.show(
-            context: context,
-            title: 'Login successful!',
-            description: 'Welcome, ${viewModel.user!.fullname}!',
-            type: ToastificationType.success,
-          );
-          context.goNamed('home');
-        } else {
-          final verifyViewModel = context.read<VerifyViewModel>();
-          await verifyViewModel.resendVerificationEmail(email: emailController.text.trim());
-          if (verifyViewModel.isSuccess) {
-            if (mounted) {
-              ToastCustom.show(
-                context: context,
-                title: 'Verification code sent',
-                description: 'A new verification code has been sent to ${emailController.text.trim()}',
-                type: ToastificationType.success,
-              );
-            }
-          }
-          if (mounted) {
-            context.goNamed(
-              'verify-code',
-              extra: {'email': emailController.text.trim()},
-            );
-          }
-        }
+        context.read<SessionManager>().setUser(viewModel.user!);
+        ToastCustom.show(
+          context: context,
+          title: 'Login successful!',
+          description: 'Welcome, ${viewModel.user!.fullname}!',
+          type: ToastificationType.success,
+        );
+        context.goNamed('home');
       }
     }
   }
@@ -112,7 +73,7 @@ class LoginPageState extends State<LoginPage> {
     final isSmallScreen = screenSize.width <= smallScreenThreshold;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.defaultBackground,
       body: SafeArea(
         child: Consumer<LoginViewModel>(
           builder: (context, viewModel, child) {
@@ -121,7 +82,7 @@ class LoginPageState extends State<LoginPage> {
                 if (mounted) {
                   ToastCustom.show(
                     context: context,
-                    title: 'Error',
+                    title: viewModel.errorTitle ?? 'Error',
                     description: viewModel.errorMessage!,
                     type: ToastificationType.error,
                   );
@@ -135,8 +96,7 @@ class LoginPageState extends State<LoginPage> {
                 SingleChildScrollView(
                   child: Container(
                     width: screenSize.width,
-                    height: screenSize.height,
-                    color: AppColors.background,
+                    color: AppColors.defaultBackground,
                     padding: EdgeInsets.fromLTRB(
                       isSmallScreen ? 16 : 24,
                       isSmallScreen ? 40 : 80,
@@ -159,8 +119,6 @@ class LoginPageState extends State<LoginPage> {
                               const SizedBox(height: 21),
                               buildPasswordField(),
                               const SizedBox(height: 21),
-                              buildRememberMe(isSmallScreen),
-                              if (isSmallScreen) const SizedBox(height: 15),
                               Padding(
                                 padding: EdgeInsets.only(top: screenSize.height * 0.05),
                                 child: Column(
@@ -182,10 +140,7 @@ class LoginPageState extends State<LoginPage> {
                                           ),
                                           child: Text(
                                             'Log in',
-                                            style: AppTextStyles.text.copyWith(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w600,
-                                            ),
+                                            style: AppTextStyles.button,
                                           ),
                                         ),
                                       ),
@@ -229,9 +184,7 @@ class LoginPageState extends State<LoginPage> {
       padding: const EdgeInsets.only(left: 13, top: 40),
       child: Text(
         'eventorize',
-        style: AppTextStyles.logo.copyWith(
-          fontWeight: FontWeight.w900,
-        ),
+        style: AppTextStyles.logo,
       ),
     );
   }
@@ -268,29 +221,6 @@ class LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget buildRememberMe(bool isSmallScreen) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 15),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: toggleRememberMe,
-            child: Icon(
-              rememberMe ? MdiIcons.checkboxMarked : MdiIcons.checkboxBlankOutline,
-              color: rememberMe ? AppColors.primary : AppColors.grey,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 7),
-          Text(
-            'Remember me',
-            style: AppTextStyles.text,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget buildDivider() {
     return Row(
       children: [
@@ -313,9 +243,51 @@ class LoginPageState extends State<LoginPage> {
       width: isSmallScreen ? double.infinity : screenSize.width * 0.9,
       height: buttonHeight,
       child: ElevatedButton(
-        onPressed: () async {
-          await GoogleSignInApi.login();
-        },
+        onPressed: viewModel.isLoading
+            ? null
+            : () async {
+                final googleUser = await GoogleSignInApi.signIn();
+                
+                if (googleUser == null) {
+                  if (mounted) {
+                    ToastCustom.show(
+                      context: context,
+                      title: 'Sign-In Canceled',
+                      description: 'Google Sign-In was canceled. Please try again.',
+                      type: ToastificationType.error,
+                    );
+                  }
+                  return;
+                }
+
+                if (mounted) {
+                  await viewModel.googleSSOAndroid(
+                    googleId: googleUser['google_id']!,
+                    displayName: googleUser['fullname']!,
+                    email: googleUser['email']!,
+                    picture: googleUser['avatar']!,
+                  );
+                  
+                  if (viewModel.errorMessage != null && mounted) {
+                    ToastCustom.show(
+                      context: context,
+                      title: viewModel.errorTitle ?? 'Error',
+                      description: viewModel.errorMessage!,
+                      type: ToastificationType.error,
+                    );
+                    viewModel.clearError();
+                  } else if (viewModel.user != null && mounted) {
+                    context.read<SessionManager>().setUser(viewModel.user!);
+                    ToastCustom.show(
+                      context: context,
+                      title: 'Login successful!',
+                      description: 'Welcome, ${viewModel.user!.fullname}!',
+                      type: ToastificationType.success,
+                    );
+                    context.goNamed('home');
+                  }
+                }
+              },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
@@ -334,10 +306,10 @@ class LoginPageState extends State<LoginPage> {
             const SizedBox(width: 11),
             Text(
               'Continue with Google',
-              style: AppTextStyles.text.copyWith(
-                fontWeight: FontWeight.w600,
+              style: AppTextStyles.button.copyWith(
+                color: AppColors.black,
+                ),
               ),
-            ),
           ],
         ),
       ),

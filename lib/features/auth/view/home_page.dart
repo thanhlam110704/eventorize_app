@@ -1,6 +1,16 @@
-import 'package:eventorize_app/common/widgets/bottom_nav_bar.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:toastification/toastification.dart';
+import 'package:eventorize_app/common/services/session_manager.dart';
+import 'package:eventorize_app/common/components/bottom_nav_bar.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
+import 'package:eventorize_app/core/utils/datetime_convert.dart';
+import 'package:eventorize_app/data/models/event.dart';
+import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
+import 'package:eventorize_app/common/components/toast_custom.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -9,9 +19,14 @@ class HomePage extends StatefulWidget {
   HomePageState createState() => HomePageState();
 }
 
-class HomePageState extends State<HomePage>{
+class HomePageState extends State<HomePage> {
   static const smallScreenThreshold = 640.0;
   static const maxContentWidth = 600.0;
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,10 +34,63 @@ class HomePageState extends State<HomePage>{
     final isSmallScreen = screenSize.width <= smallScreenThreshold;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.whiteBackground,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: buildMainContainer(isSmallScreen, screenSize),
+        child: Consumer2<SessionManager, HomeViewModel>(
+          builder: (context, sessionManager, viewModel, child) {
+            // Handle session errors
+            if (sessionManager.errorMessage != null) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  ToastCustom.show(
+                    context: context,
+                    title: sessionManager.errorTitle ?? 'Error',
+                    description: sessionManager.errorMessage!,
+                    type: ToastificationType.error,
+                  );
+                  sessionManager.clearError();
+                  if (!sessionManager.isLoading &&
+                      !sessionManager.isCheckingSession &&
+                      sessionManager.user == null) {
+                    context.pushReplacementNamed('login');
+                  }
+                }
+              });
+            }
+
+            // Handle event errors
+            if (viewModel.errorMessage != null) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  ToastCustom.show(
+                    context: context,
+                    title: viewModel.errorTitle ?? 'Error',
+                    description: viewModel.errorMessage!,
+                    type: ToastificationType.error,
+                  );
+                  viewModel.clearError();
+                }
+              });
+            }
+
+            return Stack(
+              children: [
+                SingleChildScrollView(
+                  child: buildMainContainer(isSmallScreen, screenSize, sessionManager, viewModel),
+                ),
+                if (sessionManager.isCheckingSession || viewModel.isLoading)
+                  Container(
+                    color: Colors.black.withAlpha(128),
+                    child: const Center(
+                      child: SpinKitFadingCircle(
+                        color: AppColors.primary,
+                        size: 50.0,
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
       ),
       bottomNavigationBar: Column(
@@ -39,10 +107,11 @@ class HomePageState extends State<HomePage>{
     );
   }
 
-  Widget buildMainContainer(bool isSmallScreen, Size screenSize) {
+  Widget buildMainContainer(
+      bool isSmallScreen, Size screenSize, SessionManager sessionManager, HomeViewModel viewModel) {
     return Container(
       width: screenSize.width,
-      color: AppColors.background,
+      color: AppColors.whiteBackground,
       padding: EdgeInsets.fromLTRB(
         isSmallScreen ? 16 : 24,
         isSmallScreen ? 20 : 40,
@@ -63,7 +132,7 @@ class HomePageState extends State<HomePage>{
               const SizedBox(height: 24),
               buildTrendingHeader(),
               const SizedBox(height: 16),
-              buildEventList(),
+              buildEventList(viewModel),
             ],
           ),
         ),
@@ -77,16 +146,16 @@ class HomePageState extends State<HomePage>{
         SizedBox(
           width: 60,
           height: 60,
-          child: Image.asset('assets/icons/logo_white.png'),
+          child: Image.asset('assets/icons/logo_e.png'),
         ),
         const SizedBox(width: 8),
         Expanded(
           child: Container(
-            height: 44, 
+            height: 44,
             decoration: BoxDecoration(
-              color: const Color(0xFFF8F0F0),
-              borderRadius: BorderRadius.circular(10), 
-              border: Border.all(color: Colors.black12), 
+              color: const Color(0xFFF6F6F6),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.black12),
             ),
             child: Row(
               children: [
@@ -111,7 +180,7 @@ class HomePageState extends State<HomePage>{
                   width: 36,
                   margin: const EdgeInsets.symmetric(horizontal: 6),
                   decoration: const BoxDecoration(
-                    color: const Color(0xFF2176AE),
+                    color: AppColors.primary,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.search, color: Colors.white, size: 20),
@@ -134,7 +203,7 @@ class HomePageState extends State<HomePage>{
             const SizedBox(width: 4),
             DropdownButton<String>(
               value: 'Ho Chi Minh City',
-              underline: SizedBox(), 
+              underline: const SizedBox(),
               style: const TextStyle(
                 color: Colors.blue,
                 fontWeight: FontWeight.bold,
@@ -152,7 +221,7 @@ class HomePageState extends State<HomePage>{
                 );
               }).toList(),
               onChanged: (String? newValue) {
-                // 
+                // Handle location change
               },
               icon: const Icon(Icons.keyboard_arrow_down),
             ),
@@ -161,7 +230,7 @@ class HomePageState extends State<HomePage>{
         const SizedBox(height: 2),
         Container(
           height: 1,
-          width: 150, 
+          width: 150,
           color: Colors.blue,
         ),
       ],
@@ -169,10 +238,10 @@ class HomePageState extends State<HomePage>{
   }
 
   Widget buildCategoryChips() {
-    final categories = ['All', 'Music', 'Today', 'Online', 'This week'];
+    final categories = ['All', 'Music', 'Today', 'Online', 'This Week'];
 
     return SizedBox(
-      height: 35, 
+      height: 35,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
@@ -183,7 +252,7 @@ class HomePageState extends State<HomePage>{
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFF2176AE) : const Color(0xFFEEE4E4),
+              color: isSelected ? const Color(0xFF2176AE) : const Color(0xFFE8E1E1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Center(
@@ -191,7 +260,7 @@ class HomePageState extends State<HomePage>{
                 cat,
                 style: TextStyle(
                   color: isSelected ? Colors.white : Colors.black,
-                  fontSize: 14, 
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -204,18 +273,31 @@ class HomePageState extends State<HomePage>{
 
   Widget buildTrendingHeader() {
     return const Text(
-      'Top trending in Ho Chi Minh City',
+      'Top Trending in Ho Chi Minh City',
       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
     );
   }
 
-  Widget buildEventList() {
+  Widget buildEventList(HomeViewModel viewModel) {
+    if (viewModel.events.isEmpty && !viewModel.isLoading) {
+      return const Center(
+        child: Text(
+          'No events found.',
+          style: TextStyle(fontSize: 16, color: Colors.grey),
+        ),
+      );
+    }
+
     return Column(
-      children: List.generate(4, (index) => buildEventCard()).toList(),
+      children: viewModel.events
+          .asMap()
+          .entries
+          .map((entry) => buildEventCard(entry.value))
+          .toList(),
     );
   }
 
-  Widget buildEventCard() {
+  Widget buildEventCard(Event event) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -225,12 +307,30 @@ class HomePageState extends State<HomePage>{
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.asset(
-                  'assets/icons/event.png',
-                  height: 107,
-                  width: 107,
-                  fit: BoxFit.cover,
-                ),
+                child: event.thumbnail != null
+                    ? CachedNetworkImage(
+                        imageUrl: event.thumbnail!,
+                        height: 107,
+                        width: 107,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => const Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => Image.asset(
+                          'assets/images/event.png',
+                          height: 107,
+                          width: 107,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : Image.asset(
+                        'assets/images/event.png',
+                        height: 107,
+                        width: 107,
+                        fit: BoxFit.cover,
+                      ),
               ),
               Positioned(
                 top: 4,
@@ -258,9 +358,9 @@ class HomePageState extends State<HomePage>{
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Mastering Vendor Development & The Service Provider...',
-                  style: TextStyle(
+                Text(
+                  event.title,
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
@@ -268,15 +368,18 @@ class HomePageState extends State<HomePage>{
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                const Row(
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.calendar_today, size: 14, color: Colors.grey),
-                    SizedBox(width: 4),
+                    const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
+                    const SizedBox(width: 4),
                     Expanded(
                       child: Text(
-                        'Friday, Jan 10, 6:00 - Monday, Jan 13, 8:00',
-                        style: TextStyle(
+                        DateTimeConverter.formatDateRange(
+                          event.startDate,
+                          event.endDate,
+                        ),
+                        style: const TextStyle(
                           fontSize: 12,
                           color: Colors.grey,
                         ),
@@ -287,15 +390,15 @@ class HomePageState extends State<HomePage>{
                   ],
                 ),
                 const SizedBox(height: 2),
-                const Row(
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.location_on, size: 14, color: Colors.grey),
-                    SizedBox(width: 4),
+                    const Icon(Icons.location_on, size: 14, color: Colors.grey),
+                    const SizedBox(width: 4),
                     Expanded(
                       child: Text(
-                        '53 Nguyen Co Thach, Thu Duc, Ho Chi Minh City',
-                        style: TextStyle(
+                        event.address ?? 'No address provided',
+                        style: const TextStyle(
                           fontSize: 12,
                           color: Colors.grey,
                         ),
@@ -311,7 +414,7 @@ class HomePageState extends State<HomePage>{
                     const Icon(Icons.people, size: 14, color: Colors.grey),
                     const SizedBox(width: 4),
                     const Text(
-                      '2.9k attendees',
+                      '2.9k attendees', 
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey,

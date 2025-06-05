@@ -1,93 +1,61 @@
 import 'package:flutter/foundation.dart';
-import 'package:dio/dio.dart';
-import 'package:eventorize_app/core/exceptions/exceptions.dart';
+import 'package:eventorize_app/core/utils/exceptions.dart';
+import 'package:eventorize_app/data/models/user.dart';
 import 'package:eventorize_app/data/repositories/user_repository.dart';
-import 'package:eventorize_app/data/models/user.dart'; 
 
 class VerifyViewModel extends ChangeNotifier {
   final UserRepository _userRepository;
+  final ErrorState _errorState = ErrorState();
 
   VerifyViewModel(this._userRepository);
 
   bool _isLoading = false;
-  bool _isSuccess = false;
-  String? _errorMessage;
-  String? _errorTitle;
-  User? _user;
-
   bool get isLoading => _isLoading;
-  bool get isSuccess => _isSuccess;
-  String? get errorMessage => _errorMessage;
-  String? get errorTitle => _errorTitle;
-  User? get user => _user;
+  bool get isSuccess => _errorState.isSuccess;
+  String? get errorMessage => _errorState.errorMessage;
+  String? get errorTitle => _errorState.errorTitle;
+  User? get user => _errorState.user;
 
   Future<void> verifyEmail({
     required String email,
     required String otp,
   }) async {
-    _isLoading = true;
-    _isSuccess = false;
-    _errorMessage = null;
-    _errorTitle = null;
-    _user = null;
-    notifyListeners();
-
-    try {
-      final user = await _userRepository.verifyEmail(email: email, otp: otp);
-      _user = user;
-      _isSuccess = true;
-    } on DioException catch (e) {
-      if (e.error is CustomException) {
-        final customError = e.error as CustomException;
-        _errorTitle = customError.title;
-        _errorMessage = customError.detail;
-      } else {
-        _errorTitle = 'Error';
-        _errorMessage = e.message ?? 'Verification failed. Please try again.';
-      }
-      _isSuccess = false;
-      notifyListeners();
-      rethrow;
-    } catch (e) {
-      _errorTitle = 'Error';
-      _errorMessage = 'An unexpected error occurred';
-      _isSuccess = false;
-      notifyListeners();
-      rethrow;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
+    await _executeVerify(
+      () => _userRepository.verifyEmail(email: email, otp: otp),
+      'Verification failed',
+      (user) {
+        _errorState.user = user;
+        _errorState.isSuccess = true;
+      },
+    );
   }
 
   Future<void> resendVerificationEmail({
     required String email,
   }) async {
+    await _executeVerify(
+      () => _userRepository.resendVerificationEmail(email: email),
+      'Failed to resend code',
+      (_) => _errorState.isSuccess = true,
+    );
+  }
+
+  Future<void> _executeVerify(
+    Future<dynamic> Function() verifyFn,
+    String errorPrefix,
+    void Function(dynamic) onSuccess,
+  ) async {
     _isLoading = true;
-    _isSuccess = false;
-    _errorMessage = null;
-    _errorTitle = null;
+    ErrorHandler.clearError(_errorState);
+    _errorState.isSuccess = false;
+    _errorState.user = null;
     notifyListeners();
 
     try {
-      await _userRepository.resendVerificationEmail(email: email);
-      _isSuccess = true;
-    } on DioException catch (e) {
-      if (e.error is CustomException) {
-        final customError = e.error as CustomException;
-        _errorTitle = 'Error ${customError.status}';
-        _errorMessage = customError.detail;
-      } else {
-        _errorTitle = 'Error';
-        _errorMessage = e.message ?? 'Failed to resend code';
-      }
-      _isSuccess = false;
-      notifyListeners();
-      rethrow;
+      final result = await verifyFn();
+      onSuccess(result);
     } catch (e) {
-      _errorTitle = 'Error';
-      _errorMessage = 'An unexpected error occurred';
-      _isSuccess = false;
+      ErrorHandler.handleError(e, errorPrefix, _errorState);
       notifyListeners();
       rethrow;
     } finally {
@@ -97,8 +65,7 @@ class VerifyViewModel extends ChangeNotifier {
   }
 
   void clearError() {
-    _errorMessage = null;
-    _errorTitle = null;
+    ErrorHandler.clearError(_errorState);
     notifyListeners();
   }
 }

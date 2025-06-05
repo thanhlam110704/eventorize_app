@@ -6,8 +6,8 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
-import 'package:eventorize_app/common/widgets/otp_field_input.dart';
-import 'package:eventorize_app/common/widgets/toast_custom.dart';
+import 'package:eventorize_app/features/auth/widgets/otp_field_input.dart';
+import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/features/auth/view_model/verify_view_model.dart';
 
 class VerificationCodePage extends StatefulWidget {
@@ -133,7 +133,7 @@ class VerificationCodePageState extends State<VerificationCodePage> {
     final isSmallScreen = screenSize.width <= smallScreenThreshold;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.defaultBackground,
       body: SafeArea(
         child: Consumer<VerifyViewModel>(
           builder: (context, viewModel, child) {
@@ -177,7 +177,7 @@ class VerificationCodePageState extends State<VerificationCodePage> {
   Widget buildMainContainer(bool isSmallScreen, Size screenSize, VerifyViewModel viewModel) {
     return Container(
       width: screenSize.width,
-      color: AppColors.background,
+      color: AppColors.defaultBackground,
       padding: EdgeInsets.fromLTRB(
         isSmallScreen ? 16 : 24,
         isSmallScreen ? 40 : 80,

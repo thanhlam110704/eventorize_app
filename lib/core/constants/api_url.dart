@@ -12,7 +12,20 @@ class ApiUrl {
   static String editUser(String id) => '/v1/users/$id';
   static String deleteUser(String id) => '/v1/users/$id';
   static String get editAvatar => '/v1/users/me/avatar';
-  static String get googleSSO => '/v1/auth/google/login';
+  static String get googleSSOAndroid => '/v1/auth/google/android';
   static const String verifyEmail = '/v1/auth/verify-email';
   static const String resendVerificationEmail = '/v1/auth/resend-verification-email';
-} 
+
+  // New endpoints
+  static String get getProvinces => '/v1/locations/province';
+  static String get getDistricts => '/v1/locations/districts';
+  static String get getWards => '/v1/locations/wards';
+
+  // Event endpoints
+  static String get getEvents => '/v1/events';
+  static String getEventDetail(String id) => '/v1/events/$id';
+  static String get createEvent => '/v1/events';
+  static String editEvent(String id) => '/v1/events/$id';
+  static String editEventThumbnail(String id) => '/v1/events/$id/thumbnail';
+  static String deleteEvent(String id) => '/v1/events/$id';
+}

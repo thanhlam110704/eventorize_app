@@ -2,6 +2,7 @@ import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:eventorize_app/common/components/event_card_list.dart';
 
 class EventDetailPage extends StatefulWidget {
   const EventDetailPage({super.key});
@@ -20,7 +21,8 @@ class EventDetailPageState extends State<EventDetailPage>{
     final isSmallScreen = screenSize.width <= smallScreenThreshold;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.whiteBackground
+      ,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.zero,
@@ -50,6 +52,7 @@ class EventDetailPageState extends State<EventDetailPage>{
   Widget buildMainContainer(bool isSmallScreen, Size screenSize) {
     return Container(
       width: screenSize.width,
+      color: AppColors.whiteBackground,
       padding: EdgeInsets.fromLTRB(
         isSmallScreen ? 16 : 24,
         isSmallScreen ? 16 : 24,
@@ -71,7 +74,7 @@ class EventDetailPageState extends State<EventDetailPage>{
               const SizedBox(height: 24),
               buildRelatedToThisEvent(),
               const SizedBox(height: 24),
-              buildEventList(),
+              const EventCardList(itemCount: 4),
             ],
           ),
         ),
@@ -95,11 +98,11 @@ class EventDetailPageState extends State<EventDetailPage>{
             width: 40,
             decoration: BoxDecoration(
               color: Colors.white,
-              shape: BoxShape.rectangle,
-              borderRadius: BorderRadius.circular(10),
+              shape: BoxShape.rectangle,  
+              borderRadius: BorderRadius.circular(8),
             ),
             child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black),
+              icon: const Icon(Icons.keyboard_arrow_left, color: Colors.black),
               iconSize: 24,
               padding: EdgeInsets.zero,
               onPressed: () => Navigator.of(context).pop(),
@@ -116,11 +119,9 @@ class EventDetailPageState extends State<EventDetailPage>{
       children: [
         Text(
           "Friday, January 10, 6:00",
-          style: TextStyle(
-            fontFamily: 'Roboto',
-            fontSize: 16,
+          style: AppTextStyles.medium.copyWith(
             color: Colors.red,
-            fontWeight: FontWeight.w500,
+            fontSize: 16,
           ),
         ),  
 
@@ -128,10 +129,8 @@ class EventDetailPageState extends State<EventDetailPage>{
 
         Text(
           "Mastering Vendor Development & The Service Provider Lifecycle",
-          style: TextStyle(
-            fontFamily: 'Roboto',
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
+          style: AppTextStyles.bold.copyWith(
+            fontSize: 25,
           ),
         ),
       ],
@@ -146,11 +145,7 @@ class EventDetailPageState extends State<EventDetailPage>{
         children: [
           Text(
             "Information about this event",
-            style: TextStyle(
-              fontFamily: 'Roboto',
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-            ),
+            style: AppTextStyles.bold.copyWith(fontSize: 20)
           ),
 
           const SizedBox(height: 8),
@@ -159,7 +154,7 @@ class EventDetailPageState extends State<EventDetailPage>{
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                margin: const EdgeInsets.only(top: 1),
+                margin: const EdgeInsets.only(top: 0),
                 child: const Icon(Icons.location_on, size: 24),
               ),
 
@@ -171,7 +166,7 @@ class EventDetailPageState extends State<EventDetailPage>{
                   children: [
                     Text(
                       "53 Nguyen Co Thach, Thu Duc, Ho Chi Minh City",
-                      style: AppTextStyles.text,
+                      style: AppTextStyles.text.copyWith(fontSize:13)
                     ),
                     
                     const SizedBox(height: 4),
@@ -190,14 +185,14 @@ class EventDetailPageState extends State<EventDetailPage>{
                         children: [
                           Text(
                             "Show map",
-                            style: AppTextStyles.text.copyWith(color: AppColors.linkBlue, fontSize: 14, fontWeight: FontWeight.w700),
+                            style: AppTextStyles.medium.copyWith(color: AppColors.linkBlue, fontSize: 11),
                           ),
 
                           const SizedBox(width: 4),
 
                           Icon(
                             MdiIcons.chevronDown,
-                            size: 14,
+                            size: 13,
                             color: AppColors.linkBlue,
                           ),
                         ],
@@ -214,17 +209,14 @@ class EventDetailPageState extends State<EventDetailPage>{
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                margin: const EdgeInsets.only(bottom: 4),
-                child: const Icon(Icons.calendar_today, size: 24),
-              ),
+              const Icon(Icons.calendar_today, size: 24),
 
               const SizedBox(width: 8),
 
               Expanded(
                 child: Text(
                   "Friday, Jan 10, 6:00 - Monday, Jan 13, 8:00",
-                  style: AppTextStyles.text,
+                  style: AppTextStyles.text.copyWith(fontSize: 13),
                 ),
               ),
             ],
@@ -243,9 +235,9 @@ class EventDetailPageState extends State<EventDetailPage>{
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Refund policy", style: AppTextStyles.text),
+                  Text("Refund policy", style: AppTextStyles.text.copyWith(fontSize: 13)),
                   const SizedBox(height: 6),
-                  Text("No refunds", style: AppTextStyles.text.copyWith(fontSize: 14, color: Color(0xFF9B9B9B))),
+                  Text("No refunds", style: AppTextStyles.text.copyWith(fontSize: 11, color: Color(0xFF9B9B9B))),
                 ],
               ),
             ],
@@ -261,16 +253,14 @@ class EventDetailPageState extends State<EventDetailPage>{
       children: [
         Text(
           "About this event",
-          style: TextStyle(
-            fontFamily: 'Roboto',
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-          ),
+          style: AppTextStyles.bold.copyWith(fontSize: 20)
         ),
+
         const SizedBox(height: 8),
+
         Text(
           "The event will gather migration agencies, immigration attorneys, global service providers, regional centers, project developers and investors from across the world.",
-          style: AppTextStyles.text.copyWith(fontSize: 14, color: Color(0xFF9B9B9B)),
+          style: AppTextStyles.text.copyWith(fontSize: 13, color: Color(0xFF9B9B9B)),
         ),
 
         const SizedBox(height: 9),
@@ -283,6 +273,7 @@ class EventDetailPageState extends State<EventDetailPage>{
             "Read more",
             style: AppTextStyles.text.copyWith(
               color: AppColors.linkBlue,
+              fontSize: 13
             ),
           ),
         ),
@@ -297,13 +288,11 @@ class EventDetailPageState extends State<EventDetailPage>{
         const SizedBox(height: 12),
         Text(
           "Organized by", 
-          style: TextStyle(
-            fontFamily: 'Roboto',
-            fontSize: 24,
-            fontWeight: FontWeight.w700
-          )
+          style: AppTextStyles.bold.copyWith(fontSize: 20)
         ),
+
         const SizedBox(height: 4),
+
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
           decoration: BoxDecoration(
@@ -326,13 +315,14 @@ class EventDetailPageState extends State<EventDetailPage>{
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("FPT Software", style: AppTextStyles.text.copyWith(fontWeight: FontWeight.bold, fontSize: 19)),
+                    Text("FPT Software", style: AppTextStyles.medium.copyWith(fontSize: 18)),
                     Text("22k Followers", style: AppTextStyles.text),
                   ],
                 ),
               ),
               TextButton(
                 onPressed: () {}, // Follow action
+
                 style: TextButton.styleFrom(
                   backgroundColor: const Color(0xFF0E32FF),
                   foregroundColor: Colors.white,
@@ -342,13 +332,9 @@ class EventDetailPageState extends State<EventDetailPage>{
                   ),
                 ),
                 child: 
-                const Text(
+                Text(
                   "Follow",
-                  style: TextStyle(
-                    fontFamily: 'Roboto',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700
-                  )
+                  style: AppTextStyles.bold.copyWith(fontSize: 18, color: Colors.white)
                 ),
               ),
             ],
@@ -374,11 +360,7 @@ class EventDetailPageState extends State<EventDetailPage>{
         const SizedBox(height: 8),
         Text(
           "Related to this event",
-          style: TextStyle(
-            fontFamily: 'Roboto',
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-          ),
+          style: AppTextStyles.bold.copyWith(fontSize: 20)
         ),
 
         const SizedBox(height: 16),
@@ -399,15 +381,14 @@ class EventDetailPageState extends State<EventDetailPage>{
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               decoration: BoxDecoration(
                 color: const Color(0xFFE8E1E1),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(13),
               ),
               alignment: Alignment.center,
               child: Text(
                 relatedTags[index],
                 textAlign: TextAlign.center,
-                style: AppTextStyles.text.copyWith(
+                style: AppTextStyles.medium.copyWith(
                   fontSize: 13,
-                  fontWeight: FontWeight.w700,
                 ),
               ),
             );
@@ -417,136 +398,6 @@ class EventDetailPageState extends State<EventDetailPage>{
     );
   }
 
-  Widget buildEventList() {
-    return Column(
-      children: List.generate(4, (index) => buildEventCard()).toList(),
-    );
-  }
-
-  Widget buildEventCard() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            children: [
-              ClipRRect(
-                child: Image.asset(
-                  'assets/icons/event.png',
-                  height: 125,
-                  width: 125,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              Positioned(
-                top: 4,
-                right: 4,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Text(
-                    'Free',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(width: 12),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Mastering Vendor Development & The Service Provider...',
-                  style: AppTextStyles.title.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-
-                const SizedBox(height: 4),
-
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start, 
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2), 
-                      child: Icon(Icons.calendar_today, size: 14, color: Colors.black),
-                    ),
-
-                    const SizedBox(width: 4),
-
-                    Expanded(
-                      child: Text(
-                        'Friday, Jan 10, 6:00 - Monday, Jan 13, 8:00',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF9B9B9B),
-                        ),
-                      ),
-                    ),
-                 ],
-                ),
-
-                const SizedBox(height: 2),
-
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2), 
-                      child: Icon(Icons.location_on, size: 14, color: Colors.black),
-                    ),
-                    SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        '53 Nguyen Co Thach, Thu Duc, Ho Chi Minh City',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF9B9B9B),
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    const Icon(Icons.people, size: 14, color: Colors.black),
-                    const SizedBox(width: 4),
-                    const Text(
-                      '2.9k attendees',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF9B9B9B),
-                      ),
-                    ),
-                    const Spacer(),
-                    const Icon(Icons.favorite_border),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget buildBottomBar() {
     return Container(
@@ -571,9 +422,9 @@ class EventDetailPageState extends State<EventDetailPage>{
             style: ElevatedButton.styleFrom(
               backgroundColor: Color(0xFFEC0303),
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 34, vertical: 8),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(5),
               ),
             ),
             onPressed: () {
@@ -624,7 +475,7 @@ class _TicketDialogState extends State<TicketDialog> {
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -636,23 +487,19 @@ class _TicketDialogState extends State<TicketDialog> {
                       children: [
                         Row(
                           children: [
-                            const Text(
+                            Text(
                               "Tickets",
-                              style: TextStyle(
-                                fontFamily: 'Roboto',
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                              ),
+                              style: AppTextStyles.bold.copyWith(fontSize: 20)
                             ),
 
                             const Spacer(),
 
                             Container(
-                              width: 36,
-                              height: 36,
+                              width: 34,
+                              height: 34,
                               decoration: BoxDecoration(
-                                color: Colors.white,
-                                border: Border.all(color: Colors.black26),
+                                color: Color(0xFFF9F9F9),
+                                border: Border.all(color: Color(0xFF9B9B9B)),
                                 borderRadius: BorderRadius.circular(10), 
                               ),
                               child: IconButton(
@@ -705,16 +552,11 @@ class _TicketDialogState extends State<TicketDialog> {
                           children: [
                             Text(
                               "Total",
-                              style: AppTextStyles.text.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: AppTextStyles.medium.copyWith(fontSize: 15)
                             ),
                             Text(
                               "${total.toString().replaceAllMapped(RegExp(r"(\d)(?=(\d{3})+(?!\d))"), (match) => "${match[1]}.")} VND",
-                              style: AppTextStyles.text.copyWith(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: AppTextStyles.medium.copyWith(fontSize: 12)
                             ),
                           ],
                         ),
@@ -729,17 +571,12 @@ class _TicketDialogState extends State<TicketDialog> {
                             minimumSize: const Size.fromHeight(48),
                             backgroundColor: const Color(0xFFEC0303),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)
+                              borderRadius: BorderRadius.circular(5)
                             ),
                           ),
-                          child: const Text(
+                          child: Text(
                             "Check out",
-                            style: TextStyle(
-                              fontFamily: 'Roboto',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
+                            style: AppTextStyles.bold.copyWith(fontSize: 15,color: Colors.white)
                           ),
                         ),
                       ],
@@ -781,21 +618,21 @@ class _TicketDialogState extends State<TicketDialog> {
                 Expanded(
                   child: Text(
                     title,
-                    style: AppTextStyles.text.copyWith(fontWeight: FontWeight.w600),
+                    style: AppTextStyles.medium.copyWith(fontSize: 15),
                   ),
                 ),
                 Row(
                   children: [
                     Container(
-                      width: 24,
-                      height: 24,
+                      width: 20,
+                      height: 20,
                       decoration: BoxDecoration(
                         color: const Color(0xFFE7DCDC),
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(5),
                       ),
                       child: IconButton(
                         icon: const Icon(Icons.remove, size: 14),
-                        color: Colors.black87,
+                        color: Color(0xFF9B9B9B),
                         onPressed: onDecrement,
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
@@ -803,14 +640,14 @@ class _TicketDialogState extends State<TicketDialog> {
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text("$count", style: AppTextStyles.text.copyWith(fontWeight: FontWeight.w600)),
+                      child: Text("$count", style: AppTextStyles.medium.copyWith(fontSize: 15)),
                     ),
                     Container(
-                      width: 24,
-                      height: 24,
+                      width: 20,
+                      height: 20,
                       decoration: BoxDecoration(
                         color: const Color(0xFF2176AE),
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(5),
                       ),
                       child: IconButton(
                         icon: const Icon(Icons.add, size: 14),
@@ -836,7 +673,7 @@ class _TicketDialogState extends State<TicketDialog> {
               children: [
                 Text(
                   parts[0],
-                  style: AppTextStyles.text.copyWith(fontSize: 13, fontWeight: FontWeight.w600),
+                  style: AppTextStyles.medium.copyWith(fontSize: 13),
                 ),  
                 if (parts.length > 1) ...[
                   const SizedBox(height: 2),

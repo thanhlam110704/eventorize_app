@@ -1,69 +1,69 @@
 import 'package:flutter/foundation.dart';
-import 'package:dio/dio.dart';
+import 'package:eventorize_app/common/services/secure_storage.dart';
+import 'package:eventorize_app/core/utils/exceptions.dart';
 import 'package:eventorize_app/data/models/user.dart';
 import 'package:eventorize_app/data/repositories/user_repository.dart';
-import 'package:eventorize_app/data/api/secure_storage_service.dart';
-import 'package:eventorize_app/core/exceptions/exceptions.dart';
 
 class LoginViewModel extends ChangeNotifier {
   final UserRepository _userRepository;
+  final ErrorState _errorState = ErrorState();
 
   LoginViewModel(this._userRepository);
 
   bool _isLoading = false;
-  String? _errorMessage;
-  String? _errorTitle;
-  User? _user;
-
   bool get isLoading => _isLoading;
-  String? get errorMessage => _errorMessage;
-  String? get errorTitle => _errorTitle;
-  User? get user => _user;
+  String? get errorMessage => _errorState.errorMessage;
+  String? get errorTitle => _errorState.errorTitle;
+  User? get user => _errorState.user;
 
   Future<void> login({
     required String email,
     required String password,
-    required bool rememberMe,
   }) async {
+    await _executeLogin(
+      () => _userRepository.login(email: email, password: password),
+      'Login failed',
+    );
+  }
+
+  Future<void> googleSSOAndroid({
+    required String googleId,
+    required String displayName,
+    required String email,
+    required String picture,
+  }) async {
+    await _executeLogin(
+      () => _userRepository.googleSSOAndroid(
+        googleId: googleId,
+        displayName: displayName,
+        email: email,
+        picture: picture,
+      ),
+      'Google SSO failed',
+    );
+  }
+
+  Future<void> _executeLogin(
+    Future<Map<String, dynamic>> Function() loginFn,
+    String errorPrefix,
+  ) async {
     _isLoading = true;
-    _errorMessage = null;
-    _errorTitle = null;
-    _user = null;
+    ErrorHandler.clearError(_errorState);
+    _errorState.user = null;
     notifyListeners();
 
     try {
-      final result = await _userRepository.login(email: email, password: password);
-      _user = result['user'] as User?;
+      final result = await loginFn();
+      _errorState.user = result['user'] as User?;
       final token = result['token'] as String?;
 
-      if (_user == null || token == null) {
-        throw Exception('Login failed: Invalid response');
+      if (_errorState.user == null || token == null) {
+        throw Exception('$errorPrefix: Invalid response');
       }
 
-      if (_user!.isVerified) {
-        await SecureStorageService.saveToken(token);
-        if (rememberMe) {
-          await SecureStorageService.saveEmail(email);
-        } else {
-          await SecureStorageService.clearEmail();
-        }
-      }
-    } on DioException catch (e) {
-      if (e.error is CustomException) {
-        final customError = e.error as CustomException;
-        _errorTitle = 'Error ${customError.status}';
-        _errorMessage = customError.detail;
-      } else {
-        _errorTitle = 'Error';
-        _errorMessage = e.message ?? 'Failed to log in. Please try again.';
-      }
-      _user = null;
-      notifyListeners();
-      rethrow;
+      await SecureStorage.saveToken(token);
     } catch (e) {
-      _errorTitle = 'Error';
-      _errorMessage = 'An unexpected error occurred';
-      _user = null;
+      ErrorHandler.handleError(e, errorPrefix, _errorState);
       notifyListeners();
       rethrow;
     } finally {
@@ -73,8 +73,7 @@ class LoginViewModel extends ChangeNotifier {
   }
 
   void clearError() {
-    _errorMessage = null;
-    _errorTitle = null;
+    ErrorHandler.clearError(_errorState);
     notifyListeners();
   }
 }

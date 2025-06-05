@@ -14,6 +14,7 @@ dependencies:
   equatable: ^2.0.5
   get_it: ^7.7.0 
   intl: ^0.20.2
+  shared_preferences: ^2.2.3
   floor: ^1.5.0
   flutter_hooks: ^0.21.0
   cached_network_image: ^3.4.1 
@@ -29,6 +30,10 @@ dependencies:
   path_provider: ^2.1.4
   toastification: ^2.0.0
   google_sign_in: 6.3.0
+  shimmer: ^3.0.0
+  image_picker: ^1.1.2
+  dotted_line: ^3.0.0
+  
 
 dev_dependencies:
   flutter_test:
@@ -39,6 +44,9 @@ dev_dependencies:
   floor_generator: ^1.5.0
   build_runner: ^2.4.13  
   flutter_launcher_icons: ^0.14.3
+  http: ^1.4.0
+  
+  
 
 flutter_launcher_icons:
   android: true
@@ -83,8 +91,15 @@ flutter:
 
   assets:
   - assets/icons/logo_google.png
-  - .env/dev.env
-  - assets/icons/event.png
+  - assets/icons/credit_logo.png
+  - assets/icons/logo_e.png
+  - assets/icons/paypal_logo.png
   - assets/images/verify.png
+  - assets/images/qr_code.png
   - assets/images/event1.png
+  - assets/images/event2.png
   - assets/images/fpt.png
+  - assets/images/fail.png
+  - assets/images/success.svg
+  - .env/dev.env
+ 

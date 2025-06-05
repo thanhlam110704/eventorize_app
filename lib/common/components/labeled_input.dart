@@ -5,16 +5,16 @@ class LabeledInput extends StatefulWidget {
   final Widget child;
 
   const LabeledInput({
-    Key? key,
+    super.key,
     required this.label,
     required this.child,
-  }) : super(key: key);
+  });
 
   @override
-  State<LabeledInput> createState() => _LabeledInputState();
+  State<LabeledInput> createState() => LabeledInputState();
 }
 
-class _LabeledInputState extends State<LabeledInput> {
+class LabeledInputState extends State<LabeledInput> {
   @override
   Widget build(BuildContext context) {
     return Column(

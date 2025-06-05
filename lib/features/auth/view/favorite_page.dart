@@ -1,16 +1,16 @@
-import 'package:eventorize_app/common/widgets/bottom_nav_bar.dart';
+import 'package:eventorize_app/common/components/bottom_nav_bar.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 
-class SavedPage extends StatefulWidget {
-  const SavedPage({super.key});
+class FavoritePage extends StatefulWidget {
+  const FavoritePage({super.key});
 
   @override
-  SavedPageState createState() => SavedPageState();
+  FavoritePageState createState() => FavoritePageState();
 }
 
-class SavedPageState extends State<SavedPage>{
+class FavoritePageState extends State<FavoritePage>{
   static const smallScreenThreshold = 640.0;
   static const maxContentWidth = 600.0;
 
@@ -20,7 +20,7 @@ class SavedPageState extends State<SavedPage>{
     final isSmallScreen = screenSize.width <= smallScreenThreshold;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.whiteBackground,
       body: SafeArea(
         child: SingleChildScrollView(
           child: buildMainContainer(isSmallScreen, screenSize),
@@ -29,10 +29,10 @@ class SavedPageState extends State<SavedPage>{
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Divider(
+          Divider(
             height: 1,
-            thickness: 1,
-            color: Colors.black12,
+            thickness: 0.5,
+            color: AppColors.grey,
           ),
           const BottomNavBar(),
         ],
@@ -43,7 +43,7 @@ class SavedPageState extends State<SavedPage>{
   Widget buildMainContainer(bool isSmallScreen, Size screenSize) {
     return Container(
       width: screenSize.width,
-      color: AppColors.background,
+      color: AppColors.whiteBackground,
       padding: EdgeInsets.fromLTRB(
         isSmallScreen ? 16 : 24,
         isSmallScreen ? 20 : 40,
@@ -98,7 +98,7 @@ class SavedPageState extends State<SavedPage>{
             children: [
               ClipRRect(
                 child: Image.asset(
-                  'assets/icons/event.png',
+                  'assets/images/event.png',
                   height: 125,
                   width: 125,
                   fit: BoxFit.cover,

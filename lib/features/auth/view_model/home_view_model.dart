@@ -1,106 +1,70 @@
 import 'package:flutter/foundation.dart';
-import 'package:dio/dio.dart';
+import 'package:eventorize_app/core/utils/exceptions.dart';
+import 'package:eventorize_app/data/models/event.dart';
 import 'package:eventorize_app/data/models/user.dart';
-import 'package:eventorize_app/data/repositories/user_repository.dart';
-import 'package:eventorize_app/data/api/secure_storage_service.dart';
-import 'package:eventorize_app/core/exceptions/exceptions.dart';
+import 'package:eventorize_app/data/repositories/event_repository.dart';
+import 'package:eventorize_app/common/services/session_manager.dart';
 
 class HomeViewModel extends ChangeNotifier {
-  final UserRepository _userRepository;
+  final EventRepository _eventRepository;
+  final SessionManager _sessionManager; 
+  final ErrorState _errorState = ErrorState();
 
-  HomeViewModel(this._userRepository);
+  HomeViewModel(this._eventRepository, this._sessionManager) {
+    fetchEvents();
+  }
 
   bool _isLoading = false;
-  bool _isCheckingSession = false;
-  bool _isLoggingOut = false;
-  String? _errorMessage;
-  String? _errorTitle;
-  User? _user;
-
   bool get isLoading => _isLoading;
-  bool get isCheckingSession => _isCheckingSession;
-  bool get isLoggingOut => _isLoggingOut;
-  String? get errorMessage => _errorMessage;
-  String? get errorTitle => _errorTitle;
-  User? get user => _user;
 
-  Future<void> checkSession() async {
-    _isCheckingSession = true;
-    _errorMessage = null;
-    _errorTitle = null;
-    _user = null;
+  String? get errorMessage => _errorState.errorMessage;
+  String? get errorTitle => _errorState.errorTitle;
+  User? get user => _sessionManager.user;
+
+  List<Event> _events = [];
+  List<Event> get events => _events;
+
+  int _totalEvents = 0;
+  int get totalEvents => _totalEvents;
+
+  Future<void> fetchEvents({
+    int page = 1,
+    int limit = 10,
+    String? query,
+    String? search,
+    String? fields,
+    String? sortBy,
+    String? orderBy,
+  }) async {
+    _isLoading = true;
+    ErrorHandler.clearError(_errorState);
+    _events = [];
     notifyListeners();
 
     try {
-      final token = await SecureStorageService.getToken();
-      if (token == null) {
-        _errorMessage = 'Please log in again.';
-        return;
-      }
-      _user = await _userRepository.getMe();
-    } on DioException catch (e) {
-      if (e.error is CustomException) {
-        final customError = e.error as CustomException;
-        _errorTitle = 'Error ${customError.status}';
-        _errorMessage = customError.detail;
-      } else {
-        _errorTitle = 'Error';
-        _errorMessage = e.message ?? 'Failed to validate session.';
-      }
-      _user = null;
-      notifyListeners();
-      rethrow;
+      final result = await _eventRepository.getAll(
+        page: page,
+        limit: limit,
+        query: query,
+        search: search,
+        fields: fields,
+        sortBy: sortBy,
+        orderBy: orderBy,
+      );
+      _events = result['data'] as List<Event>;
+      _totalEvents = result['total'] as int;
     } catch (e) {
-      _errorTitle = 'Error';
-      _errorMessage = 'Failed to validate session.';
-      _user = null;
+      ErrorHandler.handleError(e, 'Failed to load events', _errorState);
       notifyListeners();
-      rethrow;
-    } finally {
-      _isCheckingSession = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> logout() async {
-    _isLoading = true;
-    _isLoggingOut = true;
-    _errorMessage = null;
-    _errorTitle = null;
-
-    try {
-      await _userRepository.logout();
-      await SecureStorageService.clearAll();
-      _user = null;
-    } on DioException catch (e) {
-      if (e.error is CustomException) {
-        final customError = e.error as CustomException;
-        _errorTitle = 'Error ${customError.status}';
-        _errorMessage = customError.detail;
-      } else {
-        _errorTitle = 'Error';
-        _errorMessage = e.message ?? 'Failed to log out.';
-      }
-      rethrow;
-    } catch (e) {
-      _errorTitle = 'Error';
-      _errorMessage = 'Failed to log out.';
       rethrow;
     } finally {
       _isLoading = false;
-      _isLoggingOut = false;
       notifyListeners();
     }
   }
 
-  void setUser(User user) {
-    _user = user;
-    notifyListeners();
-  }
-
   void clearError() {
-    _errorMessage = null;
-    _errorTitle = null;
+    ErrorHandler.clearError(_errorState);
     notifyListeners();
   }
 }

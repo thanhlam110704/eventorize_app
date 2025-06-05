@@ -4,11 +4,13 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:toastification/toastification.dart';
+import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
-import 'package:eventorize_app/common/widgets/custom_field_input.dart';
-import 'package:eventorize_app/common/widgets/toast_custom.dart';
+import 'package:eventorize_app/common/components/custom_field_input.dart';
+import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/features/auth/view_model/register_view_model.dart';
+import 'package:eventorize_app/data/api/google_signin_api.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -64,6 +66,7 @@ class RegisterPageState extends State<RegisterPage> {
         password: passwordController.text.trim(),
       );
       if (mounted && viewModel.user != null) {
+        context.read<SessionManager>().setUser(viewModel.user!);
         ToastCustom.show(
           context: context,
           title: 'Registration successful!',
@@ -85,7 +88,7 @@ class RegisterPageState extends State<RegisterPage> {
     final isSmallScreen = screenSize.width <= smallScreenThreshold;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.defaultBackground,
       body: SafeArea(
         child: Consumer<RegisterViewModel>(
           builder: (context, viewModel, child) {
@@ -108,8 +111,7 @@ class RegisterPageState extends State<RegisterPage> {
                 SingleChildScrollView(
                   child: Container(
                     width: screenSize.width,
-                    height: screenSize.height,
-                    color: AppColors.background,
+                    color: AppColors.defaultBackground,
                     padding: EdgeInsets.fromLTRB(
                       isSmallScreen ? 16 : 24,
                       isSmallScreen ? 40 : 80,
@@ -144,7 +146,7 @@ class RegisterPageState extends State<RegisterPage> {
                                     const SizedBox(height: 10),
                                     buildDivider(),
                                     const SizedBox(height: 10),
-                                    buildGoogleButton(isSmallScreen, screenSize),
+                                    buildGoogleButton(isSmallScreen, screenSize, viewModel),
                                     const SizedBox(height: 29),
                                     buildLoginLink(),
                                   ],
@@ -284,18 +286,55 @@ class RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget buildGoogleButton(bool isSmallScreen, Size screenSize) {
+  Widget buildGoogleButton(bool isSmallScreen, Size screenSize, RegisterViewModel viewModel) {
     return SizedBox(
       width: isSmallScreen ? double.infinity : screenSize.width * 0.9,
       height: buttonHeight,
       child: ElevatedButton(
-        onPressed: () {
-          ToastCustom.show(
-            context: context,
-            title: 'Processing registration with Google...',
-            type: ToastificationType.info,
-          );
-        },
+        onPressed: viewModel.isLoading
+            ? null
+            : () async {
+                final googleUser = await GoogleSignInApi.signIn();
+
+                if (googleUser == null) {
+                  if (mounted) {
+                    ToastCustom.show(
+                      context: context,
+                      title: 'Sign-In Canceled',
+                      description: 'Google Sign-In was canceled. Please try again.',
+                      type: ToastificationType.info,
+                    );
+                  }
+                  return;
+                }
+
+                if (mounted) {
+                  await viewModel.googleSSOAndroid(
+                    googleId: googleUser['google_id']!,
+                    displayName: googleUser['fullname']!,
+                    email: googleUser['email']!,
+                    picture: googleUser['avatar']!,
+                  );
+
+                  if (viewModel.errorMessage != null && mounted) {
+                    ToastCustom.show(
+                      context: context,
+                      title: viewModel.errorTitle ?? 'Error',
+                      description: viewModel.errorMessage!,
+                      type: ToastificationType.error,
+                    );
+                    viewModel.clearError();
+                  } else if (viewModel.user != null && mounted) {
+                    context.read<SessionManager>().setUser(viewModel.user!);
+                    ToastCustom.show(
+                      context: context,
+                      title: 'Registration successful!',
+                      type: ToastificationType.success,
+                    );
+                    context.goNamed('account');
+                  }
+                }
+              },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(

@@ -7,12 +7,17 @@ import 'package:eventorize_app/features/auth/view/splashscreen_page.dart';
 import 'package:eventorize_app/features/auth/view/verify_page.dart';
 import 'package:eventorize_app/features/auth/view/account_page.dart';
 import 'package:eventorize_app/features/auth/view/eventdetail_page.dart';
-import 'package:eventorize_app/features/auth/view/detailprofile_page.dart';
-import 'package:eventorize_app/features/auth/view/saved_page.dart';
+import 'package:eventorize_app/features/auth/view/detail_profile_page.dart';
+import 'package:eventorize_app/features/auth/view/favorite_page.dart';
+import 'package:eventorize_app/features/auth/view/checkout_page.dart';
+import 'package:eventorize_app/features/auth/view/payment_page.dart';
+import 'package:eventorize_app/features/auth/view/paymentstate_page.dart';
+import 'package:eventorize_app/features/auth/view/tickets_page.dart';
+import 'package:eventorize_app/features/auth/view/tickets_detail_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: '/event-detail',
+    initialLocation: '/tickets-detail',
     routes: [
       GoRoute(
         path: '/splashscreen',
@@ -20,9 +25,39 @@ class AppRouter {
         builder: (context, state) => const SplashScreenPage(),
       ),
       GoRoute(
-        path: '/saved',
-        name: 'saved',
-        builder: (context, state) => const SavedPage(),
+        path: '/checkout',
+        name: 'checkout',
+        builder: (context, state) => const CheckOutPage(),
+      ),
+      GoRoute(
+        path: '/tickets-detail',
+        name: 'tickets-detail',
+        builder: (context, state) => const TicketsDetailPage(),
+      ),
+      GoRoute(
+        path: '/tickets',
+        name: 'tickets',
+        builder: (context, state) => const TicketsPage(),
+      ),
+      GoRoute(
+        path: '/paymentsuccess',
+        name: 'paymentsucess',
+        builder: (context, state) => const PaymentSuccessfulPage(),
+      ),
+      GoRoute(
+        path: '/paymentfail',
+        name: 'paymentfail',
+        builder: (context, state) => const PaymentFailedPage(),
+      ),
+      GoRoute(
+        path: '/payment',
+        name: 'payment',
+        builder: (context, state) => const PaymentPage(),
+      ),
+      GoRoute(
+        path: '/favorite',
+        name: 'favorite',
+        builder: (context, state) => const FavoritePage(),
       ),
       GoRoute(
         path: '/event-detail',
@@ -32,7 +67,7 @@ class AppRouter {
       GoRoute(
         path: '/detailprof',
         name: 'detailprof',
-        builder: (context, state) => const DetailprofilePage(),
+        builder: (context, state) => const DetailProfilePage(),
       ),
       GoRoute(
         path: '/account',

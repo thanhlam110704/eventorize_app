@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
-import 'package:eventorize_app/data/api/secure_storage_service.dart';
-import 'package:eventorize_app/core/exceptions/exceptions.dart';
+import 'package:eventorize_app/common/services/secure_storage.dart';
+import 'package:eventorize_app/core/utils/exceptions.dart';
 
 class LoggerInterceptor extends Interceptor {
   Logger logger = Logger(printer: PrettyPrinter(methodCount: 0, colors: true, printEmojis: true));
@@ -46,7 +46,7 @@ class AuthorizationInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
     try {
-      final token = await SecureStorageService.getToken();
+      final token = await SecureStorage.getToken();
       if (token != null && token.isNotEmpty) {
         options.headers['Authorization'] = "Bearer $token";
       }

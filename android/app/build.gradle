@@ -3,11 +3,6 @@ plugins {
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
 }
-def keystoreProperties = new Properties()
-def keystorePropertiesFile = rootProject.file("key.properties")
-if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-}
 
 android {
     namespace = "com.example.eventorize_app"
@@ -23,14 +18,7 @@ android {
         jvmTarget = "17"
     }
 
-    signingConfigs {
-        release {
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
-            storeFile file('H:/Do_an/my-key.keystore')
-            storePassword keystoreProperties['storePassword']
-        }
-    }
+    
 
     defaultConfig {
         applicationId = "com.example.eventorize_app"
@@ -40,12 +28,11 @@ android {
         versionName = flutter.versionName
     }
 
-    buildTypes {
-        release {
-            signingConfig = signingConfigs.release
-        }
-    }
+   
 }
 flutter {
     source = "../.."
+}
+dependencies {
+    implementation 'com.google.android.gms:play-services-auth:20.7.0' 
 }
