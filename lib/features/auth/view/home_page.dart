@@ -1,81 +1,88 @@
-  import 'package:flutter/material.dart';
-  import 'package:go_router/go_router.dart';
-  import 'package:provider/provider.dart';
-  import 'package:shimmer/shimmer.dart';
-  import 'package:toastification/toastification.dart';
-  import 'package:eventorize_app/common/services/session_manager.dart';
-  import 'package:eventorize_app/common/components/bottom_nav_bar.dart';
-  import 'package:eventorize_app/core/configs/theme/colors.dart';
-  import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
-  import 'package:eventorize_app/common/components/toast_custom.dart';
-  import 'package:flutter_spinkit/flutter_spinkit.dart';
-  import 'package:eventorize_app/common/components/event_list.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:toastification/toastification.dart';
+import 'package:eventorize_app/common/services/session_manager.dart';
+import 'package:eventorize_app/common/components/bottom_nav_bar.dart';
+import 'package:eventorize_app/core/configs/theme/colors.dart';
+import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
+import 'package:eventorize_app/common/components/toast_custom.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:eventorize_app/common/components/event_list.dart';
+import 'dart:async';
 
-  class HomePage extends StatefulWidget {
-    const HomePage({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
-    @override
-    HomePageState createState() => HomePageState();
-  }
+  @override
+  HomePageState createState() => HomePageState();
+}
 
-  class HomePageState extends State<HomePage> {
-    final FocusNode _searchFocusNode = FocusNode();
-    final TextEditingController _searchController = TextEditingController();
-    final List<String> _recentSearches = [];
-    final List<String> _suggestions = [
-      'Music Festival',
-      'Art Exhibition',
-      'Tech Conference',
-      'Food Fair',
-      'Charity Run',
-    ];
-    final GlobalKey _searchContainerKey = GlobalKey();
-    OverlayEntry? _overlayEntry;
-    String? _activeItem;
+class HomePageState extends State<HomePage> {
+  final FocusNode _searchFocusNode = FocusNode();
+  final TextEditingController _searchController = TextEditingController();
+  final List<String> _recentSearches = [];
+  final GlobalKey _searchContainerKey = GlobalKey();
+  OverlayEntry? _overlayEntry;
+  String? _activeItem;
+  Timer? _debounce;
 
-    @override
-    void initState() {
-      super.initState();
-      _searchFocusNode.addListener(() {
-        if (_searchFocusNode.hasFocus) {
-          _showOverlay();
-        } else {
-          _hideOverlay();
-        }
+  @override
+  void initState() {
+    super.initState();
+    _searchFocusNode.addListener(() {
+      if (_searchFocusNode.hasFocus) {
+        _showOverlay();
+      } else {
+        _hideOverlay();
+      }
+      setState(() {});
+    });
+    _searchController.addListener(() {
+      _debounce?.cancel();
+      _debounce = Timer(const Duration(milliseconds: 300), () {
         setState(() {});
       });
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchFocusNode.dispose();
+    _searchController.dispose();
+    _hideOverlay();
+    super.dispose();
+  }
+
+  void _addRecentSearch(String query) {
+    if (query.isNotEmpty && !_recentSearches.contains(query)) {
+      setState(() {
+        _recentSearches.insert(0, query);
+        if (_recentSearches.length > 5) {
+          _recentSearches.removeLast();
+        }
+      });
     }
+  }
 
-    @override
-    void dispose() {
-      _searchFocusNode.dispose();
-      _searchController.dispose();
-      _hideOverlay();
-      super.dispose();
-    }
+  void _deleteRecentSearch(String search) {
+    setState(() {
+      _recentSearches.remove(search);
+    });
+  }
 
-    void _addRecentSearch(String query) {
-      if (query.isNotEmpty && !_recentSearches.contains(query)) {
-        setState(() {
-          _recentSearches.insert(0, query);
-          if (_recentSearches.length > 5) {
-            _recentSearches.removeLast();
-          }
-        });
-      }
-    }
-
-
-    void _showOverlay() {
+  void _showOverlay() {
     _hideOverlay();
     _overlayEntry = OverlayEntry(
       builder: (context) => StatefulBuilder(
         builder: (context, setOverlayState) => buildSearchSuggestionsOverlay(
           searchContainerKey: _searchContainerKey,
           recentSearches: _recentSearches,
-          suggestions: _suggestions,
           searchController: _searchController,
           activeItem: _activeItem,
+          viewModel: Provider.of<HomeViewModel>(context, listen: false),
           onItemSelected: (item) {
             setState(() {
               _searchController.text = item;
@@ -87,7 +94,11 @@
             setState(() {
               _activeItem = item;
             });
-            setOverlayState(() {}); 
+            setOverlayState(() {});
+          },
+          onDeleteRecentSearch: (search) {
+            _deleteRecentSearch(search);
+            setOverlayState(() {});
           },
         ),
       ),
@@ -95,370 +106,203 @@
     Overlay.of(context).insert(_overlayEntry!);
   }
 
-    void _hideOverlay() {
-      _overlayEntry?.remove();
-      _overlayEntry = null;
-    }
+  void _hideOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
 
-    void _handleSessionErrors(BuildContext context, SessionManager sessionManager) {
-      if (sessionManager.errorMessage != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            ToastCustom.show(
-              context: context,
-              title: sessionManager.errorTitle ?? 'Error',
-              description: sessionManager.errorMessage!,
-              type: ToastificationType.error,
-            );
-            sessionManager.clearError();
-            if (!sessionManager.isLoading &&
-                !sessionManager.isCheckingSession &&
-                sessionManager.user == null) {
-              context.pushReplacementNamed('login');
-            }
-          }
-        });
-      }
-    }
-
-    void _handleViewModelErrors(BuildContext context, HomeViewModel viewModel) {
-      if (viewModel.errorMessage != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            ToastCustom.show(
-              context: context,
-              title: viewModel.errorTitle ?? 'Error',
-              description: viewModel.errorMessage!,
-              type: ToastificationType.error,
-            );
-            viewModel.clearError();
-          }
-        });
-      }
-    }
-
-    @override
-    Widget build(BuildContext context) {
-      final screenSize = MediaQuery.sizeOf(context);
-      final isSmallScreen = screenSize.width <= 640;
-
-      return Consumer2<SessionManager, HomeViewModel>(
-        builder: (context, sessionManager, viewModel, _) {
-          _handleSessionErrors(context, sessionManager);
-          _handleViewModelErrors(context, viewModel);
-
-          if (sessionManager.isCheckingSession) {
-            return Scaffold(
-              backgroundColor: AppColors.whiteBackground,
-              body: buildLoadingOverlay(),
-            );
-          }
-
+  void _handleSessionErrors(BuildContext context, SessionManager sessionManager) {
+    if (sessionManager.errorMessage != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ToastCustom.show(
+            context: context,
+            title: sessionManager.errorTitle ?? 'Error',
+            description: sessionManager.errorMessage!,
+            type: ToastificationType.error,
+          );
+          sessionManager.clearError();
           if (!sessionManager.isLoading &&
               !sessionManager.isCheckingSession &&
               sessionManager.user == null) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                context.pushReplacementNamed('login');
-              }
-            });
-            return Scaffold(
-              backgroundColor: AppColors.whiteBackground,
-              body: buildLoadingOverlay(),
-            );
+            context.pushReplacementNamed('login');
           }
+        }
+      });
+    }
+  }
 
-          if (!viewModel.isDataLoaded) {
-            return buildSkeletonUI(
-              isSmallScreen: isSmallScreen,
-              screenSize: screenSize,
-              searchHeader: buildSearchHeader(
-                context: context,
-                searchContainerKey: _searchContainerKey,
-                searchFocusNode: _searchFocusNode,
-                searchController: _searchController,
-                onSearchSubmitted: _addRecentSearch,
-              ),
-            );
-          }
-
-          return Stack(
-            children: [
-              Scaffold(
-                backgroundColor: AppColors.whiteBackground,
-                body: SafeArea(
-                  child: SingleChildScrollView(
-                    child: buildMainContainer(
-                      isSmallScreen: isSmallScreen,
-                      screenSize: screenSize,
-                      sessionManager: sessionManager,
-                      viewModel: viewModel,
-                      searchHeader: buildSearchHeader(
-                        context: context,
-                        searchContainerKey: _searchContainerKey,
-                        searchFocusNode: _searchFocusNode,
-                        searchController: _searchController,
-                        onSearchSubmitted: _addRecentSearch,
-                      ),
-                    ),
-                  ),
-                ),
-                bottomNavigationBar: const Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Divider(height: 0.5, thickness: 0.5, color: AppColors.grey),
-                    BottomNavBar(),
-                  ],
-                ),
-              ),
-              if (viewModel.isLoading && !viewModel.isInitialLoad)
-                buildLoadingOverlay(),
-            ],
+  void _handleViewModelErrors(BuildContext context, HomeViewModel viewModel) {
+    if (viewModel.errorMessage != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ToastCustom.show(
+            context: context,
+            title: viewModel.errorTitle ?? 'Error',
+            description: viewModel.errorMessage!,
+            type: ToastificationType.error,
           );
-        },
-      );
+          viewModel.clearError();
+        }
+      });
     }
   }
 
-  Widget buildLoadingOverlay() {
-    return Positioned.fill(
+  @override
+  Widget build(BuildContext context) {
+    final screenSize = MediaQuery.sizeOf(context);
+    final isSmallScreen = screenSize.width <= 640;
+
+    return Consumer2<SessionManager, HomeViewModel>(
+      builder: (context, sessionManager, viewModel, _) {
+        _handleSessionErrors(context, sessionManager);
+        _handleViewModelErrors(context, viewModel);
+
+        if (sessionManager.isCheckingSession) {
+          return Scaffold(
+            backgroundColor: AppColors.whiteBackground,
+            body: buildLoadingOverlay(),
+          );
+        }
+
+        if (!sessionManager.isLoading &&
+            !sessionManager.isCheckingSession &&
+            sessionManager.user == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              context.pushReplacementNamed('login');
+            }
+          });
+          return Scaffold(
+            backgroundColor: AppColors.whiteBackground,
+            body: buildLoadingOverlay(),
+          );
+        }
+
+        if (!viewModel.isDataLoaded) {
+          return buildSkeletonUI(
+            isSmallScreen: isSmallScreen,
+            screenSize: screenSize,
+            searchHeader: buildSearchHeader(
+              context: context,
+              searchContainerKey: _searchContainerKey,
+              searchFocusNode: _searchFocusNode,
+              searchController: _searchController,
+              onSearchSubmitted: _addRecentSearch,
+            ),
+          );
+        }
+
+        return Stack(
+          children: [
+            Scaffold(
+              backgroundColor: AppColors.whiteBackground,
+              body: SafeArea(
+                child: SingleChildScrollView(
+                  child: buildMainContainer(
+                    isSmallScreen: isSmallScreen,
+                    screenSize: screenSize,
+                    sessionManager: sessionManager,
+                    viewModel: viewModel,
+                    searchHeader: buildSearchHeader(
+                      context: context,
+                      searchContainerKey: _searchContainerKey,
+                      searchFocusNode: _searchFocusNode,
+                      searchController: _searchController,
+                      onSearchSubmitted: _addRecentSearch,
+                    ),
+                  ),
+                ),
+              ),
+              bottomNavigationBar: const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Divider(height: 0.5, thickness: 0.5, color: AppColors.grey),
+                  BottomNavBar(),
+                ],
+              ),
+            ),
+            if (viewModel.isLoading && !viewModel.isInitialLoad)
+              buildLoadingOverlay(),
+          ],
+        );
+      },
+    );
+  }
+}
+
+Widget buildLoadingOverlay() {
+  return Positioned.fill(
+    child: Container(
+      color: Colors.black.withAlpha(128),
+      child: const Center(
+        child: SpinKitFadingCircle(
+          color: AppColors.primary,
+          size: 50.0,
+        ),
+      ),
+    ),
+  );
+}
+
+Widget buildSkeletonUI({
+  required bool isSmallScreen,
+  required Size screenSize,
+  required Widget searchHeader,
+}) {
+  Widget buildSkeletonBox(double width, double height) {
+    return Shimmer.fromColors(
+      baseColor: AppColors.shimmerBase,
+      highlightColor: AppColors.shimmerHighlight,
       child: Container(
-        color: Colors.black.withAlpha(128),
-        child: const Center(
-          child: SpinKitFadingCircle(
-            color: AppColors.primary,
-            size: 50.0,
-          ),
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: AppColors.skeleton,
+          borderRadius: BorderRadius.circular(4),
         ),
       ),
     );
   }
 
-  Widget buildSkeletonUI({
-    required bool isSmallScreen,
-    required Size screenSize,
-    required Widget searchHeader,
-  }) {
-    Widget buildSkeletonBox(double width, double height) {
-      return Shimmer.fromColors(
-        baseColor: AppColors.shimmerBase,
-        highlightColor: AppColors.shimmerHighlight,
-        child: Container(
-          width: width,
-          height: height,
-          decoration: BoxDecoration(
-            color: AppColors.skeleton,
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
-      );
-    }
-
-    Widget buildSkeleton() {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          searchHeader,
-          const SizedBox(height: 16),
-          buildSkeletonBox(176, 48),
-          const SizedBox(height: 16),
-          buildSkeletonBox(double.infinity, 35),
-          const SizedBox(height: 24),
-          buildSkeletonBox(200, 20),
-          const SizedBox(height: 16),
-          Column(
-            children: List.generate(
-              4,
-              (_) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    buildSkeletonBox(120, 120),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          buildSkeletonBox(double.infinity, 20),
-                          const SizedBox(height: 4),
-                          buildSkeletonBox(150, 16),
-                          const SizedBox(height: 4),
-                          buildSkeletonBox(100, 16),
-                          const SizedBox(height: 4),
-                          buildSkeletonBox(80, 16),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-
-    return Scaffold(
-      backgroundColor: AppColors.whiteBackground,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Container(
-            width: screenSize.width,
-            color: AppColors.whiteBackground,
-            padding: EdgeInsets.fromLTRB(
-              isSmallScreen ? 16 : 24,
-              isSmallScreen ? 20 : 40,
-              isSmallScreen ? 16 : 24,
-              isSmallScreen ? 24 : 32,
-            ),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 600),
-                child: buildSkeleton(),
-              ),
-            ),
-          ),
-        ),
-      ),
-      bottomNavigationBar: const Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Divider(height: 0.5, thickness: 0.5, color: AppColors.grey),
-          BottomNavBar(),
-        ],
-      ),
-    );
-  }
-
-  Widget buildMainContainer({
-    required bool isSmallScreen,
-    required Size screenSize,
-    required SessionManager sessionManager,
-    required HomeViewModel viewModel,
-    required Widget searchHeader,
-  }) {
-    return Container(
-      width: screenSize.width,
-      color: AppColors.whiteBackground,
-      padding: EdgeInsets.fromLTRB(
-        isSmallScreen ? 16 : 24,
-        isSmallScreen ? 20 : 40,
-        isSmallScreen ? 16 : 24,
-        isSmallScreen ? 24 : 32,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              searchHeader,
-              const SizedBox(height: 16),
-              buildLocationSelector(viewModel: viewModel),
-              const SizedBox(height: 16),
-              buildCategoryChips(),
-              const SizedBox(height: 24),
-              buildTrendingHeader(),
-              const SizedBox(height: 16),
-              EventList(
-                events: viewModel.events,
-                isLoading: viewModel.isLoading,
-                totalEvents: viewModel.totalEvents,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget buildSearchHeader({
-    required BuildContext context,
-    required GlobalKey searchContainerKey,
-    required FocusNode searchFocusNode,
-    required TextEditingController searchController,
-    required ValueChanged<String> onSearchSubmitted,
-  }) {
-    final isSearchActive = searchFocusNode.hasFocus;
-
-    return Row(
+  Widget buildSkeleton() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(
-          width: 60,
-          height: 60,
-          child: Image(
-            image: AssetImage('assets/icons/logo_e.png'),
-            fit: BoxFit.contain,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Container(
-            key: searchContainerKey,
-            height: 44,
-            decoration: BoxDecoration(
-              color: isSearchActive ? Colors.white : const Color(0xFFF6F6F6),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: isSearchActive ? AppColors.darkGrey : Colors.black12,
+        searchHeader,
+        const SizedBox(height: 16),
+        buildSkeletonBox(176, 48),
+        const SizedBox(height: 16),
+        buildSkeletonBox(double.infinity, 35),
+        const SizedBox(height: 24),
+        buildSkeletonBox(200, 20),
+        const SizedBox(height: 16),
+        Column(
+          children: List.generate(
+            4,
+            (_) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  buildSkeletonBox(120, 120),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        buildSkeletonBox(double.infinity, 20),
+                        const SizedBox(height: 4),
+                        buildSkeletonBox(150, 16),
+                        const SizedBox(height: 4),
+                        buildSkeletonBox(100, 16),
+                        const SizedBox(height: 4),
+                        buildSkeletonBox(80, 16),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ),
-            child: Row(
-              children: [
-                const SizedBox(width: 10),
-                Icon(
-                  Icons.search,
-                  color: isSearchActive ? AppColors.darkGrey : Colors.grey,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextField(
-                    controller: searchController,
-                    focusNode: searchFocusNode,
-                    textAlignVertical: TextAlignVertical.center,
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: isSearchActive ? AppColors.darkGrey : Colors.black,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Search events...',
-                      hintStyle: TextStyle(
-                        color: isSearchActive ? AppColors.darkGrey : Colors.grey,
-                      ),
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                    ),
-                    onSubmitted: (value) {
-                      onSearchSubmitted(value);
-                      searchFocusNode.unfocus();
-                    },
-                    onChanged: (value) {
-                      context.findAncestorStateOfType<HomePageState>()?.setState(() {});
-                    },
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    if (searchController.text.isNotEmpty) {
-                      onSearchSubmitted(searchController.text);
-                      searchFocusNode.unfocus();
-                    }
-                  },
-                  child: Container(
-                    height: 36,
-                    width: 36,
-                    margin: const EdgeInsets.symmetric(horizontal: 6),
-                    decoration: const BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.search, color: Colors.white, size: 24),
-                  ),
-                ),
-              ],
             ),
           ),
         ),
@@ -466,80 +310,250 @@
     );
   }
 
-  Widget buildSearchSuggestionsOverlay({
-    required GlobalKey searchContainerKey,
-    required List<String> recentSearches,
-    required List<String> suggestions,
-    required TextEditingController searchController,
-    required String? activeItem,
-    required ValueChanged<String> onItemSelected,
-    required ValueChanged<String?> onActiveItemChanged,
-    double activeRectWidth = 260.7, 
-    double activeRectHeight = 40.0, 
-  }) {
-    final renderBox = searchContainerKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return const SizedBox.shrink();
-
-    final size = renderBox.size;
-    final offset = renderBox.localToGlobal(Offset.zero);
-
-    final filteredSuggestions = suggestions
-        .where((suggestion) =>
-            suggestion.toLowerCase().contains(searchController.text.toLowerCase()))
-        .toList();
-
-    return Positioned(
-      left: offset.dx,
-      top: offset.dy + size.height + 8,
-      width: size.width,
-      child: Material(
-        elevation: 4,
-        borderRadius: BorderRadius.circular(10),
+  return Scaffold(
+    backgroundColor: AppColors.whiteBackground,
+    body: SafeArea(
+      child: SingleChildScrollView(
         child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
+          width: screenSize.width,
+          color: AppColors.whiteBackground,
+          padding: EdgeInsets.fromLTRB(
+            isSmallScreen ? 16 : 24,
+            isSmallScreen ? 20 : 40,
+            isSmallScreen ? 16 : 24,
+            isSmallScreen ? 24 : 32,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: buildSkeleton(),
+            ),
+          ),
+        ),
+      ),
+    ),
+    bottomNavigationBar: const Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Divider(height: 0.5, thickness: 0.5, color: AppColors.grey),
+        BottomNavBar(),
+      ],
+    ),
+  );
+}
+
+Widget buildMainContainer({
+  required bool isSmallScreen,
+  required Size screenSize,
+  required SessionManager sessionManager,
+  required HomeViewModel viewModel,
+  required Widget searchHeader,
+}) {
+  return Container(
+    width: screenSize.width,
+    color: AppColors.whiteBackground,
+    padding: EdgeInsets.fromLTRB(
+      isSmallScreen ? 16 : 24,
+      isSmallScreen ? 20 : 40,
+      isSmallScreen ? 16 : 24,
+      isSmallScreen ? 24 : 32,
+    ),
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 600),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            searchHeader,
+            const SizedBox(height: 16),
+            buildLocationSelector(viewModel: viewModel),
+            const SizedBox(height: 16),
+            buildCategoryChips(),
+            const SizedBox(height: 24),
+            buildTrendingHeader(),
+            const SizedBox(height: 16),
+            EventList(
+              events: viewModel.events,
+              isLoading: viewModel.isLoading,
+              totalEvents: viewModel.totalEvents,
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+Widget buildSearchHeader({
+  required BuildContext context,
+  required GlobalKey searchContainerKey,
+  required FocusNode searchFocusNode,
+  required TextEditingController searchController,
+  required ValueChanged<String> onSearchSubmitted,
+}) {
+  final isSearchActive = searchFocusNode.hasFocus;
+
+  return Row(
+    children: [
+      const SizedBox(
+        width: 60,
+        height: 60,
+        child: Image(
+          image: AssetImage('assets/icons/logo_e.png'),
+          fit: BoxFit.contain,
+        ),
+      ),
+      const SizedBox(width: 8),
+      Expanded(
+        child: Container(
+          key: searchContainerKey,
+          height: 44,
+          decoration: BoxDecoration(
+            color: isSearchActive ? Colors.white : const Color(0xFFF6F6F6),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isSearchActive ? AppColors.darkGrey : Colors.black12,
+            ),
+          ),
+          child: Row(
             children: [
-              if (recentSearches.isNotEmpty) ...[
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: Text(
-                    'Recent Searches',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.darkGrey,
+              const SizedBox(width: 10),
+              Icon(
+                Icons.search,
+                color: isSearchActive ? AppColors.darkGrey : Colors.grey,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: searchController,
+                  focusNode: searchFocusNode,
+                  textAlignVertical: TextAlignVertical.center,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: isSearchActive ? AppColors.darkGrey : Colors.black,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Search events...',
+                    hintStyle: TextStyle(
+                      color: isSearchActive ? AppColors.darkGrey : Colors.grey,
                     ),
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  onSubmitted: (value) {
+                    onSearchSubmitted(value);
+                    searchFocusNode.unfocus();
+                  },
+                  onChanged: (value) {},
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  if (searchController.text.isNotEmpty) {
+                    onSearchSubmitted(searchController.text);
+                    searchFocusNode.unfocus();
+                  }
+                },
+                child: Container(
+                  height: 36,
+                  width: 36,
+                  margin: const EdgeInsets.symmetric(horizontal: 6),
+                  decoration: const BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.search, color: Colors.white, size: 24),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
+Widget buildSearchSuggestionsOverlay({
+  required GlobalKey searchContainerKey,
+  required List<String> recentSearches,
+  required TextEditingController searchController,
+  required String? activeItem,
+  required HomeViewModel viewModel,
+  required ValueChanged<String> onItemSelected,
+  required ValueChanged<String?> onActiveItemChanged,
+  required ValueChanged<String> onDeleteRecentSearch,
+  double activeRectWidth = 212.0,
+  double activeRectHeight = 40.0,
+}) {
+  final renderBox = searchContainerKey.currentContext?.findRenderObject() as RenderBox?;
+  if (renderBox == null) return const SizedBox.shrink();
+
+  final size = renderBox.size;
+  final offset = renderBox.localToGlobal(Offset.zero);
+  final double adjustedRectWidth = activeRectWidth ;
+  final List<String> defaultSuggestions = [
+    'Music Festival',
+    'Art Exhibition',
+    'Tech Conference',
+    'Food Fair',
+    'Charity Run',
+  ];
+
+  return Positioned(
+    left: offset.dx,
+    top: offset.dy + size.height + 8,
+    width: size.width,
+    child: Material(
+      elevation: 4,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (recentSearches.isNotEmpty) ...[
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Text(
+                  'Recent Searches',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.darkGrey,
                   ),
                 ),
-                ...recentSearches.map(
-                  (search) => InkWell(
-                    onTapDown: (TapDownDetails _) => onActiveItemChanged(search),
-                    onTapUp: (TapUpDetails _) => onActiveItemChanged(null),
-                    onTapCancel: () => onActiveItemChanged(null),
-                    onTap: () {
-                      onItemSelected(search);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              ),
+              ...recentSearches.map(
+                (search) => InkWell(
+                  onTapDown: (TapDownDetails _) => onActiveItemChanged(search),
+                  onTapUp: (TapUpDetails _) => onActiveItemChanged(null),
+                  onTapCancel: () => onActiveItemChanged(null),
+                  onTap: () {
+                    onItemSelected(search);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: activeItem == search ? Color(0xFFF3F3F3) : null,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                       child: Row(
                         children: [
                           Container(
-                            width: activeRectWidth, 
-                            height: activeRectHeight, 
+                            width: adjustedRectWidth,
+                            height: activeRectHeight,
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: activeItem == search ? Color(0xFFF3F3F3) : null,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
                             child: Row(
                               children: [
                                 const Icon(Icons.history, color: AppColors.darkGrey),
                                 const SizedBox(width: 16),
-                                Expanded( 
+                                Expanded(
                                   child: Text(
                                     search,
                                     style: const TextStyle(color: AppColors.darkGrey),
@@ -549,175 +563,246 @@
                               ],
                             ),
                           ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: AppColors.darkGrey, size: 20),
+                            onPressed: () => onDeleteRecentSearch(search),
+                          ),
                         ],
                       ),
                     ),
                   ),
                 ),
-              ],
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Text(
-                  'Suggestions',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.darkGrey,
-                  ),
+              ),
+            ],
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Text(
+                'Suggestions',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.darkGrey,
                 ),
               ),
-              ...filteredSuggestions.map(
-                (suggestion) => InkWell(
-                  onTapDown: (TapDownDetails _) => onActiveItemChanged(suggestion),
-                  onTapUp: (TapUpDetails _) => onActiveItemChanged(null),
-                  onTapCancel: () => onActiveItemChanged(null),
-                  onTap: () {
-                    onItemSelected(suggestion);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: activeRectWidth,
-                          height: activeRectHeight,
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: activeItem == suggestion ? Color(0xFFF3F3F3) : null,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.search, color: AppColors.darkGrey),
-                              const SizedBox(width: 16),
-                              Expanded( // Use Expanded to handle text overflow
-                                child: Text(
-                                  suggestion,
-                                  style: const TextStyle(color: AppColors.darkGrey),
-                                  overflow: TextOverflow.ellipsis,
+            ),
+            Builder(
+              builder: (context) {
+                final query = searchController.text.trim();
+                if (query.isEmpty) {
+                  return Column(
+                    children: defaultSuggestions.map(
+                      (suggestion) => InkWell(
+                        onTapDown: (TapDownDetails _) => onActiveItemChanged(suggestion),
+                        onTapUp: (TapUpDetails _) => onActiveItemChanged(null),
+                        onTapCancel: () => onActiveItemChanged(null),
+                        onTap: () {
+                          onItemSelected(suggestion);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: activeItem == suggestion ? Color(0xFFF3F3F3) : null,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: adjustedRectWidth,
+                                  height: activeRectHeight,
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.search, color: AppColors.darkGrey),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Text(
+                                          suggestion,
+                                          style: const TextStyle(color: AppColors.darkGrey),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 48), // Align with IconButton space
+                              ],
+                            ),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              if (filteredSuggestions.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text(
-                    'No suggestions found',
-                    style: TextStyle(color: AppColors.grey),
-                  ),
-                ),
-            ],
-          ),
+                      ),
+                    ).toList(),
+                  );
+                }
+                return FutureBuilder<List<String>>(
+                  future: viewModel.fetchEventTitles(query),
+                  builder: (context, snapshot) {
+                    final suggestions = snapshot.data ?? [];
+                    final filteredSuggestions = suggestions
+                        .where((suggestion) =>
+                            suggestion.toLowerCase().contains(query.toLowerCase()))
+                        .toList();
+                    if (filteredSuggestions.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text(
+                          'No suggestions found',
+                          style: TextStyle(color: AppColors.grey),
+                        ),
+                      );
+                    }
+                    return Column(
+                      children: filteredSuggestions.map(
+                        (suggestion) => InkWell(
+                          onTapDown: (TapDownDetails _) => onActiveItemChanged(suggestion),
+                          onTapUp: (TapUpDetails _) => onActiveItemChanged(null),
+                          onTapCancel: () => onActiveItemChanged(null),
+                          onTap: () {
+                            onItemSelected(suggestion);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: activeItem == suggestion ? Color(0xFFF3F3F3) : null,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: adjustedRectWidth,
+                                    height: activeRectHeight,
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.search, color: AppColors.darkGrey),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: Text(
+                                            suggestion,
+                                            style: const TextStyle(color: AppColors.darkGrey),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 48), // Align with IconButton space
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ).toList(),
+                    );
+                  },
+                );
+              },
+            ),
+          ],
         ),
       ),
-    );
-  }
-  
-  Widget buildLocationSelector({
-    required HomeViewModel viewModel,}) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    ),
+  );
+}
+
+Widget buildLocationSelector({required HomeViewModel viewModel}) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.location_on, color: Colors.red, size: 24),
-              const SizedBox(width: 2),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 150),
-                child: viewModel.provinces.isEmpty
-                    ? const SizedBox.shrink()
-                    : DropdownButtonFormField<String>(
-                        value: viewModel.selectedCity,
-                        items: viewModel.provinces.map((province) {
-                          return DropdownMenuItem(
-                            value: province.name,
-                            child: Text(
-                              province.name ?? '',
-                              style: const TextStyle(
-                                color: Colors.blue,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: viewModel.isLoading ? null : (value) => viewModel.setCity(value),
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 2, vertical: 0),
+          const Icon(Icons.location_on, color: Colors.red, size: 24),
+          const SizedBox(width: 2),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 150),
+            child: viewModel.provinces.isEmpty
+                ? const SizedBox.shrink()
+                : DropdownButtonFormField<String>(
+                    value: viewModel.selectedCity,
+                    items: viewModel.provinces.map((province) {
+                      return DropdownMenuItem(
+                        value: province.name,
+                        child: Text(
+                          province.name ?? '',
+                          style: const TextStyle(
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        isExpanded: true,
-                        style: const TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                        validator: (value) => value == null ? 'Please select a city' : null,
-                        icon: const Padding(
-                          padding: EdgeInsets.only(right: 2.0),
-                          child: Icon(Icons.arrow_drop_down, color: Colors.blue, size: 24),
-                        ),
-                        itemHeight: 48,
-                        menuMaxHeight: 200,
-                      ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 1),
-          const Divider(
-            height: 1,
-            thickness: 0.5,
-            color: AppColors.grey,
-            indent: 0,
-            endIndent: 190,
+                      );
+                    }).toList(),
+                    onChanged: viewModel.isLoading ? null : (value) => viewModel.setCity(value),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 2, vertical: 0),
+                    ),
+                    isExpanded: true,
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                    validator: (value) => value == null ? 'Please select a city' : null,
+                    icon: const Padding(
+                      padding: EdgeInsets.only(right: 2.0),
+                      child: Icon(Icons.arrow_drop_down, color: Colors.blue, size: 24),
+                    ),
+                    itemHeight: 48,
+                    menuMaxHeight: 200,
+                  ),
           ),
         ],
-      );
-    }
-
-  Widget buildCategoryChips() {
-    const categories = ['All', 'Music', 'Today', 'Online', 'This Week'];
-    return SizedBox(
-      height: 35,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (_, index) {
-          final cat = categories[index];
-          final isSelected = cat == 'All';
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFF2176AE) : const Color(0xFFE8E1E1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              cat,
-              style: TextStyle(
-                color: isSelected ? Colors.white : Colors.black,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          );
-        },
       ),
-    );
-  }
+      const SizedBox(height: 1),
+      const Divider(
+        height: 1,
+        thickness: 0.5,
+        color: AppColors.grey,
+        indent: 0,
+        endIndent: 190,
+      ),
+    ],
+  );
+}
 
-  Widget buildTrendingHeader() {
-    return const Text(
-      'Top Trending Event In City',
-      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-    );
-  }
+Widget buildCategoryChips() {
+  const categories = ['All', 'Music', 'Today', 'Online', 'This Week'];
+  return SizedBox(
+    height: 35,
+    child: ListView.separated(
+      scrollDirection: Axis.horizontal,
+      itemCount: categories.length,
+      separatorBuilder: (_, __) => const SizedBox(width: 8),
+      itemBuilder: (_, index) {
+        final cat = categories[index];
+        final isSelected = cat == 'All';
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFF2176AE) : const Color(0xFFE8E1E1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            cat,
+            style: TextStyle(
+              color: isSelected ? Colors.white : Colors.black,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
+Widget buildTrendingHeader() {
+  return const Text(
+    'Top Trending Event In City',
+    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+  );
+}

@@ -147,6 +147,21 @@ class HomeViewModel extends ChangeNotifier {
     }
   }
 
+  Future<List<String>> fetchEventTitles(String query) async {
+    try {
+      final result = await _eventRepository.getAll(
+        search: query.isNotEmpty ? query : null,
+        limit: 10,
+        fields: '_id,organizer_id,title,start_date,end_date,is_online',
+      );
+      final events = result['data'] as List<Event>;
+      return events.map((event) => event.title).toSet().toList();
+    } catch (e) {
+      ErrorHandler.handleError(e, 'Failed to load event titles', _errorState);
+      return [];
+    }
+  }
+
   void clearError() {
     ErrorHandler.clearError(_errorState);
     notifyListeners();
