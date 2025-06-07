@@ -27,10 +27,12 @@ class HomePageState extends State<HomePage> {
   OverlayEntry? _overlayEntry;
   String? _activeItem;
   Timer? _debounce;
+  List<String> _initialSuggestions = [];
 
   @override
   void initState() {
     super.initState();
+    _loadInitialSuggestions();
     _searchFocusNode.addListener(() {
       if (_searchFocusNode.hasFocus) {
         _showOverlay();
@@ -42,8 +44,19 @@ class HomePageState extends State<HomePage> {
     _searchController.addListener(() {
       _debounce?.cancel();
       _debounce = Timer(const Duration(milliseconds: 300), () {
-        setState(() {});
+        setState(() {}); 
+        if (_searchFocusNode.hasFocus && _overlayEntry != null) {
+          _overlayEntry!.markNeedsBuild();
+        }
       });
+    });
+  }
+
+  Future<void> _loadInitialSuggestions() async {
+    final viewModel = Provider.of<HomeViewModel>(context, listen: false);
+    final suggestions = await viewModel.fetchEventTitles("");
+    setState(() {
+      _initialSuggestions = suggestions;
     });
   }
 
@@ -70,6 +83,9 @@ class HomePageState extends State<HomePage> {
   void _deleteRecentSearch(String search) {
     setState(() {
       _recentSearches.remove(search);
+      if (_overlayEntry != null) {
+        _overlayEntry!.markNeedsBuild(); 
+      }
     });
   }
 
@@ -83,6 +99,7 @@ class HomePageState extends State<HomePage> {
           searchController: _searchController,
           activeItem: _activeItem,
           viewModel: Provider.of<HomeViewModel>(context, listen: false),
+          initialSuggestions: _initialSuggestions,
           onItemSelected: (item) {
             setState(() {
               _searchController.text = item;
@@ -404,71 +421,86 @@ Widget buildSearchHeader({
         ),
       ),
       const SizedBox(width: 8),
-      Expanded(
-        child: Container(
-          key: searchContainerKey,
-          height: 44,
-          decoration: BoxDecoration(
-            color: isSearchActive ? Colors.white : const Color(0xFFF6F6F6),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: isSearchActive ? AppColors.darkGrey : Colors.black12,
+      Container(
+        key: searchContainerKey,
+        width: 270, // Giữ chiều rộng 270px như đã thiết lập trước đó
+        height: 44,
+        child: SearchBar(
+          controller: searchController,
+          focusNode: searchFocusNode,
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.focused)) {
+              return Colors.white;
+            }
+            return const Color(0xFFF6F6F6);
+          }),
+          elevation: const WidgetStatePropertyAll(0),
+          shadowColor: const WidgetStatePropertyAll(Colors.transparent),
+          surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+          shape: WidgetStateProperty.resolveWith((states) {
+            return RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(
+                color: isSearchActive ? AppColors.darkGrey : Colors.black12,
+              ),
+            );
+          }),
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: Icon(
+              Icons.search,
+              color: isSearchActive ? AppColors.darkGrey : AppColors.grey,
+              size: 20,
             ),
           ),
-          child: Row(
-            children: [
-              const SizedBox(width: 10),
-              Icon(
-                Icons.search,
-                color: isSearchActive ? AppColors.darkGrey : Colors.grey,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: searchController,
-                  focusNode: searchFocusNode,
-                  textAlignVertical: TextAlignVertical.center,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: isSearchActive ? AppColors.darkGrey : Colors.black,
+          trailing: [
+            GestureDetector(
+              onTap: () {
+                if (searchController.text.isNotEmpty) {
+                  onSearchSubmitted(searchController.text);
+                  searchFocusNode.unfocus();
+                }
+              },
+              child: Container(
+                height: 36,
+                width: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.primary, // Màu nền của icon
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.primary, // Viền màu AppColors.primary
+                    width: 2, // Độ dày viền
                   ),
-                  decoration: InputDecoration(
-                    hintText: 'Search events...',
-                    hintStyle: TextStyle(
-                      color: isSearchActive ? AppColors.darkGrey : Colors.grey,
-                    ),
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                  ),
-                  onSubmitted: (value) {
-                    onSearchSubmitted(value);
-                    searchFocusNode.unfocus();
-                  },
-                  onChanged: (value) {},
+                ),
+                child: const Icon(
+                  Icons.search,
+                  color: Colors.white,
+                  size: 24,
                 ),
               ),
-              GestureDetector(
-                onTap: () {
-                  if (searchController.text.isNotEmpty) {
-                    onSearchSubmitted(searchController.text);
-                    searchFocusNode.unfocus();
-                  }
-                },
-                child: Container(
-                  height: 36,
-                  width: 36,
-                  margin: const EdgeInsets.symmetric(horizontal: 6),
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.search, color: Colors.white, size: 24),
-                ),
-              ),
-            ],
+            ),
+          ],
+          hintText: 'Search events...',
+          hintStyle: WidgetStateProperty.resolveWith((states) {
+            return TextStyle(
+              color: isSearchActive ? AppColors.darkGrey : Colors.grey,
+              fontSize: 15,
+            );
+          }),
+          textStyle: WidgetStateProperty.resolveWith((states) {
+            return TextStyle(
+              fontSize: 15,
+              color: isSearchActive ? AppColors.darkGrey : Colors.black,
+            );
+          }),
+          constraints: const BoxConstraints(minHeight: 44, maxHeight: 44),
+          padding: const WidgetStatePropertyAll(
+            EdgeInsets.only(left: 8, right: 8), // Padding tổng thể của thanh search
           ),
+          onSubmitted: (value) {
+            onSearchSubmitted(value);
+            searchFocusNode.unfocus();
+          },
         ),
       ),
     ],
@@ -481,6 +513,7 @@ Widget buildSearchSuggestionsOverlay({
   required TextEditingController searchController,
   required String? activeItem,
   required HomeViewModel viewModel,
+  required List<String> initialSuggestions,
   required ValueChanged<String> onItemSelected,
   required ValueChanged<String?> onActiveItemChanged,
   required ValueChanged<String> onDeleteRecentSearch,
@@ -492,14 +525,6 @@ Widget buildSearchSuggestionsOverlay({
 
   final size = renderBox.size;
   final offset = renderBox.localToGlobal(Offset.zero);
-  final double adjustedRectWidth = activeRectWidth ;
-  final List<String> defaultSuggestions = [
-    'Music Festival',
-    'Art Exhibition',
-    'Tech Conference',
-    'Food Fair',
-    'Charity Run',
-  ];
 
   return Positioned(
     left: offset.dx,
@@ -545,22 +570,23 @@ Widget buildSearchSuggestionsOverlay({
                       ),
                       child: Row(
                         children: [
-                          Container(
-                            width: adjustedRectWidth,
-                            height: activeRectHeight,
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.history, color: AppColors.darkGrey),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Text(
-                                    search,
-                                    style: const TextStyle(color: AppColors.darkGrey),
-                                    overflow: TextOverflow.ellipsis,
+                          Expanded( // Sử dụng Expanded để đảm bảo nội dung bên trong khớp với chiều rộng của overlay
+                            child: Container(
+                              height: activeRectHeight,
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.history, color: AppColors.darkGrey),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Text(
+                                      search,
+                                      style: const TextStyle(color: AppColors.darkGrey),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                           IconButton(
@@ -574,75 +600,95 @@ Widget buildSearchSuggestionsOverlay({
                 ),
               ),
             ],
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text(
-                'Suggestions',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.darkGrey,
-                ),
-              ),
-            ),
             Builder(
               builder: (context) {
                 final query = searchController.text.trim();
                 if (query.isEmpty) {
-                  return Column(
-                    children: defaultSuggestions.map(
-                      (suggestion) => InkWell(
-                        onTapDown: (TapDownDetails _) => onActiveItemChanged(suggestion),
-                        onTapUp: (TapUpDetails _) => onActiveItemChanged(null),
-                        onTapCancel: () => onActiveItemChanged(null),
-                        onTap: () {
-                          onItemSelected(suggestion);
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: activeItem == suggestion ? Color(0xFFF3F3F3) : null,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: adjustedRectWidth,
-                                  height: activeRectHeight,
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.search, color: AppColors.darkGrey),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: Text(
-                                          suggestion,
-                                          style: const TextStyle(color: AppColors.darkGrey),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 48), // Align with IconButton space
-                              ],
+                  if (recentSearches.isEmpty && initialSuggestions.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Text(
+                        'No recent searches',
+                        style: TextStyle(color: AppColors.grey),
+                      ),
+                    );
+                  }
+                  if (recentSearches.isEmpty && initialSuggestions.isNotEmpty) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+                          child: Text(
+                            'Suggestions',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.darkGrey,
                             ),
                           ),
                         ),
-                      ),
-                    ).toList(),
-                  );
+                        ...initialSuggestions.map(
+                          (suggestion) => InkWell(
+                            onTapDown: (TapDownDetails _) => onActiveItemChanged(suggestion),
+                            onTapUp: (TapUpDetails _) => onActiveItemChanged(null),
+                            onTapCancel: () => onActiveItemChanged(null),
+                            onTap: () {
+                              onItemSelected(suggestion);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: activeItem == suggestion ? Color(0xFFF3F3F3) : null,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded( // Sử dụng Expanded để khớp với chiều rộng của overlay
+                                      child: Container(
+                                        height: activeRectHeight,
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        child: Row(
+                                          children: [
+                                            const Icon(Icons.search, color: AppColors.darkGrey),
+                                            const SizedBox(width: 16),
+                                            Expanded(
+                                              child: Text(
+                                                suggestion,
+                                                style: const TextStyle(color: AppColors.darkGrey),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 48),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+                  return const SizedBox.shrink();
                 }
                 return FutureBuilder<List<String>>(
                   future: viewModel.fetchEventTitles(query),
                   builder: (context, snapshot) {
-                    final suggestions = snapshot.data ?? [];
-                    final filteredSuggestions = suggestions
-                        .where((suggestion) =>
-                            suggestion.toLowerCase().contains(query.toLowerCase()))
-                        .toList();
-                    if (filteredSuggestions.isEmpty) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: SpinKitFadingCircle(
+                          color: AppColors.primary,
+                          size: 30.0,
+                        ),
+                      );
+                    }
+                    if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
                       return const Padding(
                         padding: EdgeInsets.all(16),
                         child: Text(
@@ -651,49 +697,65 @@ Widget buildSearchSuggestionsOverlay({
                         ),
                       );
                     }
+                    final suggestions = snapshot.data!;
                     return Column(
-                      children: filteredSuggestions.map(
-                        (suggestion) => InkWell(
-                          onTapDown: (TapDownDetails _) => onActiveItemChanged(suggestion),
-                          onTapUp: (TapUpDetails _) => onActiveItemChanged(null),
-                          onTapCancel: () => onActiveItemChanged(null),
-                          onTap: () {
-                            onItemSelected(suggestion);
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: activeItem == suggestion ? Color(0xFFF3F3F3) : null,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: adjustedRectWidth,
-                                    height: activeRectHeight,
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    child: Row(
-                                      children: [
-                                        const Icon(Icons.search, color: AppColors.darkGrey),
-                                        const SizedBox(width: 16),
-                                        Expanded(
-                                          child: Text(
-                                            suggestion,
-                                            style: const TextStyle(color: AppColors.darkGrey),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+                          child: Text(
+                            'Search Results',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.darkGrey,
+                            ),
+                          ),
+                        ),
+                        ...suggestions.map(
+                          (suggestion) => InkWell(
+                            onTapDown: (TapDownDetails _) => onActiveItemChanged(suggestion),
+                            onTapUp: (TapUpDetails _) => onActiveItemChanged(null),
+                            onTapCancel: () => onActiveItemChanged(null),
+                            onTap: () {
+                              onItemSelected(suggestion);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: activeItem == suggestion ? Color(0xFFF3F3F3) : null,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded( // Sử dụng Expanded để khớp với chiều rộng của overlay
+                                      child: Container(
+                                        height: activeRectHeight,
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        child: Row(
+                                          children: [
+                                            const Icon(Icons.search, color: AppColors.darkGrey),
+                                            const SizedBox(width: 16),
+                                            Expanded(
+                                              child: Text(
+                                                suggestion,
+                                                style: const TextStyle(color: AppColors.darkGrey),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 48), // Align with IconButton space
-                                ],
+                                    const SizedBox(width: 48),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ).toList(),
+                      ],
                     );
                   },
                 );
