@@ -4,8 +4,10 @@ import 'package:eventorize_app/core/utils/exceptions.dart';
 import 'package:eventorize_app/data/models/event.dart';
 import 'package:eventorize_app/data/models/location.dart';
 import 'package:eventorize_app/data/models/user.dart';
+import 'package:eventorize_app/data/models/favorite.dart';
 import 'package:eventorize_app/data/repositories/event_repository.dart';
 import 'package:eventorize_app/data/repositories/location_repository.dart';
+import 'package:eventorize_app/data/repositories/favorite_repository.dart';
 import 'package:eventorize_app/common/services/location_cache.dart';
 import 'package:eventorize_app/common/services/session_manager.dart';
 
@@ -13,6 +15,7 @@ class HomeViewModel extends ChangeNotifier {
   final EventRepository _eventRepository;
   final SessionManager _sessionManager;
   final LocationRepository _locationRepository;
+  final FavoriteRepository _favoriteRepository;
   final LocationCache _locationCache = GetIt.instance<LocationCache>();
   final ErrorState _errorState = ErrorState();
 
@@ -43,7 +46,15 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  HomeViewModel(this._eventRepository, this._sessionManager, this._locationRepository) {
+  Map<String, String> _favoriteIdMap = {};
+  Map<String, String> get favoriteIdMap => _favoriteIdMap;
+
+  HomeViewModel(
+    this._eventRepository,
+    this._sessionManager,
+    this._locationRepository,
+    this._favoriteRepository,
+  ) {
     _initializeData();
   }
 
@@ -55,7 +66,10 @@ class HomeViewModel extends ChangeNotifier {
 
     try {
       await _loadInitialLocationData();
-      await fetchEvents(search: _selectedCity, page: 1, limit: 10);
+      await Future.wait([
+        fetchEvents(search: _selectedCity, page: 1, limit: 10),
+        _loadFavorites(),
+      ]);
       _updateDataLoadedStatus();
       _isInitialLoad = false;
     } catch (e) {
@@ -74,6 +88,18 @@ class HomeViewModel extends ChangeNotifier {
     }
     if (_selectedCity == null && provinces.isNotEmpty) {
       _selectedCity = provinces[0].name;
+    }
+  }
+
+  Future<void> _loadFavorites() async {
+    try {
+      final result = await _favoriteRepository.getAll(page: 1, limit: 100);
+      _favoriteIdMap = {
+        for (var favorite in result['data'] as List<Favorite>)
+          favorite.eventId: favorite.id
+      };
+    } catch (e) {
+      ErrorHandler.handleError(e, 'Failed to load favorites', _errorState);
     }
   }
 
@@ -102,6 +128,7 @@ class HomeViewModel extends ChangeNotifier {
       );
       _events = result['data'] as List<Event>;
       _totalEvents = result['total'] as int; 
+      await _loadFavorites();
       _updateDataLoadedStatus();
     } catch (e) {
       ErrorHandler.handleError(e, 'Failed to load events', _errorState);
@@ -125,6 +152,7 @@ class HomeViewModel extends ChangeNotifier {
       if (_selectedCity == null && provinces.isNotEmpty) {
         _selectedCity = provinces[0].name;
       }
+      await _loadFavorites();
       _updateDataLoadedStatus();
     } catch (e) {
       ErrorHandler.handleError(e, 'Failed to load provinces', _errorState);
@@ -136,7 +164,7 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   void _updateDataLoadedStatus() {
-    _isDataLoaded = provinces.isNotEmpty && _errorState.errorMessage == null;
+    _isDataLoaded = provinces.isNotEmpty && _events.isNotEmpty && _errorState.errorMessage == null;
   }
 
   Future<void> setCity(String? city) async {

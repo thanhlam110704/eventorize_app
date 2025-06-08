@@ -28,4 +28,10 @@ class ApiUrl {
   static String editEvent(String id) => '/v1/events/$id';
   static String editEventThumbnail(String id) => '/v1/events/$id/thumbnail';
   static String deleteEvent(String id) => '/v1/events/$id';
+
+
+  
+  static String get getFavorites => '/v1/favorites/my-events';
+  static String createFavorite(String eventId) => '/v1/favorites/add-event/$eventId';
+  static String deleteFavorite(String id) => '/v1/favorites/$id';
 }

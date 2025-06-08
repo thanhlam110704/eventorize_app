@@ -13,11 +13,13 @@ import 'package:eventorize_app/common/services/dio_client.dart';
 import 'package:eventorize_app/data/api/user_api.dart';
 import 'package:eventorize_app/data/api/location_api.dart';
 import 'package:eventorize_app/data/api/event_api.dart';
+import 'package:eventorize_app/data/api/favorite_api.dart';
 import 'package:eventorize_app/data/repositories/user_repository.dart';
 import 'package:eventorize_app/data/repositories/location_repository.dart';
 import 'package:eventorize_app/data/repositories/event_repository.dart';
+import 'package:eventorize_app/data/repositories/favorite_repository.dart';
 import 'package:get_it/get_it.dart';
-import 'package:eventorize_app/common/services/location_cache.dart'; 
+import 'package:eventorize_app/common/services/location_cache.dart';
 
 void setupDependencies() {
   final getIt = GetIt.instance;
@@ -28,6 +30,8 @@ void setupDependencies() {
   getIt.registerSingleton<LocationRepository>(LocationRepository(getIt<LocationApi>()));
   getIt.registerSingleton<EventApi>(EventApi(getIt<DioClient>()));
   getIt.registerSingleton<EventRepository>(EventRepository(getIt<EventApi>()));
+  getIt.registerSingleton<FavoriteApi>(FavoriteApi(getIt<DioClient>()));
+  getIt.registerSingleton<FavoriteRepository>(FavoriteRepository(getIt<FavoriteApi>()));
   getIt.registerSingleton<SessionManager>(SessionManager(getIt<UserRepository>()));
   getIt.registerSingleton<LocationCache>(LocationCache());
 }
@@ -46,6 +50,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        Provider<FavoriteRepository>(
+          create: (_) => GetIt.instance<FavoriteRepository>(),
+        ),
         ChangeNotifierProvider<SessionManager>(
           create: (_) => SessionManager(GetIt.instance<UserRepository>()),
         ),
@@ -72,6 +79,7 @@ class MyApp extends StatelessWidget {
             GetIt.instance<EventRepository>(),
             GetIt.instance<SessionManager>(),
             GetIt.instance<LocationRepository>(),
+            GetIt.instance<FavoriteRepository>(),
           ),
         ),
       ],

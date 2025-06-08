@@ -13,9 +13,9 @@ class BottomNavBar extends StatelessWidget {
     switch (currentRoute) {
       case 'home':
         return 0;
-      case 'favorites':
+      case 'favorite':
         return 1;
-      case 'tickets':
+      case 'ticket':
         return 2;
       case 'account':
         return 3;
@@ -30,10 +30,10 @@ class BottomNavBar extends StatelessWidget {
         context.goNamed("home");
         break;
       case 1:
-        context.goNamed("favorites");
+        context.goNamed("favorite");
         break;
       case 2:
-        context.goNamed("tickets");
+        context.goNamed("ticket");
         break;
       case 3:
         context.goNamed("account");
