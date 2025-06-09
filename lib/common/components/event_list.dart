@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
@@ -9,7 +8,6 @@ import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/core/utils/datetime_convert.dart';
 import 'package:eventorize_app/data/models/event.dart';
-import 'package:eventorize_app/data/models/favorite.dart';
 import 'package:eventorize_app/data/repositories/favorite_repository.dart';
 import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
 
@@ -132,13 +130,17 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
   Future<void> _toggleFavorite() async {
     if (_isProcessing) return;
 
-    setState(() {
-      _isProcessing = true;
-    });
-
     final sessionManager = Provider.of<SessionManager>(context, listen: false);
     final favoriteRepository = Provider.of<FavoriteRepository>(context, listen: false);
     final userId = sessionManager.user?.id;
+
+    setState(() {
+      _isProcessing = true;
+      _isFavorited = !_isFavorited;
+    });
+
+    await _animationController.forward();
+    await _animationController.reverse();
 
     if (userId == null) {
       if (mounted) {
@@ -148,10 +150,12 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
           description: 'User not logged in',
           type: ToastificationType.error,
         );
+        setState(() {
+          _isFavorited = widget.isFavorited;
+          _favoriteId = widget.favoriteId;
+          _isProcessing = false;
+        });
       }
-      setState(() {
-        _isProcessing = false;
-      });
       return;
     }
 
@@ -160,21 +164,34 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
         ToastCustom.show(
           context: context,
           title: 'Error',
-          description: 'Invalid event ID ',
+          description: 'Invalid event ID',
           type: ToastificationType.error,
         );
+        setState(() {
+          _isFavorited = widget.isFavorited;
+          _favoriteId = widget.favoriteId;
+          _isProcessing = false;
+        });
       }
-      setState(() {
-        _isProcessing = false;
-      });
       return;
     }
 
     try {
-      await _animationController.forward();
-      await _animationController.reverse();
-
       if (_isFavorited) {
+        final favorite = await favoriteRepository.create(eventId: widget.event.id);
+        if (mounted) {
+          setState(() {
+            _favoriteId = favorite.id;
+            _isProcessing = false;
+          });
+          ToastCustom.show(
+            context: context,
+            title: 'Success',
+            description: 'Event added to favorites',
+            type: ToastificationType.success,
+          );
+        }
+      } else {
         if (_favoriteId == null) {
           if (mounted) {
             ToastCustom.show(
@@ -183,35 +200,24 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
               description: 'Favorite ID not found',
               type: ToastificationType.error,
             );
+            setState(() {
+              _isFavorited = widget.isFavorited;
+              _favoriteId = widget.favoriteId;
+              _isProcessing = false;
+            });
           }
           return;
         }
         await favoriteRepository.delete(_favoriteId!);
         if (mounted) {
           setState(() {
-            _isFavorited = false;
             _favoriteId = null;
+            _isProcessing = false;
           });
           ToastCustom.show(
             context: context,
             title: 'Success',
             description: 'Event removed from favorites',
-            type: ToastificationType.success,
-          );
-        }
-      } else {
-        final favorite = await favoriteRepository.create(
-          eventId: widget.event.id,
-        );
-        if (mounted) {
-          setState(() {
-            _isFavorited = true;
-            _favoriteId = favorite.id;
-          });
-          ToastCustom.show(
-            context: context,
-            title: 'Success',
-            description: 'Event added to favorites',
             type: ToastificationType.success,
           );
         }
@@ -224,10 +230,9 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
           description: e.toString().replaceFirst('Exception: ', ''),
           type: ToastificationType.error,
         );
-      }
-    } finally {
-      if (mounted) {
         setState(() {
+          _isFavorited = widget.isFavorited;
+          _favoriteId = widget.favoriteId;
           _isProcessing = false;
         });
       }
@@ -313,7 +318,7 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
                         scale: _scaleAnimation,
                         child: Icon(
                           _isFavorited ? Icons.favorite : Icons.favorite_border,
-                          color:  Colors.black,
+                          color: Colors.black,
                         ),
                       ),
                     ),

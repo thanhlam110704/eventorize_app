@@ -44,7 +44,6 @@ class FavoriteApi {
               try {
                 return Favorite.fromJson(json);
               } catch (e) {
-                print('Error parsing favorite: $e, JSON: $json');
                 rethrow;
               }
             })
