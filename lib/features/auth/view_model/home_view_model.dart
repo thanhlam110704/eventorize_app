@@ -93,7 +93,7 @@ class HomeViewModel extends ChangeNotifier {
 
   Future<void> _loadFavorites() async {
     try {
-      final result = await _favoriteRepository.getAll(page: 1, limit: 100);
+      final result = await _favoriteRepository.getFavorites(page: 1, limit: 100);
       _favoriteIdMap = {
         for (var favorite in result['data'] as List<Favorite>)
           favorite.eventId: favorite.id

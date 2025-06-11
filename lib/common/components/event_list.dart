@@ -10,6 +10,7 @@ import 'package:eventorize_app/core/utils/datetime_convert.dart';
 import 'package:eventorize_app/data/models/event.dart';
 import 'package:eventorize_app/data/repositories/favorite_repository.dart';
 import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
+import 'package:eventorize_app/features/auth/view_model/favorite_view_model.dart';
 
 class EventList extends StatelessWidget {
   final List<Event> events;
@@ -26,7 +27,8 @@ class EventList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sessionManager = Provider.of<SessionManager>(context);
-    final viewModel = Provider.of<HomeViewModel>(context);
+    final homeViewModel = Provider.of<HomeViewModel>(context);
+    final favoriteViewModel = Provider.of<FavoriteViewModel>(context, listen: false);
 
     if (sessionManager.user == null) {
       return const Center(
@@ -37,7 +39,7 @@ class EventList extends StatelessWidget {
       );
     }
 
-    if (viewModel.events.isEmpty && viewModel.totalEvents == 0) {
+    if (events.isEmpty && totalEvents == 0) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -60,11 +62,14 @@ class EventList extends StatelessWidget {
     return SizedBox(
       height: 300,
       child: Column(
-        children: viewModel.events.map((event) => EventCard(
-              event: event,
-              isFavorited: viewModel.favoriteIdMap.containsKey(event.id),
-              favoriteId: viewModel.favoriteIdMap[event.id],
-            )).toList(),
+        children: events.map((event) {
+          final isFavoritePage = favoriteViewModel.events.contains(event);
+          return EventCard(
+            event: event,
+            isFavorited: isFavoritePage ? true : homeViewModel.favoriteIdMap.containsKey(event.id),
+            favoriteId: isFavoritePage ? event.id : homeViewModel.favoriteIdMap[event.id],
+          );
+        }).toList(),
       ),
     );
   }
@@ -130,8 +135,11 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
   Future<void> _toggleFavorite() async {
     if (_isProcessing) return;
 
+    
     final sessionManager = Provider.of<SessionManager>(context, listen: false);
     final favoriteRepository = Provider.of<FavoriteRepository>(context, listen: false);
+    final homeViewModel = Provider.of<HomeViewModel>(context, listen: false);
+    final favoriteViewModel = Provider.of<FavoriteViewModel>(context, listen: false);
     final userId = sessionManager.user?.id;
 
     setState(() {
@@ -222,6 +230,8 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
           );
         }
       }
+      await homeViewModel.fetchEvents(page: 1, limit: 10, search: homeViewModel.selectedCity);
+      await favoriteViewModel.refreshFavorites();
     } catch (e) {
       if (mounted) {
         ToastCustom.show(
@@ -318,7 +328,7 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
                         scale: _scaleAnimation,
                         child: Icon(
                           _isFavorited ? Icons.favorite : Icons.favorite_border,
-                          color: Colors.black,
+                          color: _isFavorited ? Colors.red : Colors.black,
                         ),
                       ),
                     ),

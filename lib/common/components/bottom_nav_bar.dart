@@ -65,7 +65,7 @@ class BottomNavBar extends StatelessWidget {
           label: "",
         ),
         BottomNavigationBarItem(
-          icon: Icon(MdiIcons.ticketOutline),
+          icon: Icon(MdiIcons.ticketConfirmationOutline),
           label: "",
         ),
         BottomNavigationBarItem(

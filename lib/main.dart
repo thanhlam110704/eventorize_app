@@ -5,6 +5,7 @@ import 'package:eventorize_app/features/auth/view_model/verify_view_model.dart';
 import 'package:eventorize_app/features/auth/view_model/account_view_model.dart';
 import 'package:eventorize_app/features/auth/view_model/detail_profile_view_model.dart';
 import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
+import 'package:eventorize_app/features/auth/view_model/favorite_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
@@ -80,6 +81,12 @@ class MyApp extends StatelessWidget {
             GetIt.instance<SessionManager>(),
             GetIt.instance<LocationRepository>(),
             GetIt.instance<FavoriteRepository>(),
+          ),
+        ),
+        ChangeNotifierProvider<FavoriteViewModel>(
+          create: (_) => FavoriteViewModel(
+            GetIt.instance<FavoriteRepository>(),
+            GetIt.instance<SessionManager>(),
           ),
         ),
       ],

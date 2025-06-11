@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:toastification/toastification.dart';
@@ -399,27 +400,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
           'Settings',
           style: AppTextStyles.sectionTitle,
         ),
-        const SizedBox(height: 10),
-        buildSettingItem(
-          icon: Icons.location_on,
-          title: 'Location',
-          onTap: () {},
-          iconColor: AppColors.black,
-          textColor: AppColors.black,
-          showTrailing: true,
-        ),
-        buildDivider(),
-        const SizedBox(height: 20),
-        buildSettingItem(
-          icon: Icons.apartment_outlined,
-          title: 'Organization',
-          onTap: () {},
-          iconColor: AppColors.black,
-          textColor: AppColors.black,
-          showTrailing: true,
-        ),
-        buildDivider(),
-        const SizedBox(height: 20),
+        const SizedBox(height: 15),
         buildSettingItem(
           icon: Icons.account_circle,
           title: 'Linked accounts',
@@ -429,7 +410,37 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
           showTrailing: true,
         ),
         buildDivider(),
-        const SizedBox(height: 135),
+        const SizedBox(height: 15),
+        buildSettingItem(
+          icon: Icons.apartment_outlined,
+          title: 'Organization',
+          onTap: () {},
+          iconColor: AppColors.black,
+          textColor: AppColors.black,
+          showTrailing: true,
+        ),
+        buildDivider(),
+        const SizedBox(height: 15),
+        buildSettingItem(
+          icon: MdiIcons.fileDocumentOutline,
+          title: 'Terms of Service',
+          onTap: () {},
+          iconColor: AppColors.black,
+          textColor: AppColors.black,
+          showTrailing: true,
+        ),
+        buildDivider(),
+        const SizedBox(height: 15),
+        buildSettingItem(
+          icon: MdiIcons.lockOutline,
+          title: 'Privacy Policy',
+          onTap: () {},
+          iconColor: AppColors.black,
+          textColor: AppColors.black,
+          showTrailing: true,
+        ),
+        buildDivider(),
+        const SizedBox(height: 80),
         SizedBox(
           width: double.infinity,
           child: OutlinedButton(
@@ -501,7 +512,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
         ),
       ),
       trailing: showTrailing
-          ? const Icon(Icons.chevron_right, size: 15, color: AppColors.darkGrey)
+          ? const Icon(Icons.chevron_right, size: 24, color: AppColors.darkGrey)
           : null,
       onTap: onTap,
     );

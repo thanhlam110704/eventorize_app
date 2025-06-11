@@ -22,7 +22,7 @@ class FavoriteApi {
     };
   }
 
-  Future<Map<String, dynamic>> getAll({
+  Future<Map<String, dynamic>> getFavorites({
     int page = 1,
     int limit = 10,
     String? sortBy,

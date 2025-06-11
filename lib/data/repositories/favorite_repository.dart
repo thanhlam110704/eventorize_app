@@ -6,13 +6,13 @@ class FavoriteRepository {
 
   FavoriteRepository(this._favoriteApi);
 
-  Future<Map<String, dynamic>> getAll({
+  Future<Map<String, dynamic>> getFavorites({
     int page = 1,
     int limit = 10,
     String? sortBy,
     String? orderBy,
   }) async {
-    return await _favoriteApi.getAll(
+    return await _favoriteApi.getFavorites(
       page: page,
       limit: limit,
       sortBy: sortBy,
