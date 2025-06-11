@@ -44,9 +44,9 @@ class HomePageState extends State<HomePage> {
     _searchController.addListener(() {
       _debounce?.cancel();
       _debounce = Timer(const Duration(milliseconds: 300), () {
-        setState(() {}); // Cập nhật UI khi query thay đổi
+        setState(() {});
         if (_searchFocusNode.hasFocus && _overlayEntry != null) {
-          _overlayEntry!.markNeedsBuild(); // Làm mới overlay
+          _overlayEntry!.markNeedsBuild();
         }
       });
     });
@@ -88,7 +88,7 @@ class HomePageState extends State<HomePage> {
     setState(() {
       _recentSearches.remove(search);
       if (_overlayEntry != null) {
-        _overlayEntry!.markNeedsBuild(); // Làm mới overlay khi xóa lịch sử
+        _overlayEntry!.markNeedsBuild();
       }
     });
   }
@@ -518,7 +518,6 @@ Widget buildSectionHeader(String title) => Padding(
       ),
     );
 
-
 Widget buildSuggestionItem({
   required String suggestion,
   required String? activeItem,
@@ -564,7 +563,6 @@ Widget buildSuggestionItem({
         ),
       ),
     );
-
 
 Widget buildRecentSearchItem({
   required String search,
@@ -616,7 +614,6 @@ Widget buildRecentSearchItem({
       ),
     );
 
-
 Widget buildSuggestionsList({
   required List<String> suggestions,
   required String? activeItem,
@@ -638,7 +635,6 @@ Widget buildSuggestionsList({
         ),
       ],
     );
-
 
 Widget buildRecentSearchesList({
   required List<String> recentSearches,

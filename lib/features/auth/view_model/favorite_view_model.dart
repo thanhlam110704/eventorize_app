@@ -19,6 +19,9 @@ class FavoriteViewModel extends ChangeNotifier {
   bool _isDataLoaded = false;
   bool get isDataLoaded => _isDataLoaded;
 
+  bool _isTogglingFavorite = false;
+  bool get isTogglingFavorite => _isTogglingFavorite;
+
   String? get errorMessage => _errorState.errorMessage;
   String? get errorTitle => _errorState.errorTitle;
   User? get user => _sessionManager.user;
@@ -26,7 +29,7 @@ class FavoriteViewModel extends ChangeNotifier {
   List<Event> _events = [];
   List<Event> get events => _events;
 
-  int _totalEvents = 0;
+  final int _totalEvents = 0;
   int get totalEvents => _totalEvents;
 
   Map<String, String> _favoriteIdMap = {};
@@ -43,7 +46,7 @@ class FavoriteViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await fetchFavoriteEvents(page: 1, limit: 10);
+      await fetchFavoriteEvents();
       _updateDataLoadedStatus();
       _isInitialLoad = false;
     } catch (e) {
@@ -55,20 +58,16 @@ class FavoriteViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> fetchFavoriteEvents({
-    int page = 1,
-    int limit = 10,
-  }) async {
+  Future<void> fetchFavoriteEvents() async {
     _isLoading = true;
     ErrorHandler.clearError(_errorState);
     notifyListeners();
 
     try {
-      final result = await _favoriteRepository.getFavorites(page: page, limit: limit);
-      _events = result['data'] as List<Event>;
-      _totalEvents = result['total'] as int;
+      final favorite = await _favoriteRepository.getMyFavoriteEvents();
+      _events = favorite.events ?? [];
       _favoriteIdMap = {
-        for (var event in _events) event.id: event.id 
+        for (var eventId in favorite.listEventId) eventId: favorite.id
       };
       _updateDataLoadedStatus();
     } catch (e) {
@@ -80,8 +79,33 @@ class FavoriteViewModel extends ChangeNotifier {
     }
   }
 
+  void updateFavoriteLocally({required Event event, required bool addFavorite, required String favoriteId}) {
+    _isTogglingFavorite = true;
+    notifyListeners();
+
+    try {
+      if (addFavorite) {
+        // Thêm sự kiện vào danh sách favorite
+        if (!_events.any((e) => e.id == event.id)) {
+          _events = [..._events, event];
+          _favoriteIdMap[event.id] = favoriteId;
+        }
+      } else {
+        // Xóa sự kiện khỏi danh sách favorite
+        _events = _events.where((e) => e.id != event.id).toList();
+        _favoriteIdMap.remove(event.id);
+      }
+      _updateDataLoadedStatus();
+    } catch (e) {
+      ErrorHandler.handleError(e, 'Failed to update favorite locally', _errorState);
+    } finally {
+      _isTogglingFavorite = false;
+      notifyListeners();
+    }
+  }
+
   void _updateDataLoadedStatus() {
-    _isDataLoaded = _events.isNotEmpty && _errorState.errorMessage == null;
+    _isDataLoaded = _errorState.errorMessage == null;
   }
 
   void clearError() {
@@ -90,6 +114,6 @@ class FavoriteViewModel extends ChangeNotifier {
   }
 
   Future<void> refreshFavorites() async {
-    await fetchFavoriteEvents(page: 1, limit: 10);
+    await fetchFavoriteEvents();
   }
 }

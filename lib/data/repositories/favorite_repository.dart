@@ -6,29 +6,19 @@ class FavoriteRepository {
 
   FavoriteRepository(this._favoriteApi);
 
-  Future<Map<String, dynamic>> getFavorites({
-    int page = 1,
-    int limit = 10,
-    String? sortBy,
-    String? orderBy,
-  }) async {
-    return await _favoriteApi.getFavorites(
-      page: page,
-      limit: limit,
-      sortBy: sortBy,
-      orderBy: orderBy,
-    );
+  Future<Favorite> getMyFavoriteEvents() async {
+    return await _favoriteApi.getMyFavoriteEvents();
   }
 
-  Future<Favorite> create({
+  Future<Favorite> addEventFavorite({
     required String eventId,
   }) async {
-    return await _favoriteApi.create(
-      eventId: eventId,
-    );
+    return await _favoriteApi.addEventFavorite(eventId: eventId);
   }
 
-  Future<void> delete(String id) async {
-    await _favoriteApi.delete(id);
+  Future<Favorite> removeEventFavorite({
+    required String eventId,
+  }) async {
+    return await _favoriteApi.removeEventFavorite(eventId: eventId);
   }
 }

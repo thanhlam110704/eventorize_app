@@ -8,65 +8,21 @@ class FavoriteApi {
 
   FavoriteApi(this._dioClient);
 
-  Map<String, dynamic> _buildQueryParams({
-    int page = 1,
-    int limit = 10,
-    String? sortBy,
-    String? orderBy,
-  }) {
-    return {
-      'page': page,
-      'limit': limit,
-      if (sortBy != null) 'sort_by': sortBy,
-      if (orderBy != null) 'order_by': orderBy,
-    };
-  }
-
-  Future<Map<String, dynamic>> getFavorites({
-    int page = 1,
-    int limit = 10,
-    String? sortBy,
-    String? orderBy,
-  }) async {
+  Future<Favorite> getMyFavoriteEvents() async {
     try {
-      final response = await _dioClient.get(
-        ApiUrl.getFavorites,
-        queryParameters: _buildQueryParams(
-          page: page,
-          limit: limit,
-          sortBy: sortBy,
-          orderBy: orderBy,
-        ),
-      );
-      return {
-        'data': (response.data['results'] as List)
-            .map((json) {
-              try {
-                return Favorite.fromJson(json);
-              } catch (e) {
-                rethrow;
-              }
-            })
-            .toList(),
-        'total': response.data['total_items'] as int,
-        'total_page': response.data['total_page'] as int,
-        'records_per_page': response.data['records_per_page'] as int,
-      };
+      final response = await _dioClient.get(ApiUrl.getFavorites);
+      return Favorite.fromJson(response.data);
     } on DioException catch (e) {
       final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to fetch favorites: $errorMessage');
+      throw Exception('Failed to fetch favorite events: $errorMessage');
     } catch (e) {
-      throw Exception('Failed to fetch favorites: $e');
+      throw Exception('Failed to fetch favorite events: $e');
     }
   }
 
-  Future<Favorite> create({
-    required String eventId,
-  }) async {
+  Future<Favorite> addEventFavorite({required String eventId}) async {
     try {
-      final response = await _dioClient.post(
-        ApiUrl.createFavorite(eventId),
-      );
+      final response = await _dioClient.post(ApiUrl.addEventFavorite(eventId),);
       return Favorite.fromJson(response.data);
     } on DioException catch (e) {
       final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
@@ -76,12 +32,15 @@ class FavoriteApi {
     }
   }
 
-  Future<void> delete(String id) async {
+  Future<Favorite> removeEventFavorite({required String eventId}) async {
     try {
-      await _dioClient.delete(ApiUrl.deleteFavorite(id));
+      final response = await _dioClient.delete(ApiUrl.removeEventFavorite(eventId));
+      return Favorite.fromJson(response.data);
     } on DioException catch (e) {
       final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
       throw Exception('Failed to delete favorite: $errorMessage');
+    } catch (e) {
+      throw Exception('Failed to delete favorite: $e');
     }
   }
 }

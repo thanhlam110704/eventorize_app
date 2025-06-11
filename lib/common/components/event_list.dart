@@ -67,7 +67,6 @@ class EventList extends StatelessWidget {
           return EventCard(
             event: event,
             isFavorited: isFavoritePage ? true : homeViewModel.favoriteIdMap.containsKey(event.id),
-            favoriteId: isFavoritePage ? event.id : homeViewModel.favoriteIdMap[event.id],
           );
         }).toList(),
       ),
@@ -78,13 +77,11 @@ class EventList extends StatelessWidget {
 class EventCard extends StatefulWidget {
   final Event event;
   final bool isFavorited;
-  final String? favoriteId;
 
   const EventCard({
     super.key,
     required this.event,
     required this.isFavorited,
-    this.favoriteId,
   });
 
   @override
@@ -95,14 +92,11 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   late bool _isFavorited;
-  late String? _favoriteId;
-  bool _isProcessing = false;
 
   @override
   void initState() {
     super.initState();
     _isFavorited = widget.isFavorited;
-    _favoriteId = widget.favoriteId;
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 200),
@@ -118,10 +112,9 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
   @override
   void didUpdateWidget(covariant EventCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.isFavorited != widget.isFavorited || oldWidget.favoriteId != widget.favoriteId) {
+    if (oldWidget.isFavorited != widget.isFavorited) {
       setState(() {
         _isFavorited = widget.isFavorited;
-        _favoriteId = widget.favoriteId;
       });
     }
   }
@@ -133,9 +126,6 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
   }
 
   Future<void> _toggleFavorite() async {
-    if (_isProcessing) return;
-
-    
     final sessionManager = Provider.of<SessionManager>(context, listen: false);
     final favoriteRepository = Provider.of<FavoriteRepository>(context, listen: false);
     final homeViewModel = Provider.of<HomeViewModel>(context, listen: false);
@@ -143,7 +133,6 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
     final userId = sessionManager.user?.id;
 
     setState(() {
-      _isProcessing = true;
       _isFavorited = !_isFavorited;
     });
 
@@ -160,8 +149,6 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
         );
         setState(() {
           _isFavorited = widget.isFavorited;
-          _favoriteId = widget.favoriteId;
-          _isProcessing = false;
         });
       }
       return;
@@ -177,21 +164,17 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
         );
         setState(() {
           _isFavorited = widget.isFavorited;
-          _favoriteId = widget.favoriteId;
-          _isProcessing = false;
         });
       }
       return;
     }
 
     try {
+      String favoriteId = '';
       if (_isFavorited) {
-        final favorite = await favoriteRepository.create(eventId: widget.event.id);
+        final response = await favoriteRepository.addEventFavorite(eventId: widget.event.id);
+        favoriteId = response.id; // Giả sử API trả về object với trường id
         if (mounted) {
-          setState(() {
-            _favoriteId = favorite.id;
-            _isProcessing = false;
-          });
           ToastCustom.show(
             context: context,
             title: 'Success',
@@ -200,28 +183,8 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
           );
         }
       } else {
-        if (_favoriteId == null) {
-          if (mounted) {
-            ToastCustom.show(
-              context: context,
-              title: 'Error',
-              description: 'Favorite ID not found',
-              type: ToastificationType.error,
-            );
-            setState(() {
-              _isFavorited = widget.isFavorited;
-              _favoriteId = widget.favoriteId;
-              _isProcessing = false;
-            });
-          }
-          return;
-        }
-        await favoriteRepository.delete(_favoriteId!);
+        await favoriteRepository.removeEventFavorite(eventId: widget.event.id);
         if (mounted) {
-          setState(() {
-            _favoriteId = null;
-            _isProcessing = false;
-          });
           ToastCustom.show(
             context: context,
             title: 'Success',
@@ -230,8 +193,19 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
           );
         }
       }
-      await homeViewModel.fetchEvents(page: 1, limit: 10, search: homeViewModel.selectedCity);
-      await favoriteViewModel.refreshFavorites();
+      // Cập nhật HomeViewModel
+      await homeViewModel.fetchEvents(
+        page: 1,
+        limit: 10,
+        search: homeViewModel.selectedCity,
+        isToggleFavorite: true,
+      );
+      // Cập nhật FavoriteViewModel cục bộ
+      favoriteViewModel.updateFavoriteLocally(
+        event: widget.event,
+        addFavorite: _isFavorited,
+        favoriteId: favoriteId,
+      );
     } catch (e) {
       if (mounted) {
         ToastCustom.show(
@@ -242,8 +216,6 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
         );
         setState(() {
           _isFavorited = widget.isFavorited;
-          _favoriteId = widget.favoriteId;
-          _isProcessing = false;
         });
       }
     }

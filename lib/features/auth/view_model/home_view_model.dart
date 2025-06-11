@@ -4,7 +4,6 @@ import 'package:eventorize_app/core/utils/exceptions.dart';
 import 'package:eventorize_app/data/models/event.dart';
 import 'package:eventorize_app/data/models/location.dart';
 import 'package:eventorize_app/data/models/user.dart';
-import 'package:eventorize_app/data/models/favorite.dart';
 import 'package:eventorize_app/data/repositories/event_repository.dart';
 import 'package:eventorize_app/data/repositories/location_repository.dart';
 import 'package:eventorize_app/data/repositories/favorite_repository.dart';
@@ -19,14 +18,17 @@ class HomeViewModel extends ChangeNotifier {
   final LocationCache _locationCache = GetIt.instance<LocationCache>();
   final ErrorState _errorState = ErrorState();
 
-  bool _isLoading = true; 
+  bool _isLoading = true;
   bool get isLoading => _isLoading;
 
-  bool _isInitialLoad = true; 
+  bool _isInitialLoad = true;
   bool get isInitialLoad => _isInitialLoad;
 
-  bool _isDataLoaded = false; 
+  bool _isDataLoaded = false;
   bool get isDataLoaded => _isDataLoaded;
+
+  bool _isTogglingFavorite = false;
+  bool get isTogglingFavorite => _isTogglingFavorite;
 
   String? get errorMessage => _errorState.errorMessage;
   String? get errorTitle => _errorState.errorTitle;
@@ -66,10 +68,8 @@ class HomeViewModel extends ChangeNotifier {
 
     try {
       await _loadInitialLocationData();
-      await Future.wait([
-        fetchEvents(search: _selectedCity, page: 1, limit: 10),
-        _loadFavorites(),
-      ]);
+      await _loadFavorites();
+      await fetchEvents(search: _selectedCity, page: 1, limit: 10);
       _updateDataLoadedStatus();
       _isInitialLoad = false;
     } catch (e) {
@@ -93,13 +93,14 @@ class HomeViewModel extends ChangeNotifier {
 
   Future<void> _loadFavorites() async {
     try {
-      final result = await _favoriteRepository.getFavorites(page: 1, limit: 100);
+      final favorite = await _favoriteRepository.getMyFavoriteEvents();
       _favoriteIdMap = {
-        for (var favorite in result['data'] as List<Favorite>)
-          favorite.eventId: favorite.id
+        for (var eventId in favorite.listEventId) eventId: favorite.id
       };
+      notifyListeners();
     } catch (e) {
       ErrorHandler.handleError(e, 'Failed to load favorites', _errorState);
+      notifyListeners();
     }
   }
 
@@ -111,8 +112,14 @@ class HomeViewModel extends ChangeNotifier {
     String? fields,
     String? sortBy,
     String? orderBy,
+    bool isToggleFavorite = false,
+    bool isFromNavigation = false,
   }) async {
-    _isLoading = true;
+    if (!isToggleFavorite && !isFromNavigation) {
+      _isLoading = true;
+    } else if (isToggleFavorite) {
+      _isTogglingFavorite = true;
+    }
     ErrorHandler.clearError(_errorState);
     notifyListeners();
 
@@ -127,14 +134,18 @@ class HomeViewModel extends ChangeNotifier {
         orderBy: orderBy,
       );
       _events = result['data'] as List<Event>;
-      _totalEvents = result['total'] as int; 
+      _totalEvents = result['total'] as int;
       await _loadFavorites();
       _updateDataLoadedStatus();
     } catch (e) {
       ErrorHandler.handleError(e, 'Failed to load events', _errorState);
       _isDataLoaded = false;
     } finally {
-      _isLoading = false;
+      if (!isToggleFavorite && !isFromNavigation) {
+        _isLoading = false;
+      } else if (isToggleFavorite) {
+        _isTogglingFavorite = false;
+      }
       notifyListeners();
     }
   }
@@ -171,7 +182,7 @@ class HomeViewModel extends ChangeNotifier {
     if (city != _selectedCity) {
       _selectedCity = city;
       notifyListeners();
-      await fetchEvents(search: city); 
+      await fetchEvents(search: city);
     }
   }
 

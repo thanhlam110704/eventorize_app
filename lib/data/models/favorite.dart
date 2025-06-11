@@ -3,8 +3,9 @@ import 'package:eventorize_app/data/models/event.dart';
 
 class Favorite extends Equatable {
   final String id;
-  final String eventId;
-  final Event? event;
+  final String userId;
+  final List<String> listEventId;
+  final List<Event>? events;
   final DateTime createdAt;
   final String? createdBy;
   final DateTime? updatedAt;
@@ -14,8 +15,9 @@ class Favorite extends Equatable {
 
   const Favorite({
     required this.id,
-    required this.eventId,
-    this.event,
+    required this.userId,
+    required this.listEventId,
+    this.events,
     required this.createdAt,
     this.createdBy,
     this.updatedAt,
@@ -25,15 +27,25 @@ class Favorite extends Equatable {
   });
 
   factory Favorite.fromJson(Map<String, dynamic> json) {
+    final events = (json['events'] as List<dynamic>?)
+        ?.map((e) => Event.fromJson(e as Map<String, dynamic>))
+        .toList();
     return Favorite(
-      id: json['_id'] as String,
-      eventId: (json['event'] != null ? json['event']['_id'] : json['event_id']) as String,
-      event: json['event'] != null ? Event.fromJson(json['event'] as Map<String, dynamic>) : null,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      id: json['_id'] as String? ?? '',
+      userId: json['user_id'] as String? ?? '',
+      listEventId: json['list_event_id'] != null
+          ? (json['list_event_id'] as List<dynamic>).cast<String>()
+          : events?.map((e) => e.id).toList() ?? [], 
+      events: events,
+      createdAt: DateTime.parse(json['created_at'] as String? ?? DateTime.now().toIso8601String()),
       createdBy: json['created_by'] as String?,
-      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'] as String) : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : null,
       updatedBy: json['updated_by'] as String?,
-      deletedAt: json['deleted_at'] != null ? DateTime.parse(json['deleted_at'] as String) : null,
+      deletedAt: json['deleted_at'] != null
+          ? DateTime.parse(json['deleted_at'] as String)
+          : null,
       deletedBy: json['deleted_by'] as String?,
     );
   }
@@ -41,8 +53,9 @@ class Favorite extends Equatable {
   Map<String, dynamic> toJson() {
     return {
       '_id': id,
-      'event_id': eventId,
-      'event': event?.toJson(),
+      'user_id': userId,
+      'list_event_id': listEventId,
+      'events': events?.map((e) => e.toJson()).toList(),
       'created_at': createdAt.toIso8601String(),
       'created_by': createdBy,
       'updated_at': updatedAt?.toIso8601String(),
@@ -55,8 +68,9 @@ class Favorite extends Equatable {
   @override
   List<Object?> get props => [
         id,
-        eventId,
-        event,
+        userId,
+        listEventId,
+        events,
         createdAt,
         createdBy,
         updatedAt,

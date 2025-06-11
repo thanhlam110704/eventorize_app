@@ -31,7 +31,7 @@ class ApiUrl {
 
 
   
-  static String get getFavorites => '/v1/favorites/my-events';
-  static String createFavorite(String eventId) => '/v1/favorites/add-event/$eventId';
-  static String deleteFavorite(String id) => '/v1/favorites/$id';
+  static const String getFavorites = '/v1/favorites/my-events';
+  static String addEventFavorite(String eventId) => '/v1/favorites/add-event/$eventId';
+  static String removeEventFavorite(String eventId) => '/v1/favorites/remove-event/$eventId';
 }
