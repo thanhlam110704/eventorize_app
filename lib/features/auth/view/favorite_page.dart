@@ -31,7 +31,7 @@ class FavoritePageState extends State<FavoritePage> {
       builder: (context, viewModel, _) {
         _handleViewModelErrors(context, viewModel);
 
-        if (viewModel.isInitialLoad || viewModel.isLoading) {
+        if (viewModel.isInitialLoad || !viewModel.isDataLoaded) {
           return buildSkeletonUI(
             isSmallScreen: isSmallScreen,
             screenSize: screenSize,
@@ -104,7 +104,9 @@ class FavoritePageState extends State<FavoritePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               buildHeader(),
-              const SizedBox(height: 30),
+              const SizedBox(height: 10),
+              buildTitle(),
+              const SizedBox(height: 10),
               EventList(
                 events: viewModel.events,
                 isLoading: viewModel.isLoading,
@@ -124,7 +126,12 @@ class FavoritePageState extends State<FavoritePage> {
     );
   }
 
-  
+  Widget buildTitle() {
+    return Text(
+      'Events',
+      style: AppTextStyles.title.copyWith(fontSize: 22),
+    );
+  }
 
   Widget buildEmptyState(BuildContext context, bool isSmallScreen, Size screenSize) {
     return Container(
@@ -145,7 +152,7 @@ class FavoritePageState extends State<FavoritePage> {
               buildHeader(),
               const SizedBox(height: 30),
               SizedBox(
-                height: screenSize.height / 2, 
+                height: screenSize.height / 2,
                 child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -160,7 +167,8 @@ class FavoritePageState extends State<FavoritePage> {
                           overflow: TextOverflow.ellipsis,
                           softWrap: true,
                           textAlign: TextAlign.center,
-                        )),
+                        ),
+                      ),
                       const SizedBox(height: 24),
                       ElevatedButton(
                         onPressed: () {
@@ -170,8 +178,7 @@ class FavoritePageState extends State<FavoritePage> {
                             page: 1,
                             limit: 10,
                             search: homeViewModel.selectedCity,
-                            isFromNavigation: true,
-                          );
+                            isFromNavigation: true,                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
@@ -182,7 +189,7 @@ class FavoritePageState extends State<FavoritePage> {
                         ),
                         child: const Text(
                           'Find some fun!',
-                          style: AppTextStyles.button
+                          style: AppTextStyles.button,
                         ),
                       ),
                     ],
@@ -220,7 +227,9 @@ class FavoritePageState extends State<FavoritePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           buildHeader(),
-          const SizedBox(height: 30),
+          const SizedBox(height: 10),
+          buildTitle(),
+          const SizedBox(height: 10),
           Column(
             children: List.generate(
               4,
