@@ -8,7 +8,6 @@ import 'package:eventorize_app/common/components/bottom_nav_bar.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:eventorize_app/common/components/event_list.dart';
 import 'dart:async';
 
@@ -54,14 +53,10 @@ class HomePageState extends State<HomePage> {
 
   Future<void> _loadInitialSuggestions() async {
     final viewModel = Provider.of<HomeViewModel>(context, listen: false);
-    try {
-      final suggestions = await viewModel.fetchEventTitles("");
-      setState(() {
-        _initialSuggestions = suggestions;
-      });
-    } catch (e) {
-      // Silent error handling
-    }
+    final suggestions = await viewModel.fetchEventTitles("");
+    setState(() {
+      _initialSuggestions = suggestions;
+    });
   }
 
   @override
@@ -180,27 +175,6 @@ class HomePageState extends State<HomePage> {
         _handleViewModelErrors(context, viewModel);
 
         if (sessionManager.isCheckingSession) {
-          return Scaffold(
-            backgroundColor: AppColors.whiteBackground,
-            body: buildLoadingOverlay(),
-          );
-        }
-
-        if (!sessionManager.isLoading &&
-            !sessionManager.isCheckingSession &&
-            sessionManager.user == null) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              context.pushReplacementNamed('login');
-            }
-          });
-          return Scaffold(
-            backgroundColor: AppColors.whiteBackground,
-            body: buildLoadingOverlay(),
-          );
-        }
-
-        if (!viewModel.isDataLoaded) {
           return buildSkeletonUI(
             isSmallScreen: isSmallScreen,
             screenSize: screenSize,
@@ -214,59 +188,74 @@ class HomePageState extends State<HomePage> {
           );
         }
 
-        return Stack(
-          children: [
-            Scaffold(
-              backgroundColor: AppColors.whiteBackground,
-              body: SafeArea(
-                child: SingleChildScrollView(
-                  physics: _searchFocusNode.hasFocus
-                      ? const NeverScrollableScrollPhysics()
-                      : const AlwaysScrollableScrollPhysics(),
-                  child: buildMainContainer(
-                    isSmallScreen: isSmallScreen,
-                    screenSize: screenSize,
-                    sessionManager: sessionManager,
-                    viewModel: viewModel,
-                    searchHeader: buildSearchHeader(
-                      context: context,
-                      searchContainerKey: _searchContainerKey,
-                      searchFocusNode: _searchFocusNode,
-                      searchController: _searchController,
-                      onSearchSubmitted: _addRecentSearch,
-                    ),
-                  ),
+        if (!sessionManager.isLoading &&
+            !sessionManager.isCheckingSession &&
+            sessionManager.user == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              context.pushReplacementNamed('login');
+            }
+          });
+          return buildSkeletonUI(
+            isSmallScreen: isSmallScreen,
+            screenSize: screenSize,
+            searchHeader: buildSearchHeader(
+              context: context,
+              searchContainerKey: _searchContainerKey,
+              searchFocusNode: _searchFocusNode,
+              searchController: _searchController,
+              onSearchSubmitted: _addRecentSearch,
+            ),
+          );
+        }
+
+        if (viewModel.isInitialLoad) {
+          return buildSkeletonUI(
+            isSmallScreen: isSmallScreen,
+            screenSize: screenSize,
+            searchHeader: buildSearchHeader(
+              context: context,
+              searchContainerKey: _searchContainerKey,
+              searchFocusNode: _searchFocusNode,
+              searchController: _searchController,
+              onSearchSubmitted: _addRecentSearch,
+            ),
+          );
+        }
+
+        return Scaffold(
+          backgroundColor: AppColors.whiteBackground,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              physics: _searchFocusNode.hasFocus
+                  ? const NeverScrollableScrollPhysics()
+                  : const AlwaysScrollableScrollPhysics(),
+              child: buildMainContainer(
+                isSmallScreen: isSmallScreen,
+                screenSize: screenSize,
+                sessionManager: sessionManager,
+                viewModel: viewModel,
+                searchHeader: buildSearchHeader(
+                  context: context,
+                  searchContainerKey: _searchContainerKey,
+                  searchFocusNode: _searchFocusNode,
+                  searchController: _searchController,
+                  onSearchSubmitted: _addRecentSearch,
                 ),
               ),
-              bottomNavigationBar: const Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Divider(height: 0.5, thickness: 0.5, color: AppColors.grey),
-                  BottomNavBar(),
-                ],
-              ),
             ),
-            if (viewModel.isLoading && !viewModel.isInitialLoad)
-              buildLoadingOverlay(),
-          ],
+          ),
+          bottomNavigationBar: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Divider(height: 0.5, thickness: 0.5, color: AppColors.grey),
+              BottomNavBar(),
+            ],
+          ),
         );
       },
     );
   }
-}
-
-Widget buildLoadingOverlay() {
-  return Positioned.fill(
-    child: Container(
-      color: Colors.black.withAlpha(128),
-      child: const Center(
-        child: SpinKitFadingCircle(
-          color: AppColors.primary,
-          size: 50.0,
-        ),
-      ),
-    ),
-  );
 }
 
 Widget buildSkeletonUI({
@@ -392,7 +381,7 @@ Widget buildMainContainer({
             const SizedBox(height: 16),
             buildLocationSelector(viewModel: viewModel),
             const SizedBox(height: 16),
-            buildCategoryChips(),
+            buildCategoryChips(viewModel: viewModel),
             const SizedBox(height: 24),
             buildTrendingHeader(),
             const SizedBox(height: 16),
@@ -429,79 +418,79 @@ Widget buildSearchHeader({
       ),
       const SizedBox(width: 8),
       SizedBox(
-          key: searchContainerKey,
-          width: 270,
-          height: 44,
-          child: SearchBar(
-            controller: searchController,
-            focusNode: searchFocusNode,
-            backgroundColor: WidgetStateProperty.resolveWith((states) {
-              if (states.contains(WidgetState.focused)) {
-                return Colors.white;
-              }
-              return const Color(0xFFF6F6F6);
-            }),
-            elevation: const WidgetStatePropertyAll(0),
-            shadowColor: const WidgetStatePropertyAll(Colors.transparent),
-            surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
-            shape: WidgetStateProperty.resolveWith((states) {
-              return RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-                side: BorderSide(
-                  color: isSearchActive ? AppColors.darkGrey : Colors.black12,
+        key: searchContainerKey,
+        width: 270,
+        height: 44,
+        child: SearchBar(
+          controller: searchController,
+          focusNode: searchFocusNode,
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.focused)) {
+              return Colors.white;
+            }
+            return const Color(0xFFF6F6F6);
+          }),
+          elevation: const WidgetStatePropertyAll(0),
+          shadowColor: const WidgetStatePropertyAll(Colors.transparent),
+          surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+          shape: WidgetStateProperty.resolveWith((states) {
+            return RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(
+                color: isSearchActive ? AppColors.darkGrey : Colors.black12,
+              ),
+            );
+          }),
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: Icon(
+              Icons.search,
+              color: isSearchActive ? AppColors.darkGrey : AppColors.grey,
+              size: 20,
+            ),
+          ),
+          trailing: [
+            GestureDetector(
+              onTap: () {
+                if (searchController.text.isNotEmpty) {
+                  onSearchSubmitted(searchController.text);
+                  searchFocusNode.unfocus();
+                }
+              },
+              child: Container(
+                height: 36,
+                width: 36,
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
                 ),
-              );
-            }),
-            leading: Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: Icon(
-                Icons.search,
-                color: isSearchActive ? AppColors.darkGrey : AppColors.grey,
-                size: 20,
+                child: const Icon(Icons.search, color: Colors.white, size: 24),
               ),
             ),
-            trailing: [
-                GestureDetector(
-                  onTap: () {
-                    if (searchController.text.isNotEmpty) {
-                      onSearchSubmitted(searchController.text);
-                      searchFocusNode.unfocus();
-                    }
-                  },
-                  child: Container(
-                    height: 36,
-                    width: 36,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.search, color: Colors.white, size: 24),
-                  ),
-                ),
-            ],
-            hintText: 'Search events...',
-            hintStyle: WidgetStateProperty.resolveWith((states) {
-              return TextStyle(
-                color: isSearchActive ? AppColors.darkGrey : AppColors.grey,
-                fontSize: 15,
-              );
-            }),
-            textStyle: WidgetStateProperty.resolveWith((states) {
-              return TextStyle(
-                fontSize: 15,
-                color: isSearchActive ? AppColors.darkGrey : Colors.black,
-              );
-            }),
-            constraints: const BoxConstraints(minHeight: 44, maxHeight: 44),
-            padding: const WidgetStatePropertyAll(
-              EdgeInsets.symmetric(horizontal: 8),
-            ),
-            onSubmitted: (value) {
-              onSearchSubmitted(value);
-              searchFocusNode.unfocus();
-            },
+          ],
+          hintText: 'Search events...',
+          hintStyle: WidgetStateProperty.resolveWith((states) {
+            return TextStyle(
+              color: isSearchActive ? AppColors.darkGrey : AppColors.grey,
+              fontSize: 15,
+            );
+          }),
+          textStyle: WidgetStateProperty.resolveWith((states) {
+            return TextStyle(
+              fontSize: 15,
+              color: isSearchActive ? AppColors.darkGrey : Colors.black,
+            );
+          }),
+          constraints: const BoxConstraints(minHeight: 44, maxHeight: 44),
+          padding: const WidgetStatePropertyAll(
+            EdgeInsets.symmetric(horizontal: 8),
           ),
+          onSubmitted: (value) {
+            onSearchSubmitted(value);
+            searchFocusNode.unfocus();
+          },
         ),
+      ),
     ],
   );
 }
@@ -732,11 +721,28 @@ Widget buildSearchSuggestionsOverlay({
                   future: viewModel.fetchEventTitles(query),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Padding(
-                        padding: EdgeInsets.all(16),
-                        child: SpinKitFadingCircle(
-                          color: AppColors.primary,
-                          size: 30.0,
+                      return Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Shimmer.fromColors(
+                          baseColor: AppColors.shimmerBase,
+                          highlightColor: AppColors.shimmerHighlight,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: List.generate(
+                              3,
+                              (_) => Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                child: Container(
+                                  width: double.infinity,
+                                  height: 20,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.skeleton,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       );
                     }
@@ -801,7 +807,7 @@ Widget buildLocationSelector({required HomeViewModel viewModel}) {
                         child: Text(
                           province.name ?? '',
                           style: const TextStyle(
-                            color: Colors.blue,
+                            color: AppColors.primary,
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
@@ -809,24 +815,26 @@ Widget buildLocationSelector({required HomeViewModel viewModel}) {
                         ),
                       );
                     }).toList(),
-                    onChanged: viewModel.isLoading ? null : (value) => viewModel.setCity(value),
-                    decoration: const InputDecoration(
+                    onChanged: viewModel.isLoading ? null : (value) => viewModel.setCity(value!),
+                    decoration: InputDecoration(
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 2, vertical: 0),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 2, vertical: -4),
+                     
                     ),
                     isExpanded: true,
                     style: const TextStyle(
-                      color: Colors.blue,
+                      color: AppColors.primary,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
                     validator: (value) => value == null ? 'Please select a city' : null,
                     icon: const Padding(
-                      padding: EdgeInsets.only(right: 2.0),
-                      child: Icon(Icons.arrow_drop_down, color: Colors.blue, size: 24),
+                      padding: EdgeInsets.only(right: 2),
+                      child: Icon(Icons.arrow_drop_down, color: AppColors.primary, size: 24),
                     ),
                     itemHeight: 48,
-                    menuMaxHeight: 200,
+                    menuMaxHeight: 144,
+                    dropdownColor: AppColors.whiteBackground,
                   ),
           ),
         ],
@@ -843,8 +851,8 @@ Widget buildLocationSelector({required HomeViewModel viewModel}) {
   );
 }
 
-Widget buildCategoryChips() {
-  const categories = ['All', 'Music', 'Today', 'Online', 'This Week'];
+Widget buildCategoryChips({required HomeViewModel viewModel}) {
+  const categories = ['All', 'Today', 'Tomorrow', 'Online', 'This Week'];
   return SizedBox(
     height: 35,
     child: ListView.separated(
@@ -853,19 +861,22 @@ Widget buildCategoryChips() {
       separatorBuilder: (_, __) => const SizedBox(width: 8),
       itemBuilder: (_, index) {
         final cat = categories[index];
-        final isSelected = cat == 'All';
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF2176AE) : const Color(0xFFE8E1E1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Text(
-            cat,
-            style: TextStyle(
-              color: isSelected ? Colors.white : Colors.black,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+        final isSelected = cat == viewModel.selectedCategory;
+        return GestureDetector(
+          onTap: () => viewModel.setCategory(cat),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: isSelected ? const Color(0xFF2177AE) : const Color(0xFFE8E1E1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              cat,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.black,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         );

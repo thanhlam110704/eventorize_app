@@ -16,6 +16,9 @@ class EventApi {
     String? fields,
     String? sortBy,
     String? orderBy,
+    String? dateFilter,
+    bool? isOnline,
+    String? city,
   }) {
     return {
       'page': page,
@@ -25,6 +28,9 @@ class EventApi {
       if (fields != null) 'fields': fields,
       if (sortBy != null) 'sort_by': sortBy,
       if (orderBy != null) 'order_by': orderBy,
+      if (dateFilter != null) 'date_filter': dateFilter,
+      if (isOnline != null) 'is_online': isOnline,
+      if (city != null) 'city': city,
     };
   }
 
@@ -36,6 +42,9 @@ class EventApi {
     String? fields,
     String? sortBy,
     String? orderBy,
+    String? dateFilter,
+    bool? isOnline,
+    String? city,
   }) async {
     try {
       final response = await _dioClient.get(
@@ -48,6 +57,9 @@ class EventApi {
           fields: fields,
           sortBy: sortBy,
           orderBy: orderBy,
+          dateFilter: dateFilter,
+          isOnline: isOnline,
+          city: city,
         ),
       );
       return {
@@ -60,6 +72,10 @@ class EventApi {
       };
     } on DioException catch (e) {
       final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
+      final errorType = e.response?.data?['type'] ?? '';
+      if (errorType == 'events/info/invalid-filter') {
+        throw Exception('Invalid date filter. Use "today", "tomorrow", or "this_week".');
+      }
       throw Exception('Failed to fetch events: $errorMessage');
     }
   }

@@ -46,14 +46,18 @@ class Event extends Equatable {
   });
 
   factory Event.fromJson(Map<String, dynamic> json) {
+    DateTime parseDateTime(String dateStr) {
+      return DateTime.parse(dateStr).toLocal();
+    }
+
     return Event(
       id: json['_id'] as String,
       organizerId: json['organizer_id'] as String,
       title: json['title'] as String,
       thumbnail: json['thumbnail'] as String?,
       description: json['description'] as String?,
-      startDate: DateTime.parse(json['start_date'] as String),
-      endDate: DateTime.parse(json['end_date'] as String),
+      startDate: parseDateTime(json['start_date'] as String),
+      endDate: parseDateTime(json['end_date'] as String),
       link: json['link'] as String?,
       isOnline: json['is_online'] as bool,
       address: json['address'] as String?,
@@ -61,24 +65,31 @@ class Event extends Equatable {
       ward: json['ward'] == 'string' ? null : json['ward'] as String?,
       city: json['city'] == 'string' ? null : json['city'] as String?,
       country: json['country'] == 'string' ? null : json['country'] as String?,
-      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : null,
+      createdAt: json['created_at'] != null ? parseDateTime(json['created_at'] as String) : null,
       createdBy: json['created_by'] as String?,
-      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'] as String) : null,
+      updatedAt: json['updated_at'] != null ? parseDateTime(json['updated_at'] as String) : null,
       updatedBy: json['updated_by'] as String?,
-      deletedAt: json['deleted_at'] != null ? DateTime.parse(json['deleted_at'] as String) : null,
+      deletedAt: json['deleted_at'] != null ? parseDateTime(json['deleted_at'] as String) : null,
       deletedBy: json['deleted_by'] as String?,
     );
   }
 
   Map<String, dynamic> toJson() {
+    String? formatDateTime(DateTime? date) {
+      if (date == null) return null;
+      final offset = const Duration(hours: 7);
+      final adjusted = date.toUtc().add(offset);
+      return adjusted.toIso8601String();
+    }
+
     return {
       '_id': id,
       'organizer_id': organizerId,
       'title': title,
       'thumbnail': thumbnail,
       'description': description,
-      'start_date': startDate.toIso8601String(),
-      'end_date': endDate.toIso8601String(),
+      'start_date': formatDateTime(startDate),
+      'end_date': formatDateTime(endDate),
       'link': link,
       'is_online': isOnline,
       'address': address,
@@ -86,11 +97,11 @@ class Event extends Equatable {
       'ward': ward,
       'city': city,
       'country': country,
-      'created_at': createdAt?.toIso8601String(),
+      'created_at': formatDateTime(createdAt),
       'created_by': createdBy,
-      'updated_at': updatedAt?.toIso8601String(),
+      'updated_at': formatDateTime(updatedAt),
       'updated_by': updatedBy,
-      'deleted_at': deletedAt?.toIso8601String(),
+      'deleted_at': formatDateTime(deletedAt),
       'deleted_by': deletedBy,
     };
   }

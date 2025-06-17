@@ -177,8 +177,9 @@ class FavoritePageState extends State<FavoritePage> {
                           homeViewModel.fetchEvents(
                             page: 1,
                             limit: 10,
-                            search: homeViewModel.selectedCity,
-                            isFromNavigation: true,                          );
+                            city: homeViewModel.selectedCity,
+                            isFromNavigation: true,
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,

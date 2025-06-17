@@ -48,6 +48,9 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  String _selectedCategory = 'All';
+  String get selectedCategory => _selectedCategory;
+
   Map<String, String> _favoriteIdMap = {};
   Map<String, String> get favoriteIdMap => _favoriteIdMap;
 
@@ -69,7 +72,7 @@ class HomeViewModel extends ChangeNotifier {
     try {
       await _loadInitialLocationData();
       await _loadFavorites();
-      await fetchEvents(search: _selectedCity, page: 1, limit: 10);
+      await fetchEvents(page: 1, limit: 10, city: _selectedCity);
       _updateDataLoadedStatus();
       _isInitialLoad = false;
     } catch (e) {
@@ -109,6 +112,7 @@ class HomeViewModel extends ChangeNotifier {
     int limit = 10,
     String? query,
     String? search,
+    String? city,
     String? fields,
     String? sortBy,
     String? orderBy,
@@ -124,14 +128,29 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      String? dateFilter;
+      bool? isOnline;
+      if (_selectedCategory == 'Today') {
+        dateFilter = 'today';
+      } else if (_selectedCategory == 'Tomorrow') {
+        dateFilter = 'tomorrow';
+      } else if (_selectedCategory == 'This Week') {
+        dateFilter = 'this_week';
+      } else if (_selectedCategory == 'Online') {
+        isOnline = true;
+      }
+
       final result = await _eventRepository.getAll(
         page: page,
         limit: limit,
         query: query,
         search: search,
+        city: city ?? _selectedCity,
         fields: fields,
         sortBy: sortBy,
         orderBy: orderBy,
+        dateFilter: dateFilter,
+        isOnline: isOnline,
       );
       _events = result['data'] as List<Event>;
       _totalEvents = result['total'] as int;
@@ -163,7 +182,7 @@ class HomeViewModel extends ChangeNotifier {
       if (_selectedCity == null && provinces.isNotEmpty) {
         _selectedCity = provinces[0].name;
       }
-      await _loadFavorites();
+      await fetchEvents(city: _selectedCity);
       _updateDataLoadedStatus();
     } catch (e) {
       ErrorHandler.handleError(e, 'Failed to load provinces', _errorState);
@@ -178,11 +197,19 @@ class HomeViewModel extends ChangeNotifier {
     _isDataLoaded = provinces.isNotEmpty && _events.isNotEmpty && _errorState.errorMessage == null;
   }
 
-  Future<void> setCity(String? city) async {
-    if (city != _selectedCity) {
-      _selectedCity = city;
+  Future<void> setCity(String value) async {
+    if (value != _selectedCity) {
+      _selectedCity = value;
       notifyListeners();
-      await fetchEvents(search: city);
+      await fetchEvents(city: value);
+    }
+  }
+
+  Future<void> setCategory(String category) async {
+    if (category != _selectedCategory) {
+      _selectedCategory = category;
+      notifyListeners();
+      await fetchEvents(city: _selectedCity);
     }
   }
 

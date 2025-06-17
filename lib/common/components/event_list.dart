@@ -11,6 +11,7 @@ import 'package:eventorize_app/data/models/event.dart';
 import 'package:eventorize_app/data/repositories/favorite_repository.dart';
 import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
 import 'package:eventorize_app/features/auth/view_model/favorite_view_model.dart';
+import 'package:shimmer/shimmer.dart';
 
 class EventList extends StatelessWidget {
   final List<Event> events;
@@ -23,6 +24,53 @@ class EventList extends StatelessWidget {
     required this.isLoading,
     required this.totalEvents,
   });
+
+  Widget buildSkeletonBox(double width, double height) {
+    return Shimmer.fromColors(
+      baseColor: AppColors.shimmerBase,
+      highlightColor: AppColors.shimmerHighlight,
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: AppColors.skeleton,
+          borderRadius: BorderRadius.circular(4),
+        ),
+      ),
+    );
+  }
+
+  Widget buildSkeleton() {
+    return Column(
+      children: List.generate(
+        4,
+        (_) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              buildSkeletonBox(120, 120),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    buildSkeletonBox(double.infinity, 20),
+                    const SizedBox(height: 4),
+                    buildSkeletonBox(150, 16),
+                    const SizedBox(height: 4),
+                    buildSkeletonBox(100, 16),
+                    const SizedBox(height: 4),
+                    buildSkeletonBox(80, 16),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,37 +87,47 @@ class EventList extends StatelessWidget {
       );
     }
 
-    if (events.isEmpty && totalEvents == 0) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SvgPicture.asset(
-              'assets/icons/no_data.svg',
-              width: 102,
-              height: 102,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'No events found',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-          ],
+    if (isLoading) {
+      return ListView(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        children: [buildSkeleton()],
+      );
+    }
+
+    if (!homeViewModel.isLoading && events.isEmpty && totalEvents == 0) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 20),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SvgPicture.asset(
+                'assets/icons/no_data.svg',
+                width: 102,
+                height: 102,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'No events found',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            ],
+          ),
         ),
       );
     }
 
-    return SizedBox(
-      height: 300,
-      child: Column(
-        children: events.map((event) {
-          final isFavoritePage = favoriteViewModel.events.contains(event);
-          return EventCard(
-            event: event,
-            isFavorited: isFavoritePage ? true : homeViewModel.favoriteIdMap.containsKey(event.id),
-          );
-        }).toList(),
-      ),
+    return ListView(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      children: events.map((event) {
+        final isFavoritePage = favoriteViewModel.events.contains(event);
+        return EventCard(
+          event: event,
+          isFavorited: isFavoritePage ? true : homeViewModel.favoriteIdMap.containsKey(event.id),
+        );
+      }).toList(),
     );
   }
 }
@@ -173,7 +231,7 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
       String favoriteId = '';
       if (_isFavorited) {
         final response = await favoriteRepository.addEventFavorite(eventId: widget.event.id);
-        favoriteId = response.id; // Giả sử API trả về object với trường id
+        favoriteId = response.id;
         if (mounted) {
           ToastCustom.show(
             context: context,
@@ -193,14 +251,12 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
           );
         }
       }
-      // Cập nhật HomeViewModel
       await homeViewModel.fetchEvents(
         page: 1,
         limit: 10,
-        search: homeViewModel.selectedCity,
+        city: homeViewModel.selectedCity,
         isToggleFavorite: true,
       );
-      // Cập nhật FavoriteViewModel cục bộ
       favoriteViewModel.updateFavoriteLocally(
         event: widget.event,
         addFavorite: _isFavorited,
