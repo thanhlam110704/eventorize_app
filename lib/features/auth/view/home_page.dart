@@ -133,7 +133,7 @@ class HomePageState extends State<HomePage> {
         if (mounted) {
           ToastCustom.show(
             context: context,
-            title: sessionManager.errorTitle ?? 'Error',
+            title: sessionManager.errorTitle ?? 'Lỗi',
             description: sessionManager.errorMessage!,
             type: ToastificationType.error,
           );
@@ -154,7 +154,7 @@ class HomePageState extends State<HomePage> {
         if (mounted) {
           ToastCustom.show(
             context: context,
-            title: viewModel.errorTitle ?? 'Error',
+            title: viewModel.errorTitle ?? 'Lỗi',
             description: viewModel.errorMessage!,
             type: ToastificationType.error,
           );
@@ -468,7 +468,7 @@ Widget buildSearchHeader({
               ),
             ),
           ],
-          hintText: 'Search events...',
+          hintText: 'Tìm kiếm sự kiện...',
           hintStyle: WidgetStateProperty.resolveWith((states) {
             return TextStyle(
               color: isSearchActive ? AppColors.darkGrey : AppColors.grey,
@@ -612,7 +612,7 @@ Widget buildSuggestionsList({
 }) => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        buildSectionHeader('Suggestions'),
+        buildSectionHeader('Gợi ý'),
         ...suggestions.map(
           (suggestion) => buildSuggestionItem(
             suggestion: suggestion,
@@ -635,7 +635,7 @@ Widget buildRecentSearchesList({
 }) => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        buildSectionHeader('Recent Searches'),
+        buildSectionHeader('Gần đây'),
         ...recentSearches.map(
           (search) => buildRecentSearchItem(
             search: search,
@@ -710,7 +710,7 @@ Widget buildSearchSuggestionsOverlay({
                       const Padding(
                         padding: EdgeInsets.all(16),
                         child: Text(
-                          'No suggestions or recent searches',
+                          'Không có gợi ý nào',
                           style: TextStyle(color: AppColors.grey),
                         ),
                       ),
@@ -750,7 +750,7 @@ Widget buildSearchSuggestionsOverlay({
                       return const Padding(
                         padding: EdgeInsets.all(16),
                         child: Text(
-                          'No suggestions found',
+                          'Không tìm thấy kết quả nào',
                           style: TextStyle(color: AppColors.grey),
                         ),
                       );
@@ -852,7 +852,7 @@ Widget buildLocationSelector({required HomeViewModel viewModel}) {
 }
 
 Widget buildCategoryChips({required HomeViewModel viewModel}) {
-  const categories = ['All', 'Today', 'Tomorrow', 'Online', 'This Week'];
+  const categories = ['Tất cả', 'Hôm nay', 'Ngày mai', 'Trực tuyến', 'Tuần này'];
   return SizedBox(
     height: 35,
     child: ListView.separated(
@@ -887,7 +887,7 @@ Widget buildCategoryChips({required HomeViewModel viewModel}) {
 
 Widget buildTrendingHeader() {
   return const Text(
-    'Top Trending Event In City',
+    'Các sự kiện nổi bật trong thành phố',
     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
   );
 }

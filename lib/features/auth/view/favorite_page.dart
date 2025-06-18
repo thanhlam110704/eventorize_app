@@ -73,7 +73,7 @@ class FavoritePageState extends State<FavoritePage> {
         if (mounted) {
           ToastCustom.show(
             context: context,
-            title: viewModel.errorTitle ?? 'Error',
+            title: viewModel.errorTitle ?? 'Lỗi',
             description: viewModel.errorMessage!,
             type: ToastificationType.error,
           );
@@ -121,14 +121,14 @@ class FavoritePageState extends State<FavoritePage> {
 
   Widget buildHeader() {
     return Text(
-      'Favorite',
+      'Yêu thích',
       style: AppTextStyles.title,
     );
   }
 
   Widget buildTitle() {
     return Text(
-      'Events',
+      'Sự kiện',
       style: AppTextStyles.title.copyWith(fontSize: 22),
     );
   }
@@ -161,7 +161,7 @@ class FavoritePageState extends State<FavoritePage> {
                       SizedBox(
                         width: 300,
                         child: Text(
-                          'Save your faves so you don\'t forget later',
+                          'Lưu sự kiện yêu thích của bạn',
                           style: AppTextStyles.sectionTitle.copyWith(fontWeight: FontWeight.w600),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -189,7 +189,7 @@ class FavoritePageState extends State<FavoritePage> {
                           ),
                         ),
                         child: const Text(
-                          'Find some fun!',
+                          'Khám phá điều thú vị!',
                           style: AppTextStyles.button,
                         ),
                       ),

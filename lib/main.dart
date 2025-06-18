@@ -3,7 +3,7 @@ import 'package:eventorize_app/features/auth/view_model/register_view_model.dart
 import 'package:eventorize_app/features/auth/view_model/login_view_model.dart';
 import 'package:eventorize_app/features/auth/view_model/verify_view_model.dart';
 import 'package:eventorize_app/features/auth/view_model/account_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/detail_profile_view_model.dart';
+import 'package:eventorize_app/features/auth/view_model/profile_detail_view_model.dart';
 import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
 import 'package:eventorize_app/features/auth/view_model/favorite_view_model.dart';
 import 'package:flutter/material.dart';
@@ -69,8 +69,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<AccountViewModel>(
           create: (_) => AccountViewModel(GetIt.instance<SessionManager>()),
         ),
-        ChangeNotifierProvider<DetailProfileViewModel>(
-          create: (_) => DetailProfileViewModel(
+        ChangeNotifierProvider<ProfileDetailViewModel>(
+          create: (_) => ProfileDetailViewModel(
             GetIt.instance<UserRepository>(),
             GetIt.instance<LocationRepository>(),
           ),

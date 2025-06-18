@@ -11,19 +11,19 @@ import 'package:eventorize_app/common/components/top_nav_bar.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/data/models/user.dart';
-import 'package:eventorize_app/features/auth/view_model/detail_profile_view_model.dart';
+import 'package:eventorize_app/features/auth/view_model/profile_detail_view_model.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'dart:async';
 import 'dart:io';
 
-class DetailProfilePage extends StatefulWidget {
-  const DetailProfilePage({super.key});
+class ProfileDetailPage extends StatefulWidget {
+  const ProfileDetailPage({super.key});
 
   @override
-  DetailProfilePageState createState() => DetailProfilePageState();
+  ProfileDetailPageState createState() => ProfileDetailPageState();
 }
 
-class DetailProfilePageState extends State<DetailProfilePage> {
+class ProfileDetailPageState extends State<ProfileDetailPage> {
   final _formKey = GlobalKey<FormState>();
   bool _hasShownSuccessToast = false;
   bool _hasShownErrorToast = false;
@@ -35,7 +35,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final viewModel = context.read<DetailProfileViewModel>();
+      final viewModel = context.read<ProfileDetailViewModel>();
       final sessionManager = context.read<SessionManager>();
       await viewModel.loadUser(sessionManager.user);
     });
@@ -43,7 +43,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
   }
 
   void _handleScroll() {
-    final viewModel = context.read<DetailProfileViewModel>();
+    final viewModel = context.read<ProfileDetailViewModel>();
     if (!viewModel.isDataLoaded) return; 
 
     _debounceTimer?.cancel();
@@ -57,7 +57,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
     _debounceTimer?.cancel();
     _scrollController.dispose();
     _showDividerNotifier.dispose();
-    context.read<DetailProfileViewModel>().dispose();
+    context.read<ProfileDetailViewModel>().dispose();
     super.dispose();
   }
 
@@ -67,7 +67,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
     final isSmallScreen = screenSize.width <= 640;
     final isShortScreen = screenSize.height < 600;
 
-    return Consumer<DetailProfileViewModel>(
+    return Consumer<ProfileDetailViewModel>(
       builder: (context, viewModel, _) {
         _showToastIfNeeded(context, viewModel);
 
@@ -104,13 +104,12 @@ class DetailProfilePageState extends State<DetailProfilePage> {
     );
   }
 
-  void _showToastIfNeeded(BuildContext context, DetailProfileViewModel viewModel) {
+  void _showToastIfNeeded(BuildContext context, ProfileDetailViewModel viewModel) {
     if (viewModel.isUpdateSuccessful && !_hasShownSuccessToast) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ToastCustom.show(
           context: context,
-          title: 'Update successful!',
-          description: 'Your profile has been updated, ${viewModel.user!.fullname}!',
+          title: 'Cập nhật tài khoản thành công!',
           type: ToastificationType.success,
         );
         _hasShownSuccessToast = true;
@@ -121,7 +120,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ToastCustom.show(
           context: context,
-          title: viewModel.errorTitle ?? 'Error',
+          title: viewModel.errorTitle ?? 'Lỗi',
           description: viewModel.errorMessage!,
           type: ToastificationType.error,
         );
@@ -140,7 +139,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
         0,
       ),
       child: const TopNavBar(
-        title: "Detail Info",
+        title: "Thông tin chi tiết",
         showBackButton: true,
         backgroundColor: AppColors.white,
       ),
@@ -302,7 +301,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
     );
   }
 
-  Widget _buildMainContainer(bool isSmallScreen, bool isShortScreen, Size screenSize, DetailProfileViewModel viewModel) {
+  Widget _buildMainContainer(bool isSmallScreen, bool isShortScreen, Size screenSize, ProfileDetailViewModel viewModel) {
     return Container(
       width: screenSize.width,
       color: AppColors.white,
@@ -340,7 +339,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
     );
   }
 
-  Widget _buildAvatar(User? user, DetailProfileViewModel viewModel) {
+  Widget _buildAvatar(User? user, ProfileDetailViewModel viewModel) {
     if (user == null) return const SizedBox.shrink();
     final initials = user.fullname.isNotEmpty ? user.fullname.split(' ').map((e) => e[0]).take(2).join() : 'N/A';
 
@@ -396,7 +395,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             child: Text(
-              "Upload your image",
+              "Tải ảnh lên",
               style: AppTextStyles.text.copyWith(
                 fontSize: 16,
                 decoration: TextDecoration.underline,
@@ -413,7 +412,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
 
   Widget _buildSectionTitle() {
     return Text(
-      "Personal Information",
+      "Thông tin cá nhân",
       style: AppTextStyles.sectionTitle,
       textAlign: TextAlign.left,
     );
@@ -443,20 +442,20 @@ class DetailProfilePageState extends State<DetailProfilePage> {
     );
   }
 
-  Widget _buildFullnameField(DetailProfileViewModel viewModel) {
+  Widget _buildFullnameField(ProfileDetailViewModel viewModel) {
     return LabeledInput(
-      label: "Full Name",
+      label: "Họ tên",
       child: TextFormField(
         controller: viewModel.fullnameController,
         decoration: _inputDecoration(),
-        validator: (value) => value!.isEmpty ? "Please enter your full name" : null,
+        validator: (value) => value!.isEmpty ? "Hãy nhập thông tin tên" : null,
       ),
     );
   }
 
-  Widget _buildEmailField(DetailProfileViewModel viewModel) {
+  Widget _buildEmailField(ProfileDetailViewModel viewModel) {
     return LabeledInput(
-      label: "Email Address",
+      label: "Email",
       child: TextFormField(
         controller: viewModel.emailController,
         enabled: false,
@@ -465,21 +464,21 @@ class DetailProfilePageState extends State<DetailProfilePage> {
     );
   }
 
-  Widget _buildPhoneField(DetailProfileViewModel viewModel) {
+  Widget _buildPhoneField(ProfileDetailViewModel viewModel) {
     return LabeledInput(
-      label: "Phone Number",
+      label: "Số điện thoại",
       child: TextFormField(
         controller: viewModel.phoneController,
         keyboardType: TextInputType.phone,
         decoration: _inputDecoration(),
-        validator: (value) => value!.isEmpty ? "Please enter your phone number" : null,
+        validator: (value) => value!.isEmpty ? "Hãy nhập thông tin số điện thoại" : null,
       ),
     );
   }
 
-  Widget _buildCityDropdown(DetailProfileViewModel viewModel) {
+  Widget _buildCityDropdown(ProfileDetailViewModel viewModel) {
     return LabeledInput(
-      label: "City",
+      label: "Thành phố/Tỉnh",
       child: DropdownButtonFormField<String>(
         value: viewModel.selectedCity,
         items: viewModel.provinces.map((province) {
@@ -490,7 +489,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
         }).toList(),
         onChanged: viewModel.isLoadingAnyLocation ? null : viewModel.setCity,
         decoration: _inputDecoration(),
-        validator: (value) => value == null ? "Please select a city" : null,
+        validator: (value) => value == null ? "Hãy nhập thông tin thành phố/tỉnh" : null,
         isExpanded: true,
         menuMaxHeight: MediaQuery.sizeOf(context).height * 0.4,
         dropdownColor: AppColors.white,
@@ -499,9 +498,9 @@ class DetailProfilePageState extends State<DetailProfilePage> {
     );
   }
 
-  Widget _buildDistrictDropdown(DetailProfileViewModel viewModel) {
+  Widget _buildDistrictDropdown(ProfileDetailViewModel viewModel) {
     return LabeledInput(
-      label: "District",
+      label: "Quận/Huyện",
       child: DropdownButtonFormField<String>(
         value: viewModel.selectedDistrict,
         items: viewModel.districts.map((district) {
@@ -512,7 +511,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
         }).toList(),
         onChanged: viewModel.isLoadingAnyLocation ? null : viewModel.setDistrict,
         decoration: _inputDecoration(),
-        validator: (value) => value == null ? "Please select a district" : null,
+        validator: (value) => value == null ? "Hãy nhập thông tin quận/huyện" : null,
         isExpanded: true,
         menuMaxHeight: MediaQuery.sizeOf(context).height * 0.4,
         dropdownColor: AppColors.white,
@@ -521,9 +520,9 @@ class DetailProfilePageState extends State<DetailProfilePage> {
     );
   }
 
-  Widget _buildWardDropdown(DetailProfileViewModel viewModel) {
+  Widget _buildWardDropdown(ProfileDetailViewModel viewModel) {
     return LabeledInput(
-      label: "Ward",
+      label: "Phường/Xã",
       child: DropdownButtonFormField<String>(
         value: viewModel.selectedWard,
         items: viewModel.wards.map((ward) {
@@ -534,7 +533,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
         }).toList(),
         onChanged: viewModel.isLoadingAnyLocation ? null : viewModel.setWard,
         decoration: _inputDecoration(),
-        validator: (value) => value == null ? "Please select a ward" : null,
+        validator: (value) => value == null ? "Hãy nhập thông tin phường/xã" : null,
         isExpanded: true,
         menuMaxHeight: MediaQuery.sizeOf(context).height * 0.4,
         dropdownColor: AppColors.white,
@@ -543,7 +542,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
     );
   }
 
-  Widget _buildUpdateButton(DetailProfileViewModel viewModel) {
+  Widget _buildUpdateButton(ProfileDetailViewModel viewModel) {
     return SizedBox(
       width: double.infinity,
       height: 50,
@@ -554,8 +553,8 @@ class DetailProfilePageState extends State<DetailProfilePage> {
                 if (!_formKey.currentState!.validate()) {
                   ToastCustom.show(
                     context: context,
-                    title: 'Validation Error',
-                    description: 'Please fill in all required fields.',
+                    title: 'Lỗi cập nhật',
+                    description: 'Hãy điền đầy đủ thông tin trước khi cập nhật.',
                     type: ToastificationType.error,
                   );
                   return;
@@ -569,7 +568,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(vertical: 12),
         ),
-        child: Text("Update Detail Info", style: AppTextStyles.button),
+        child: Text("Cập nhật thông tin", style: AppTextStyles.button),
       ),
     );
   }

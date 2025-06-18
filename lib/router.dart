@@ -6,7 +6,7 @@ import 'package:eventorize_app/features/auth/view/register_page.dart';
 import 'package:eventorize_app/features/auth/view/splashscreen_page.dart';
 import 'package:eventorize_app/features/auth/view/verify_page.dart';
 import 'package:eventorize_app/features/auth/view/account_page.dart';
-import 'package:eventorize_app/features/auth/view/detail_profile_page.dart';
+import 'package:eventorize_app/features/auth/view/profile_detail_page.dart';
 import 'package:eventorize_app/features/auth/view/favorite_page.dart';
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -35,7 +35,7 @@ class AppRouter {
       GoRoute(
         path: '/detail-profile',
         name: 'detail-profile',
-        builder: (context, state) => const DetailProfilePage(),
+        builder: (context, state) => const ProfileDetailPage(),
       ),
       GoRoute(
         path: '/favorite',
@@ -51,6 +51,7 @@ class AppRouter {
         return VerificationCodePage(email: email);
         },
       ),
+      
       GoRoute(
       path: '/home',
       name: 'home',

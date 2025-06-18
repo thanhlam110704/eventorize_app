@@ -66,6 +66,8 @@ flutter:
           weight: 700
         - asset: assets/fonts/Roboto-SemiBold.ttf
           weight: 600
+        - asset: assets/fonts/Roboto-Medium.ttf
+          weight: 500
         - asset: assets/fonts/Roboto-Italic-VariableFont_wdth,wght.ttf
           style: italic
 
@@ -92,6 +94,8 @@ flutter:
   - assets/images/verify.png
   - assets/icons/logo_e.png
   - assets/images/event.png
+  - assets/images/event1.png
+  - assets/images/fpt.png
   - assets/icons/no_data.svg
   - .env/dev.env
  

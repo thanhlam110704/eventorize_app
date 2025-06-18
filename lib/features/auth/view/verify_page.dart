@@ -83,8 +83,7 @@ class VerificationCodePageState extends State<VerificationCodePage> {
     if (mounted && viewModel.isSuccess) {
       ToastCustom.show(
         context: context,
-        title: 'Verification successful!',
-        description: 'Please log in.',
+        title: 'Xác nhận tài khoản thành công!',
         type: ToastificationType.success,
       );
       context.goNamed('login');
@@ -98,8 +97,8 @@ class VerificationCodePageState extends State<VerificationCodePage> {
     if (mounted && viewModel.isSuccess) {
       ToastCustom.show(
         context: context,
-        title: 'Verification code resent!',
-        description: 'Check your email for the new code.',
+        title: 'Mã xác nhận đã được gửi!',
+        description: 'Hãy kiểm tra email của bạn.',
         type: ToastificationType.info,
       );
       for (var controller in codeControllers) {
@@ -124,7 +123,7 @@ class VerificationCodePageState extends State<VerificationCodePage> {
   String get countdownText {
     final minutes = (_remainingTime.inSeconds ~/ 60).toString().padLeft(2, '0');
     final seconds = (_remainingTime.inSeconds % 60).toString().padLeft(2, '0');
-    return 'Resend code after $minutes:$seconds';
+    return 'Gửi lại mã sau $minutes:$seconds';
   }
 
   @override
@@ -142,7 +141,7 @@ class VerificationCodePageState extends State<VerificationCodePage> {
                 if (mounted) {
                   ToastCustom.show(
                     context: context,
-                    title: viewModel.errorTitle ?? 'Error',
+                    title: viewModel.errorTitle ?? 'Lỗi',
                     description: viewModel.errorMessage!,
                     type: ToastificationType.error,
                   );
@@ -227,7 +226,7 @@ class VerificationCodePageState extends State<VerificationCodePage> {
     return Padding(
       padding: const EdgeInsets.only(left: 13),
       child: Text(
-        'Verification Code',
+        'Xác nhận tài khoản',
         style: AppTextStyles.title,
       ),
     );
@@ -237,7 +236,7 @@ class VerificationCodePageState extends State<VerificationCodePage> {
     return Padding(
       padding: const EdgeInsets.only(left: 13),
       child: Text(
-        'Enter code sent to ${widget.email}',
+        'Mã đã được gửi cho ${widget.email}',
         style: AppTextStyles.text.copyWith(
           fontSize: 18,
           color: Colors.red,
@@ -321,7 +320,7 @@ class VerificationCodePageState extends State<VerificationCodePage> {
           elevation: 0,
         ),
         child: Text(
-          'Submit',
+          'Gửi mã',
           style: AppTextStyles.text.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.w600,

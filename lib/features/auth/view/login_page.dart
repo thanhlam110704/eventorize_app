@@ -59,8 +59,8 @@ class LoginPageState extends State<LoginPage> {
       if (!mounted) return; 
       ToastCustom.show(
         context: context,
-        title: 'Login successful!',
-        description: 'Welcome, ${result['user'].fullname}!',
+        title: 'Đăng nhập thành công!',
+        description: 'Chào mừng bạn trở lại, ${result['user'].fullname}!',  
         type: ToastificationType.success,
       );
       context.goNamed('home');
@@ -83,7 +83,7 @@ class LoginPageState extends State<LoginPage> {
                 if (mounted) {
                   ToastCustom.show(
                     context: context,
-                    title: viewModel.errorTitle ?? 'Error',
+                    title: viewModel.errorTitle ?? 'Lỗi',
                     description: viewModel.errorMessage!,
                     type: ToastificationType.error,
                   );
@@ -140,7 +140,7 @@ class LoginPageState extends State<LoginPage> {
                                             elevation: 0,
                                           ),
                                           child: Text(
-                                            'Log in',
+                                            'Đăng nhập',
                                             style: AppTextStyles.button,
                                           ),
                                         ),
@@ -194,7 +194,7 @@ class LoginPageState extends State<LoginPage> {
     return Padding(
       padding: const EdgeInsets.only(left: 13),
       child: Text(
-        'Log in',
+        'Đăng nhập',
         style: AppTextStyles.title,
       ),
     );
@@ -215,7 +215,7 @@ class LoginPageState extends State<LoginPage> {
     return CustomFieldInput(
       key: passwordInputKey,
       controller: passwordController,
-      hintText: 'Password',
+      hintText: 'Mật khẩu',
       icon: MdiIcons.lock,
       isPassword: true,
       inputType: InputType.password,
@@ -228,7 +228,7 @@ class LoginPageState extends State<LoginPage> {
         Expanded(child: Divider(color: AppColors.grey)),
         const SizedBox(width: 10),
         Text(
-          'or',
+          'hoặc',
           style: AppTextStyles.text.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -252,14 +252,13 @@ class LoginPageState extends State<LoginPage> {
                   if (mounted) {
                     ToastCustom.show(
                       context: context,
-                      title: 'Sign-In Canceled',
-                      description: 'Google Sign-In was canceled. Please try again.',
+                      title:'Lỗi đăng nhập với Google',
+                      description: 'Đăng nhập với Google thất bại. Vui lòng thử lại.',
                       type: ToastificationType.error,
                     );
                   }
                   return;
                 }
-
                 final result = await viewModel.googleSSOAndroid(
                   googleId: googleUser['google_id']!,
                   displayName: googleUser['fullname']!,
@@ -272,7 +271,7 @@ class LoginPageState extends State<LoginPage> {
                 if (viewModel.errorMessage != null) {
                   ToastCustom.show(
                     context: context,
-                    title: viewModel.errorTitle ?? 'Error',
+                    title: viewModel.errorTitle ?? 'Lỗi',
                     description: viewModel.errorMessage!,
                     type: ToastificationType.error,
                   );
@@ -282,8 +281,7 @@ class LoginPageState extends State<LoginPage> {
                   if (!mounted) return;
                   ToastCustom.show(
                     context: context,
-                    title: 'Login successful!',
-                    description: 'Welcome, ${result['user'].fullname}!',
+                    title: 'Đăng nhập thành công!',
                     type: ToastificationType.success,
                   );
                   context.goNamed('home');
@@ -306,7 +304,7 @@ class LoginPageState extends State<LoginPage> {
             ),
             const SizedBox(width: 11),
             Text(
-              'Continue with Google',
+              'Tiếp tục với Google',
               style: AppTextStyles.button.copyWith(
                 color: AppColors.black,
               ),
@@ -324,7 +322,7 @@ class LoginPageState extends State<LoginPage> {
           context.goNamed('register');
         },
         child: Text(
-          'Don\'t have an account? Register now!',
+          'Đã có tài khoản? Đăng nhập ngay!!',
           style: AppTextStyles.link,
         ),
       ),

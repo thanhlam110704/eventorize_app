@@ -48,7 +48,7 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  String _selectedCategory = 'All';
+  String _selectedCategory = 'Tất cả';
   String get selectedCategory => _selectedCategory;
 
   Map<String, String> _favoriteIdMap = {};
@@ -76,7 +76,7 @@ class HomeViewModel extends ChangeNotifier {
       _updateDataLoadedStatus();
       _isInitialLoad = false;
     } catch (e) {
-      ErrorHandler.handleError(e, 'Failed to initialize data', _errorState);
+      ErrorHandler.handleError(e, 'Lỗi khi tải dữ liệu ban đầu', _errorState);
       _isDataLoaded = false;
     } finally {
       _isLoading = false;
@@ -102,7 +102,7 @@ class HomeViewModel extends ChangeNotifier {
       };
       notifyListeners();
     } catch (e) {
-      ErrorHandler.handleError(e, 'Failed to load favorites', _errorState);
+      ErrorHandler.handleError(e, 'Lỗi khi tải danh sách yêu thích', _errorState);
       notifyListeners();
     }
   }
@@ -130,13 +130,13 @@ class HomeViewModel extends ChangeNotifier {
     try {
       String? dateFilter;
       bool? isOnline;
-      if (_selectedCategory == 'Today') {
+      if (_selectedCategory == 'Hôm nay') {
         dateFilter = 'today';
-      } else if (_selectedCategory == 'Tomorrow') {
+      } else if (_selectedCategory == 'Ngày mai') {
         dateFilter = 'tomorrow';
-      } else if (_selectedCategory == 'This Week') {
+      } else if (_selectedCategory == 'Tuần này') {
         dateFilter = 'this_week';
-      } else if (_selectedCategory == 'Online') {
+      } else if (_selectedCategory == 'Trực tuyến') {
         isOnline = true;
       }
 
@@ -157,7 +157,7 @@ class HomeViewModel extends ChangeNotifier {
       await _loadFavorites();
       _updateDataLoadedStatus();
     } catch (e) {
-      ErrorHandler.handleError(e, 'Failed to load events', _errorState);
+      ErrorHandler.handleError(e, 'Lỗi khi tải danh sách sự kiện', _errorState);
       _isDataLoaded = false;
     } finally {
       if (!isToggleFavorite && !isFromNavigation) {
@@ -186,7 +186,7 @@ class HomeViewModel extends ChangeNotifier {
       await fetchEvents(city: _selectedCity);
       _updateDataLoadedStatus();
     } catch (e) {
-      ErrorHandler.handleError(e, 'Failed to load provinces', _errorState);
+      ErrorHandler.handleError(e, 'Lỗi khi tải khu vực', _errorState);
       _isDataLoaded = false;
     } finally {
       _isLoading = false;
@@ -224,7 +224,7 @@ class HomeViewModel extends ChangeNotifier {
       final events = result['data'] as List<Event>;
       return events.map((event) => event.title).toSet().toList();
     } catch (e) {
-      ErrorHandler.handleError(e, 'Failed to load event titles', _errorState);
+      ErrorHandler.handleError(e, 'Lỗi khi tải dữ liệu tìm kiếm', _errorState);
       return [];
     }
   }

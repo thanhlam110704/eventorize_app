@@ -11,7 +11,7 @@ import 'package:eventorize_app/core/utils/exceptions.dart';
 import 'package:eventorize_app/common/services/location_cache.dart';
 import 'dart:io';
 
-class DetailProfileViewModel extends ChangeNotifier {
+class ProfileDetailViewModel extends ChangeNotifier {
   final UserRepository userRepository;
   final LocationRepository locationRepository;
   final LocationCache _locationCache = GetIt.instance<LocationCache>();
@@ -56,12 +56,12 @@ class DetailProfileViewModel extends ChangeNotifier {
   String? get errorMessage => _errorState.errorMessage;
   String? get errorTitle => _errorState.errorTitle;
 
-  DetailProfileViewModel(this.userRepository, this.locationRepository);
+  ProfileDetailViewModel(this.userRepository, this.locationRepository);
 
   Future<void> loadUser(User? accountUser) async {
     if (accountUser == null) {
-      _errorState.errorTitle = 'Error';
-      _errorState.errorMessage = 'User data is missing. Please log in again.';
+      _errorState.errorTitle = 'Lỗi';
+      _errorState.errorMessage = 'Lỗi dữ liệu. Hãy thử đăng nhập lại.';
       _isDataLoaded = false;
       notifyListeners();
       return;
@@ -86,7 +86,7 @@ class DetailProfileViewModel extends ChangeNotifier {
     if (_locationCache.provinces.isEmpty) {
       await _executeApiCall(
         apiCall: () => locationRepository.getProvinces(),
-        errorPrefix: 'Failed to load provinces',
+        errorPrefix: 'Lỗi khi tải danh sách tỉnh thành',
         onSuccess: (data) {
           _locationCache.setProvinces(data as List<Province>);
           selectedCity ??= provinces.isNotEmpty ? provinces[0].name : null;
@@ -111,7 +111,7 @@ class DetailProfileViewModel extends ChangeNotifier {
     if (_locationCache.getDistricts(provinceCode).isEmpty) {
       await _executeApiCall(
         apiCall: () => locationRepository.getDistricts(provinceCode: provinceCode),
-        errorPrefix: 'Failed to load districts',
+        errorPrefix: 'Lỗi khi tải danh sách quận huyện',
         onSuccess: (data) {
           _locationCache.setDistricts(provinceCode, data as List<District>);
           selectedDistrict ??= districts.isNotEmpty ? districts[0].name : null;
@@ -136,7 +136,7 @@ class DetailProfileViewModel extends ChangeNotifier {
     if (_locationCache.getWards(districtCode).isEmpty) {
       await _executeApiCall(
         apiCall: () => locationRepository.getWards(districtCode: districtCode),
-        errorPrefix: 'Failed to load wards',
+        errorPrefix: 'Lỗi khi tải danh sách phường xã',
         onSuccess: (data) {
           _locationCache.setWards(districtCode, data as List<Ward>);
           selectedWard ??= wards.isNotEmpty ? wards[0].name : null;
@@ -204,8 +204,8 @@ class DetailProfileViewModel extends ChangeNotifier {
 
     final userId = user?.id;
     if (userId == null || userId.isEmpty) {
-      _errorState.errorTitle = 'Error';
-      _errorState.errorMessage = 'User ID is missing. Please try again.';
+      _errorState.errorTitle = 'Lỗi';
+      _errorState.errorMessage = 'Lỗi dữ liệu. Hãy thử lại.';
       _isUpdateSuccessful = false;
       notifyListeners();
       return;
@@ -225,7 +225,7 @@ class DetailProfileViewModel extends ChangeNotifier {
         district: selectedDistrict,
         ward: selectedWard,
       ),
-      errorPrefix: 'Failed to update profile',
+      errorPrefix: 'Lỗi khi cập nhật thông tin',
       onSuccess: (updatedUser) {
         try {
           context.read<SessionManager>().setUser(updatedUser as User);
@@ -233,8 +233,8 @@ class DetailProfileViewModel extends ChangeNotifier {
           _isUpdateSuccessful = true;
           ErrorHandler.clearError(_errorState);
         } catch (e) {
-          _errorState.errorTitle = 'Error';
-          _errorState.errorMessage = 'Failed to access session manager: $e';
+          _errorState.errorTitle = 'Lỗi';
+          _errorState.errorMessage = 'Lỗi khi lấy dữ liệu người dùng: $e';
           _isUpdateSuccessful = false;
         }
       },
@@ -255,7 +255,7 @@ class DetailProfileViewModel extends ChangeNotifier {
         final multipartFile = await MultipartFile.fromFile(imageFile.path, filename: imageFile.path.split('/').last);
         return userRepository.editAvatar(file: multipartFile);
       },
-      errorPrefix: 'Failed to upload avatar',
+      errorPrefix: 'Lỗi khi tải ảnh đại diện',
       onSuccess: (updatedUser) {
         try {
           context.read<SessionManager>().setUser(updatedUser as User);

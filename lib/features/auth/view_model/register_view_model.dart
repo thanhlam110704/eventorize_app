@@ -37,11 +37,11 @@ class RegisterViewModel extends ChangeNotifier {
       _errorState.user = result['user'] as User?;
       final token = result['token'] as String?;
       if (_errorState.user == null || token == null) {
-        throw Exception('Registration failed: Invalid response');
+        throw Exception('Đăng ký thất bại: Phản hồi không hợp lệ');
       }
       await SecureStorage.saveToken(token);
     } catch (e) {
-      ErrorHandler.handleError(e, 'Registration failed', _errorState);
+      ErrorHandler.handleError(e, 'Đăng ký thất bại', _errorState);
       notifyListeners();
       rethrow;
     } finally {
@@ -71,11 +71,11 @@ class RegisterViewModel extends ChangeNotifier {
       _errorState.user = result['user'] as User?;
       final token = result['token'] as String?;
       if (_errorState.user == null || token == null) {
-        throw Exception('Google SSO registration failed: Invalid response');
+        throw Exception('Đăng ký thất bại với Google: Phản hồi không hợp lệ');
       }
       await SecureStorage.saveToken(token);
     } catch (e) {
-      ErrorHandler.handleError(e, 'Google SSO registration failed', _errorState);
+      ErrorHandler.handleError(e, 'Đăng ký thất bại với Google', _errorState);
       notifyListeners();
       rethrow;
     } finally {

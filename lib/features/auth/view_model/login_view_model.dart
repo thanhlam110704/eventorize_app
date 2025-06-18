@@ -21,7 +21,7 @@ class LoginViewModel extends ChangeNotifier {
   }) async {
     return await _executeLogin(
       () => _userRepository.login(email: email, password: password),
-      'Login failed',
+      'Đăng nhập thất bại',
     );
   }
 
@@ -38,7 +38,7 @@ class LoginViewModel extends ChangeNotifier {
         email: email,
         picture: picture,
       ),
-      'Google SSO failed',
+      'Đăng nhập bằng Google thất bại',
     );
   }
 
@@ -57,7 +57,7 @@ class LoginViewModel extends ChangeNotifier {
       final token = result['token'] as String?;
 
       if (_errorState.user == null || token == null) {
-        throw Exception('$errorPrefix: Invalid response');
+        throw Exception('$errorPrefix: Phản hồi không hợp lệ');
       }
 
       return {'user': _errorState.user, 'token': token};

@@ -294,7 +294,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
 
   Widget buildHeader() {
     return Text(
-      'Account',
+      'Tài khoản',
       style: AppTextStyles.title,
     );
   }
@@ -379,7 +379,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
                       ),
                     ),
                     child: Text(
-                      'Detail profile',
+                      'Thông tin chi tiết',
                       style: AppTextStyles.text.copyWith(fontWeight: FontWeight.w700),
                     ),
                   ),
@@ -397,13 +397,13 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Settings',
+          'Cài đặt',
           style: AppTextStyles.sectionTitle,
         ),
         const SizedBox(height: 15),
         buildSettingItem(
           icon: Icons.account_circle,
-          title: 'Linked accounts',
+          title: 'Liên kết tài khoản',
           onTap: () {},
           iconColor: AppColors.black,
           textColor: AppColors.black,
@@ -413,7 +413,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
         const SizedBox(height: 15),
         buildSettingItem(
           icon: Icons.apartment_outlined,
-          title: 'Organization',
+          title: 'Nhà tổ chức',
           onTap: () {},
           iconColor: AppColors.black,
           textColor: AppColors.black,
@@ -423,7 +423,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
         const SizedBox(height: 15),
         buildSettingItem(
           icon: MdiIcons.fileDocumentOutline,
-          title: 'Terms of Service',
+          title: 'Điều khoản dịch vụ',
           onTap: () {},
           iconColor: AppColors.black,
           textColor: AppColors.black,
@@ -433,7 +433,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
         const SizedBox(height: 15),
         buildSettingItem(
           icon: MdiIcons.lockOutline,
-          title: 'Privacy Policy',
+          title: 'Chính sách bảo mật',
           onTap: () {},
           iconColor: AppColors.black,
           textColor: AppColors.black,
@@ -449,7 +449,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
               if (context.mounted) {
                 ToastCustom.show(
                   context: context,
-                  title: 'Logged out successfully!',
+                  title: 'Đăng xuất thành công!',
                   type: ToastificationType.success,
                 );
                 context.pushReplacementNamed('login');
@@ -472,7 +472,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Log out',
+                  'Đăng xuất',
                   style: AppTextStyles.text.copyWith(
                     fontWeight: FontWeight.w600,
                     color: AppColors.red,
@@ -485,7 +485,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
         const SizedBox(height: 10),
         Center(
           child: Text(
-            'Version 1.0.0',
+            'Phiên bản 1.0.0',
             style: AppTextStyles.subtitle.copyWith(color: AppColors.mutedText),
           ),
         ),

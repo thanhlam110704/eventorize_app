@@ -50,7 +50,7 @@ class FavoriteViewModel extends ChangeNotifier {
       _updateDataLoadedStatus();
       _isInitialLoad = false;
     } catch (e) {
-      ErrorHandler.handleError(e, 'Failed to initialize favorite events', _errorState);
+      ErrorHandler.handleError(e, 'Lỗi khi tải danh sách yêu thích ban đầu', _errorState);
       _isDataLoaded = false;
     } finally {
       _isLoading = false;
@@ -71,7 +71,7 @@ class FavoriteViewModel extends ChangeNotifier {
       };
       _updateDataLoadedStatus();
     } catch (e) {
-      ErrorHandler.handleError(e, 'Failed to load favorite events', _errorState);
+      ErrorHandler.handleError(e, 'Lỗi khi tải danh sách sự kiện yêu thích', _errorState);
       _isDataLoaded = false;
     } finally {
       _isLoading = false;
@@ -91,13 +91,12 @@ class FavoriteViewModel extends ChangeNotifier {
           _favoriteIdMap[event.id] = favoriteId;
         }
       } else {
-        // Xóa sự kiện khỏi danh sách favorite
         _events = _events.where((e) => e.id != event.id).toList();
         _favoriteIdMap.remove(event.id);
       }
       _updateDataLoadedStatus();
     } catch (e) {
-      ErrorHandler.handleError(e, 'Failed to update favorite locally', _errorState);
+      ErrorHandler.handleError(e, 'Lỗi khi cập nhật danh sách yêu thích', _errorState);
     } finally {
       _isTogglingFavorite = false;
       notifyListeners();

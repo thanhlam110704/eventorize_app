@@ -88,4 +88,22 @@ class AppTextStyles {
     fontSize: 14,
     color: AppColors.black,
   );
+
+  static const TextStyle semibold = TextStyle(
+    fontFamily: 'Roboto',
+    fontWeight: FontWeight.w600,
+    color: AppColors.black,
+    fontSize: 16
+  );
+  static const TextStyle bold = TextStyle(
+    fontFamily: 'Roboto',
+    fontWeight: FontWeight.w700,
+    color: AppColors.black,
+  );
+  static const TextStyle medium = TextStyle(
+    fontFamily: 'Roboto',
+    fontWeight: FontWeight.w500,
+    color: AppColors.black,
+  );
+
 }
