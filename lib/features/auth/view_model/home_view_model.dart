@@ -182,6 +182,7 @@ class HomeViewModel extends ChangeNotifier {
       if (_selectedCity == null && provinces.isNotEmpty) {
         _selectedCity = provinces[0].name;
       }
+      await _loadFavorites();
       await fetchEvents(city: _selectedCity);
       _updateDataLoadedStatus();
     } catch (e) {
