@@ -24,7 +24,7 @@ class TopNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: backgroundColor ?? AppColors.white,
+      color: Colors.transparent,
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -35,7 +35,7 @@ class TopNavBar extends StatelessWidget {
               height: 40.0,
               margin: const EdgeInsets.only(left: 6),
               decoration: BoxDecoration(
-                color: AppColors.iconButtonOverlay,
+                color: AppColors.inputBackground, 
                 borderRadius: BorderRadius.circular(10),
               ),
               child: IconButton(

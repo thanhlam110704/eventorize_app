@@ -8,6 +8,8 @@ import 'package:eventorize_app/features/auth/view/verify_page.dart';
 import 'package:eventorize_app/features/auth/view/account_page.dart';
 import 'package:eventorize_app/features/auth/view/profile_detail_page.dart';
 import 'package:eventorize_app/features/auth/view/favorite_page.dart';
+import 'package:eventorize_app/features/auth/view/event_detail_page.dart';
+
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: '/splashscreen',
@@ -28,6 +30,28 @@ class AppRouter {
         builder: (context, state) => const LoginPage(),
       ),
       GoRoute(
+        path: '/verify-code',
+        name: 'verify-code',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final email = extra?['email'] as String? ?? '';
+          return VerificationCodePage(email: email);
+        },
+      ),
+      GoRoute(
+        path: '/home',
+        name: 'home',
+        builder: (context, state) => const HomePage(),
+      ),
+      GoRoute(
+        path: '/event/:id',
+        name: 'event_detail',
+        builder: (context, state) {
+          final eventId = state.pathParameters['id']!;
+          return EventDetailPage(eventId: eventId);
+        },
+      ),
+      GoRoute(
         path: '/account',
         name: 'account',
         builder: (context, state) => const AccountPage(),
@@ -42,21 +66,6 @@ class AppRouter {
         name: 'favorite',
         builder: (context, state) => const FavoritePage(),
       ),
-      GoRoute(
-      path: '/verify-code',
-      name: 'verify-code',
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        final email = extra?['email'] as String? ?? '';
-        return VerificationCodePage(email: email);
-        },
-      ),
-      
-      GoRoute(
-      path: '/home',
-      name: 'home',
-      builder: (context, state) => const HomePage(),
-    ),
     ],
     errorBuilder: (context, state) => Scaffold(
       body: Center(

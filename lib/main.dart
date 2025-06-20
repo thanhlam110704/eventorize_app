@@ -6,6 +6,7 @@ import 'package:eventorize_app/features/auth/view_model/account_view_model.dart'
 import 'package:eventorize_app/features/auth/view_model/profile_detail_view_model.dart';
 import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
 import 'package:eventorize_app/features/auth/view_model/favorite_view_model.dart';
+import 'package:eventorize_app/features/auth/view_model/event_detail_view_model.dart'; 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
@@ -22,8 +23,9 @@ import 'package:eventorize_app/data/repositories/favorite_repository.dart';
 import 'package:get_it/get_it.dart';
 import 'package:eventorize_app/common/services/location_cache.dart';
 
+final getIt = GetIt.instance;
+
 void setupDependencies() {
-  final getIt = GetIt.instance;
   getIt.registerSingleton<DioClient>(DioClient());
   getIt.registerSingleton<UserApi>(UserApi(getIt<DioClient>()));
   getIt.registerSingleton<UserRepository>(UserRepository(getIt<UserApi>()));
@@ -35,6 +37,9 @@ void setupDependencies() {
   getIt.registerSingleton<FavoriteRepository>(FavoriteRepository(getIt<FavoriteApi>()));
   getIt.registerSingleton<SessionManager>(SessionManager(getIt<UserRepository>()));
   getIt.registerSingleton<LocationCache>(LocationCache());
+  getIt.registerFactory<EventDetailViewModel>(
+    () => EventDetailViewModel(eventRepository: getIt<EventRepository>()),
+  );
 }
 
 Future<void> main() async {
@@ -52,42 +57,45 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         Provider<FavoriteRepository>(
-          create: (_) => GetIt.instance<FavoriteRepository>(),
+          create: (_) => getIt<FavoriteRepository>(),
         ),
         ChangeNotifierProvider<SessionManager>(
-          create: (_) => SessionManager(GetIt.instance<UserRepository>()),
+          create: (_) => getIt<SessionManager>(),
         ),
         ChangeNotifierProvider<VerifyViewModel>(
-          create: (_) => VerifyViewModel(GetIt.instance<UserRepository>()),
+          create: (_) => VerifyViewModel(getIt<UserRepository>()),
         ),
         ChangeNotifierProvider<LoginViewModel>(
-          create: (_) => LoginViewModel(GetIt.instance<UserRepository>()),
+          create: (_) => LoginViewModel(getIt<UserRepository>()),
         ),
         ChangeNotifierProvider<RegisterViewModel>(
-          create: (_) => RegisterViewModel(GetIt.instance<UserRepository>()),
+          create: (_) => RegisterViewModel(getIt<UserRepository>()),
         ),
         ChangeNotifierProvider<AccountViewModel>(
-          create: (_) => AccountViewModel(GetIt.instance<SessionManager>()),
+          create: (_) => AccountViewModel(getIt<SessionManager>()),
         ),
         ChangeNotifierProvider<ProfileDetailViewModel>(
           create: (_) => ProfileDetailViewModel(
-            GetIt.instance<UserRepository>(),
-            GetIt.instance<LocationRepository>(),
+            getIt<UserRepository>(),
+            getIt<LocationRepository>(),
           ),
         ),
         ChangeNotifierProvider<HomeViewModel>(
           create: (_) => HomeViewModel(
-            GetIt.instance<EventRepository>(),
-            GetIt.instance<SessionManager>(),
-            GetIt.instance<LocationRepository>(),
-            GetIt.instance<FavoriteRepository>(),
+            getIt<EventRepository>(),
+            getIt<SessionManager>(),
+            getIt<LocationRepository>(),
+            getIt<FavoriteRepository>(),
           ),
         ),
         ChangeNotifierProvider<FavoriteViewModel>(
           create: (_) => FavoriteViewModel(
-            GetIt.instance<FavoriteRepository>(),
-            GetIt.instance<SessionManager>(),
+            getIt<FavoriteRepository>(),
+            getIt<SessionManager>(),
           ),
+        ),
+        ChangeNotifierProvider<EventDetailViewModel>(
+          create: (_) => getIt<EventDetailViewModel>(),
         ),
       ],
       child: MaterialApp.router(

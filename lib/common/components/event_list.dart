@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:toastification/toastification.dart';
+import 'package:go_router/go_router.dart'; // Thêm import go_router
 import 'package:eventorize_app/common/components/toast_custom.dart';
-import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/core/utils/datetime_convert.dart';
 import 'package:eventorize_app/data/models/event.dart';
@@ -74,18 +74,8 @@ class EventList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sessionManager = Provider.of<SessionManager>(context);
     final homeViewModel = Provider.of<HomeViewModel>(context);
     final favoriteViewModel = Provider.of<FavoriteViewModel>(context, listen: false);
-
-    if (sessionManager.user == null) {
-      return const Center(
-        child: Text(
-          'Please log in to view events',
-          style: TextStyle(fontSize: 16, color: Colors.grey),
-        ),
-      );
-    }
 
     if (isLoading) {
       return ListView(
@@ -184,11 +174,9 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
   }
 
   Future<void> _toggleFavorite() async {
-    final sessionManager = Provider.of<SessionManager>(context, listen: false);
     final favoriteRepository = Provider.of<FavoriteRepository>(context, listen: false);
     final homeViewModel = Provider.of<HomeViewModel>(context, listen: false);
     final favoriteViewModel = Provider.of<FavoriteViewModel>(context, listen: false);
-    final userId = sessionManager.user?.id;
 
     setState(() {
       _isFavorited = !_isFavorited;
@@ -196,21 +184,6 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
 
     await _animationController.forward();
     await _animationController.reverse();
-
-    if (userId == null) {
-      if (mounted) {
-        ToastCustom.show(
-          context: context,
-          title: 'Error',
-          description: 'User not logged in',
-          type: ToastificationType.error,
-        );
-        setState(() {
-          _isFavorited = widget.isFavorited;
-        });
-      }
-      return;
-    }
 
     if (widget.event.id.isEmpty) {
       if (mounted) {
@@ -245,8 +218,7 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
         if (mounted) {
           ToastCustom.show(
             context: context,
-            title: 'Success',
-            description: 'Event removed from favorites',
+            title: 'Xóa sự kiện yêu thích thành công',
             type: ToastificationType.success,
           );
         }
@@ -266,7 +238,7 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
       if (mounted) {
         ToastCustom.show(
           context: context,
-          title: 'Error',
+          title: 'Lỗi',
           description: e.toString().replaceFirst('Exception: ', ''),
           type: ToastificationType.error,
         );
@@ -279,135 +251,140 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(5),
-                child: CachedNetworkImage(
-                  imageUrl: widget.event.thumbnail ?? '',
-                  height: 120,
-                  width: 120,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: AppColors.skeleton,
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: AppColors.shimmerBase,
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: const Icon(Icons.event, size: 40, color: Colors.grey),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 4,
-                right: 4,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Text(
-                    'Free',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return GestureDetector(
+      onTap: () {
+        context.push('/event/${widget.event.id}'); // Điều hướng đến EventDetailPage với eventId
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        widget.event.title,
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: CachedNetworkImage(
+                    imageUrl: widget.event.thumbnail ?? '',
+                    height: 120,
+                    width: 120,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: AppColors.skeleton,
+                        borderRadius: BorderRadius.circular(5),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: _toggleFavorite,
-                      child: ScaleTransition(
-                        scale: _scaleAnimation,
-                        child: Icon(
-                          _isFavorited ? Icons.favorite : Icons.favorite_border,
-                          color: _isFavorited ? Colors.red : Colors.black,
-                        ),
+                    errorWidget: (context, url, error) => Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: AppColors.shimmerBase,
+                        borderRadius: BorderRadius.circular(5),
                       ),
+                      child: const Icon(Icons.event, size: 40, color: Colors.grey),
                     ),
-                  ],
+                  ),
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.calendar_today, size: 14, color: Colors.black),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        DateTimeConverter.formatDateRange(widget.event.startDate, widget.event.endDate),
-                        style: const TextStyle(fontSize: 12, color: AppColors.mutedText),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text(
+                      'Free',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.location_on, size: 14, color: Colors.black),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        widget.event.address ?? 'No address provided',
-                        style: const TextStyle(fontSize: 12, color: AppColors.mutedText),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                const Row(
-                  children: [
-                    Icon(Icons.people, size: 14, color: Colors.black),
-                    SizedBox(width: 4),
-                    Text(
-                      '2.9k attendees',
-                      style: TextStyle(fontSize: 12, color: AppColors.mutedText),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          widget.event.title,
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: _toggleFavorite,
+                        child: ScaleTransition(
+                          scale: _scaleAnimation,
+                          child: Icon(
+                            _isFavorited ? Icons.favorite : Icons.favorite_border,
+                            color: _isFavorited ? Colors.red : Colors.black,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.calendar_today, size: 14, color: Colors.black),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          DateTimeConverter.formatDateRange(widget.event.startDate, widget.event.endDate),
+                          style: const TextStyle(fontSize: 12, color: AppColors.mutedText),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on, size: 14, color: Colors.black),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          widget.event.address ?? 'No address provided',
+                          style: const TextStyle(fontSize: 12, color: AppColors.mutedText),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  const Row(
+                    children: [
+                      Icon(Icons.people, size: 14, color: Colors.black),
+                      SizedBox(width: 4),
+                      Text(
+                        '2.9k attendees',
+                        style: TextStyle(fontSize: 12, color: AppColors.mutedText),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

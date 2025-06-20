@@ -117,7 +117,5 @@ class EventRepository {
     await _eventApi.deleteEvent(id);
   }
 
-  Future<List<Event>> getEventsByOrganizerId(String organizerId) async {
-    return await _eventApi.getEventsByOrganizerId(organizerId);
-  }
+  
 }

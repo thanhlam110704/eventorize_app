@@ -16,7 +16,6 @@ class AppColors {
   static const Color skeleton = Color.fromRGBO(158, 158, 158, 1);
   static const Color shimmerBase = Color.fromRGBO(189, 189, 189, 1);
   static const Color shimmerHighlight = Color.fromRGBO(245, 245, 245, 1);
-  static const Color iconButtonOverlay = Color.fromRGBO(0, 0, 0, 0.05); 
   static const Color loadingOverlay = Color.fromRGBO(0, 0, 0, 0.5);
   static const Color mutedText = Color(0x8A000000); 
 }

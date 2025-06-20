@@ -141,7 +141,6 @@ class ProfileDetailPageState extends State<ProfileDetailPage> {
       child: const TopNavBar(
         title: "Thông tin chi tiết",
         showBackButton: true,
-        backgroundColor: AppColors.white,
       ),
     );
   }
