@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
-import '../../../common/widgets/custom_field_input.dart';
+import 'package:eventorize_app/common/components/custom_field_input.dart';
+import 'package:eventorize_app/common/components/toast_custom.dart';
+import 'package:eventorize_app/features/auth/view_model/login_view_model.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:toastification/toastification.dart';
+import 'package:eventorize_app/data/api/google_signin_api.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -15,13 +23,16 @@ class LoginPageState extends State<LoginPage> {
   static const smallScreenThreshold = 640.0;
   static const maxContentWidth = 600.0;
   static const buttonHeight = 50.0;
-
-  bool rememberMe = false;
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final formKey = GlobalKey<FormState>();
   final emailInputKey = GlobalKey<CustomFieldInputState>();
   final passwordInputKey = GlobalKey<CustomFieldInputState>();
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -30,24 +41,32 @@ class LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void handleLogin() {
-    bool isValid = true;
-    if (emailInputKey.currentState != null) {
-      isValid &= emailInputKey.currentState!.validate();
-    }
-    if (passwordInputKey.currentState != null) {
-      isValid &= passwordInputKey.currentState!.validate();
-    }
-    if (isValid) {
-    
-    }
+  Future<void> handleLogin(LoginViewModel viewModel) async {
+  bool isValid = true;
+  if (emailInputKey.currentState != null) {
+    isValid &= emailInputKey.currentState!.validate();
   }
-
-  void toggleRememberMe() {
-    setState(() {
-      rememberMe = !rememberMe;
-    });
+  if (passwordInputKey.currentState != null) {
+    isValid &= passwordInputKey.currentState!.validate();
   }
+  if (isValid) {
+    final result = await viewModel.login(
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
+    );
+    if (mounted) {
+      await context.read<SessionManager>().setUserFromToken(result['token']);
+      if (!mounted) return; 
+      ToastCustom.show(
+        context: context,
+        title: 'Đăng nhập thành công!',
+        description: 'Chào mừng bạn trở lại, ${result['user'].fullname}!',  
+        type: ToastificationType.success,
+      );
+      context.goNamed('home');
+    } 
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -55,61 +74,107 @@ class LoginPageState extends State<LoginPage> {
     final isSmallScreen = screenSize.width <= smallScreenThreshold;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.defaultBackground,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: buildMainContainer(isSmallScreen, screenSize),
-        ),
-      ),
-    );
-  }
+        child: Consumer<LoginViewModel>(
+          builder: (context, viewModel, child) {
+            if (viewModel.errorMessage != null) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  ToastCustom.show(
+                    context: context,
+                    title: viewModel.errorTitle ?? 'Lỗi',
+                    description: viewModel.errorMessage!,
+                    type: ToastificationType.error,
+                  );
+                  viewModel.clearError();
+                }
+              });
+            }
 
-  Widget buildMainContainer(bool isSmallScreen, Size screenSize) {
-    return Container(
-      width: screenSize.width,
-      height: screenSize.height,
-      color: AppColors.background,
-      padding: EdgeInsets.fromLTRB(
-        isSmallScreen ? 16 : 24,
-        isSmallScreen ? 40 : 80,
-        isSmallScreen ? 16 : 24,
-        isSmallScreen ? 24 : 32,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: maxContentWidth),
-          child: Form(
-            key: formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            return Stack(
               children: [
-                buildLogo(),
-                const SizedBox(height: 3),
-                buildTitle(),
-                const SizedBox(height: 36),
-                buildEmailField(),
-                const SizedBox(height: 21),
-                buildPasswordField(),
-                const SizedBox(height: 21),
-                buildRememberMe(isSmallScreen),
-                if (isSmallScreen) const SizedBox(height: 15),
-                Padding(
-                  padding: EdgeInsets.only(top: screenSize.height * 0.05),
-                  child: Column(
-                    children: [
-                      buildLoginButton(isSmallScreen, screenSize),
-                      const SizedBox(height: 10),
-                      buildDivider(),
-                      const SizedBox(height: 10),
-                      buildGoogleButton(isSmallScreen, screenSize),
-                      const SizedBox(height: 29),
-                      buildRegisterLink(),
-                    ],
+                SingleChildScrollView(
+                  child: Container(
+                    width: screenSize.width,
+                    color: AppColors.defaultBackground,
+                    padding: EdgeInsets.fromLTRB(
+                      isSmallScreen ? 16 : 24,
+                      isSmallScreen ? 40 : 80,
+                      isSmallScreen ? 16 : 24,
+                      isSmallScreen ? 24 : 32,
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: maxContentWidth),
+                        child: Form(
+                          key: formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              buildLogo(),
+                              const SizedBox(height: 3),
+                              buildTitle(),
+                              const SizedBox(height: 36),
+                              buildEmailField(),
+                              const SizedBox(height: 21),
+                              buildPasswordField(),
+                              const SizedBox(height: 21),
+                              Padding(
+                                padding: EdgeInsets.only(top: screenSize.height * 0.05),
+                                child: Column(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 90),
+                                      child: Container(
+                                        width: isSmallScreen ? double.infinity : screenSize.width * 0.9,
+                                        height: buttonHeight,
+                                        margin: const EdgeInsets.only(top: 10),
+                                        child: ElevatedButton(
+                                          onPressed: viewModel.isLoading ? null : () => handleLogin(viewModel),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: AppColors.primary,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                            elevation: 0,
+                                          ),
+                                          child: Text(
+                                            'Đăng nhập',
+                                            style: AppTextStyles.button,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    buildDivider(),
+                                    const SizedBox(height: 10),
+                                    buildGoogleButton(isSmallScreen, screenSize, viewModel),
+                                    const SizedBox(height: 29),
+                                    buildRegisterLink(),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
+                if (viewModel.isLoading)
+                  Container(
+                    color: Colors.black.withAlpha(128),
+                    child: const Center(
+                      child: SpinKitFadingCircle(
+                        color: AppColors.primary,
+                        size: 50.0,
+                      ),
+                    ),
+                  ),
               ],
-            ),
-          ),
+            );
+          },
         ),
       ),
     );
@@ -117,7 +182,7 @@ class LoginPageState extends State<LoginPage> {
 
   Widget buildLogo() {
     return Padding(
-      padding: const EdgeInsets.only(left: 13),
+      padding: const EdgeInsets.only(left: 13, top: 40),
       child: Text(
         'eventorize',
         style: AppTextStyles.logo,
@@ -129,7 +194,7 @@ class LoginPageState extends State<LoginPage> {
     return Padding(
       padding: const EdgeInsets.only(left: 13),
       child: Text(
-        'Log in',
+        'Đăng nhập',
         style: AppTextStyles.title,
       ),
     );
@@ -150,58 +215,10 @@ class LoginPageState extends State<LoginPage> {
     return CustomFieldInput(
       key: passwordInputKey,
       controller: passwordController,
-      hintText: 'Password',
+      hintText: 'Mật khẩu',
       icon: MdiIcons.lock,
       isPassword: true,
       inputType: InputType.password,
-    );
-  }
-
-  Widget buildRememberMe(bool isSmallScreen) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 15),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: toggleRememberMe,
-            child: Icon(
-              rememberMe ? MdiIcons.checkboxMarked : MdiIcons.checkboxBlankOutline,
-              color: rememberMe ? AppColors.primary : AppColors.grey,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 7),
-          Text(
-            'Remember me',
-            style: AppTextStyles.text,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget buildLoginButton(bool isSmallScreen, Size screenSize) {
-    return Container(
-      width: isSmallScreen ? double.infinity : screenSize.width * 0.9,
-      height: buttonHeight,
-      margin: const EdgeInsets.only(top: 10),
-      child: ElevatedButton(
-        onPressed: handleLogin,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          elevation: 0,
-        ),
-        child: Text(
-          'Log in',
-          style: AppTextStyles.text.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
     );
   }
 
@@ -211,7 +228,7 @@ class LoginPageState extends State<LoginPage> {
         Expanded(child: Divider(color: AppColors.grey)),
         const SizedBox(width: 10),
         Text(
-          'or',
+          'hoặc',
           style: AppTextStyles.text.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -222,12 +239,54 @@ class LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget buildGoogleButton(bool isSmallScreen, Size screenSize) {
+  Widget buildGoogleButton(bool isSmallScreen, Size screenSize, LoginViewModel viewModel) {
     return SizedBox(
       width: isSmallScreen ? double.infinity : screenSize.width * 0.9,
       height: buttonHeight,
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: viewModel.isLoading
+            ? null
+            : () async {
+                final googleUser = await GoogleSignInApi.signIn();
+                if (googleUser == null) {
+                  if (mounted) {
+                    ToastCustom.show(
+                      context: context,
+                      title:'Lỗi đăng nhập với Google',
+                      description: 'Đăng nhập với Google thất bại. Vui lòng thử lại.',
+                      type: ToastificationType.error,
+                    );
+                  }
+                  return;
+                }
+                final result = await viewModel.googleSSOAndroid(
+                  googleId: googleUser['google_id']!,
+                  displayName: googleUser['fullname']!,
+                  email: googleUser['email']!,
+                  picture: googleUser['avatar']!,
+                );
+
+                if (!mounted) return;
+
+                if (viewModel.errorMessage != null) {
+                  ToastCustom.show(
+                    context: context,
+                    title: viewModel.errorTitle ?? 'Lỗi',
+                    description: viewModel.errorMessage!,
+                    type: ToastificationType.error,
+                  );
+                  viewModel.clearError();
+                } else {
+                  await context.read<SessionManager>().setUserFromToken(result['token']);
+                  if (!mounted) return;
+                  ToastCustom.show(
+                    context: context,
+                    title: 'Đăng nhập thành công!',
+                    type: ToastificationType.success,
+                  );
+                  context.goNamed('home');
+                }
+              },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
@@ -239,15 +298,15 @@ class LoginPageState extends State<LoginPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'lib/assets/icon/logo_google.png',
+              'assets/icons/logo_google.png',
               width: screenSize.width * 0.06,
               height: screenSize.width * 0.06,
             ),
             const SizedBox(width: 11),
             Text(
-              'Continue with Google',
-              style: AppTextStyles.text.copyWith(
-                fontWeight: FontWeight.w600,
+              'Tiếp tục với Google',
+              style: AppTextStyles.button.copyWith(
+                color: AppColors.black,
               ),
             ),
           ],
@@ -259,9 +318,11 @@ class LoginPageState extends State<LoginPage> {
   Widget buildRegisterLink() {
     return Center(
       child: GestureDetector(
-        onTap: () {},
+        onTap: () {
+          context.goNamed('register');
+        },
         child: Text(
-          'Don\'t have an account? Register now!',
+          'Đã có tài khoản? Đăng nhập ngay!!',
           style: AppTextStyles.link,
         ),
       ),

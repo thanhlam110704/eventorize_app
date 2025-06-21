@@ -4,8 +4,8 @@ class User extends Equatable {
   final String id; 
   final String fullname;
   final String email;
-  final String? position;
   final String? phone;
+  final String? position;
   final String? avatar;
   final String? company;
   final String? country;
@@ -38,8 +38,8 @@ class User extends Equatable {
     required this.id,
     required this.fullname,
     required this.email,
-    this.position,
     this.phone,
+    this.position,
     this.avatar,
     this.company,
     this.country,
@@ -71,11 +71,11 @@ class User extends Equatable {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['_id'] as String, // BE thường trả về ObjectIdStr dưới dạng '_id'
+      id: json['_id'] as String, 
       fullname: json['fullname'] as String,
       email: json['email'] as String,
-      position: json['position'] as String?,
       phone: json['phone'] as String?,
+      position: json['position'] as String?,
       avatar: json['avatar'] as String?,
       company: json['company'] as String?,
       country: json['country'] as String?,
@@ -86,7 +86,7 @@ class User extends Equatable {
       twitter: json['twitter'] as String?,
       linkedin: json['linkedin'] as String?,
       instagram: json['instagram'] as String?,
-      password: json['password'] as String?, // Nếu BE trả về dạng string đã mã hóa
+      password: json['password'] as String?,
       googleId: json['google_id'] as String?,
       githubId: json['github_id'] as String?,
       isVerified: json['is_verified'] as bool? ?? false,
