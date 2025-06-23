@@ -98,6 +98,7 @@ class AppTextStyles {
     fontFamily: 'Roboto',
     fontWeight: FontWeight.w700,
     color: AppColors.black,
+    fontSize: 16
   );
   static const TextStyle medium = TextStyle(
     fontFamily: 'Roboto',

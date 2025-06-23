@@ -1,10 +1,10 @@
 import 'package:eventorize_app/common/services/session_manager.dart';
-import 'package:eventorize_app/features/auth/view_model/register_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/login_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/verify_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/account_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/detail_profile_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/register_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/login_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/verify_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/account_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/detail_profile_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/home_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
@@ -76,10 +76,15 @@ class MyApp extends StatelessWidget {
         title: 'Eventorize',
         theme: ThemeData(
           useMaterial3: true,
+          dropdownMenuTheme: DropdownMenuThemeData(
+    inputDecorationTheme: InputDecorationTheme(
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(5)),
+    ),
+  ),
         ),
         routerConfig: AppRouter.router,
         debugShowCheckedModeBanner: false,
       ),
     );
   }
-}
+} 

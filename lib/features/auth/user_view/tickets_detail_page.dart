@@ -43,7 +43,7 @@ class _TicketsDetailPageState extends State<TicketsDetailPage> {
           children: [
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 12),
-              child: TopNavBar(title: "Ticket detail", showBackButton: true),
+              child: TopNavBar(title: "Chi tiết vé", showBackButton: true),
             ),
 
             if (_showDivider)
@@ -197,7 +197,7 @@ class _TicketsDetailPageState extends State<TicketsDetailPage> {
               Text.rich(
                 TextSpan(
                   children: [
-                    TextSpan(text: 'Type: ', style: AppTextStyles.semibold),
+                    TextSpan(text: 'Loại vé: ', style: AppTextStyles.semibold),
                     TextSpan(text: 'Ticket Vip', style: AppTextStyles.text),
                   ],
                 ),
@@ -277,7 +277,7 @@ class TicketBorderPainter extends CustomPainter {
     final path = TicketClipper().getClip(size);
 
     final paint = Paint()
-      ..color = AppColors.grey
+      ..color = AppColors.darkGrey
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1
       ..isAntiAlias = true;
@@ -296,7 +296,7 @@ class HorizontalDashedLine extends StatelessWidget {
   Widget build(BuildContext context) {
     return DottedLine(
       direction: Axis.horizontal,
-      dashColor: AppColors.grey,
+      dashColor: AppColors.darkGrey,
       dashLength: 8,
       dashGapLength: 4,
       lineThickness: 1,

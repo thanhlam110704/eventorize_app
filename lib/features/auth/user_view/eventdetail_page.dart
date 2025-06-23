@@ -173,7 +173,7 @@ class EventDetailPageState extends State<EventDetailPage>{
 
                     TextButton(
                       onPressed: () {
-                        // TODO: Show map
+                        // 
                       },
                       style: TextButton.styleFrom(
                         padding: EdgeInsets.zero,

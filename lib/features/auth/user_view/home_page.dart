@@ -8,7 +8,7 @@ import 'package:eventorize_app/common/components/bottom_nav_bar.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/core/utils/datetime_convert.dart';
 import 'package:eventorize_app/data/models/event.dart';
-import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/home_view_model.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 

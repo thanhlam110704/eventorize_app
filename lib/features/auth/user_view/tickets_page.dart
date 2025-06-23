@@ -180,7 +180,7 @@ class VerticalDashedLine extends StatelessWidget {
           child: RotatedBox(
             quarterTurns: 1,
             child: DottedLine(
-              dashColor: Colors.grey,
+              dashColor: AppColors.darkGrey,
               dashLength: 8,
               dashGapLength: 4,
               lineThickness: 1,
@@ -231,7 +231,7 @@ class TicketBorderPainter extends CustomPainter {
     final path = TicketClipper().getClip(size);
 
     final paint = Paint()
-      ..color = AppColors.grey 
+      ..color = AppColors.darkGrey 
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 

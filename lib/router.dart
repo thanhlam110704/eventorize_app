@@ -1,23 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:eventorize_app/features/auth/view/login_page.dart';
-import 'package:eventorize_app/features/auth/view/home_page.dart';
-import 'package:eventorize_app/features/auth/view/register_page.dart';
-import 'package:eventorize_app/features/auth/view/splashscreen_page.dart';
-import 'package:eventorize_app/features/auth/view/verify_page.dart';
-import 'package:eventorize_app/features/auth/view/account_page.dart';
-import 'package:eventorize_app/features/auth/view/eventdetail_page.dart';
-import 'package:eventorize_app/features/auth/view/detail_profile_page.dart';
-import 'package:eventorize_app/features/auth/view/favorite_page.dart';
-import 'package:eventorize_app/features/auth/view/checkout_page.dart';
-import 'package:eventorize_app/features/auth/view/payment_page.dart';
-import 'package:eventorize_app/features/auth/view/paymentstate_page.dart';
-import 'package:eventorize_app/features/auth/view/tickets_page.dart';
-import 'package:eventorize_app/features/auth/view/tickets_detail_page.dart';
+import 'package:eventorize_app/features/auth/user_view/login_page.dart';
+import 'package:eventorize_app/features/auth/user_view/home_page.dart';
+import 'package:eventorize_app/features/auth/user_view/register_page.dart';
+import 'package:eventorize_app/features/auth/user_view/splashscreen_page.dart';
+import 'package:eventorize_app/features/auth/user_view/verify_page.dart';
+import 'package:eventorize_app/features/auth/user_view/account_page.dart';
+import 'package:eventorize_app/features/auth/user_view/eventdetail_page.dart';
+import 'package:eventorize_app/features/auth/user_view/detail_profile_page.dart';
+import 'package:eventorize_app/features/auth/user_view/favorite_page.dart';
+import 'package:eventorize_app/features/auth/user_view/checkout_page.dart';
+import 'package:eventorize_app/features/auth/user_view/payment_page.dart';
+import 'package:eventorize_app/features/auth/user_view/paymentstate_page.dart';
+import 'package:eventorize_app/features/auth/user_view/tickets_page.dart';
+import 'package:eventorize_app/features/auth/user_view/tickets_detail_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/create_org_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/event_list_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/ticket_list_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/order_list_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/create_event_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/create_ticket_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/edit_event_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/edit_ticket_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/org_info_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/select_org_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: '/tickets-detail',
+    initialLocation: '/createevent',
     routes: [
       GoRoute(
         path: '/splashscreen',
@@ -28,6 +38,56 @@ class AppRouter {
         path: '/checkout',
         name: 'checkout',
         builder: (context, state) => const CheckOutPage(),
+      ),
+      GoRoute(
+        path: '/orginfo',
+        name: 'orginfo',
+        builder: (context, state) => const OrgInfoPage(),
+      ),
+      GoRoute(
+        path: '/selectorg',
+        name: 'selectorg',
+        builder: (context, state) => const SelectOrgPage(),
+      ),
+      GoRoute(
+        path: '/eventlist',
+        name: 'eventlist',
+        builder: (context, state) => const EventListPage(),
+      ),
+      GoRoute(
+        path: '/orderlist',
+        name: 'orderlist',
+        builder: (context, state) => const OrderListPage(),
+      ),
+      GoRoute(
+        path: '/createticket',
+        name: 'createticket',
+        builder: (context, state) => const CreateTicketPage(),
+      ),
+      GoRoute(
+        path: '/editticket',
+        name: 'editticket',
+        builder: (context, state) => const EditTicketPage(),
+      ),
+      GoRoute(
+        path: '/editevent',
+        name: 'editevent',
+        builder: (context, state) => const EditEventPage(),
+      ),
+      GoRoute(
+        path: '/ticketlist',
+        name: 'ticketlist',
+        builder: (context, state) => const TicketListPage(),
+      ),
+      GoRoute(
+        path: '/createorg',
+        name: 'createorg',
+        builder: (context, state) => const CreateOrgPage(),
+      ),
+      GoRoute(
+        path: '/createevent',
+        name: 'createevent',
+        builder: (context, state) => const CreateEventPage(),
       ),
       GoRoute(
         path: '/tickets-detail',

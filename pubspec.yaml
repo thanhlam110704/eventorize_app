@@ -33,6 +33,7 @@ dependencies:
   shimmer: ^3.0.0
   image_picker: ^1.1.2
   dotted_line: ^3.0.0
+  dotted_border: ^2.0.0
   
 
 dev_dependencies:
@@ -94,6 +95,7 @@ flutter:
   - assets/icons/credit_logo.png
   - assets/icons/logo_e.png
   - assets/icons/paypal_logo.png
+  - assets/icons/upload.png
   - assets/images/verify.png
   - assets/images/qr_code.png
   - assets/images/event1.png

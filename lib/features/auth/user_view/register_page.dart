@@ -9,7 +9,7 @@ import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/components/custom_field_input.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
-import 'package:eventorize_app/features/auth/view_model/register_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/register_view_model.dart';
 import 'package:eventorize_app/data/api/google_signin_api.dart';
 
 class RegisterPage extends StatefulWidget {
