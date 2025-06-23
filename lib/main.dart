@@ -3,8 +3,10 @@ import 'package:eventorize_app/features/auth/user_view_model/register_view_model
 import 'package:eventorize_app/features/auth/user_view_model/login_view_model.dart';
 import 'package:eventorize_app/features/auth/user_view_model/verify_view_model.dart';
 import 'package:eventorize_app/features/auth/user_view_model/account_view_model.dart';
-import 'package:eventorize_app/features/auth/user_view_model/detail_profile_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/profile_detail_view_model.dart';
 import 'package:eventorize_app/features/auth/user_view_model/home_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/favorite_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/event_detail_view_model.dart'; 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
@@ -13,13 +15,17 @@ import 'package:eventorize_app/common/services/dio_client.dart';
 import 'package:eventorize_app/data/api/user_api.dart';
 import 'package:eventorize_app/data/api/location_api.dart';
 import 'package:eventorize_app/data/api/event_api.dart';
+import 'package:eventorize_app/data/api/favorite_api.dart';
 import 'package:eventorize_app/data/repositories/user_repository.dart';
 import 'package:eventorize_app/data/repositories/location_repository.dart';
 import 'package:eventorize_app/data/repositories/event_repository.dart';
+import 'package:eventorize_app/data/repositories/favorite_repository.dart';
 import 'package:get_it/get_it.dart';
+import 'package:eventorize_app/common/services/location_cache.dart';
+
+final getIt = GetIt.instance;
 
 void setupDependencies() {
-  final getIt = GetIt.instance;
   getIt.registerSingleton<DioClient>(DioClient());
   getIt.registerSingleton<UserApi>(UserApi(getIt<DioClient>()));
   getIt.registerSingleton<UserRepository>(UserRepository(getIt<UserApi>()));
@@ -27,7 +33,13 @@ void setupDependencies() {
   getIt.registerSingleton<LocationRepository>(LocationRepository(getIt<LocationApi>()));
   getIt.registerSingleton<EventApi>(EventApi(getIt<DioClient>()));
   getIt.registerSingleton<EventRepository>(EventRepository(getIt<EventApi>()));
+  getIt.registerSingleton<FavoriteApi>(FavoriteApi(getIt<DioClient>()));
+  getIt.registerSingleton<FavoriteRepository>(FavoriteRepository(getIt<FavoriteApi>()));
   getIt.registerSingleton<SessionManager>(SessionManager(getIt<UserRepository>()));
+  getIt.registerSingleton<LocationCache>(LocationCache());
+  getIt.registerFactory<EventDetailViewModel>(
+    () => EventDetailViewModel(eventRepository: getIt<EventRepository>()),
+  );
 }
 
 Future<void> main() async {
@@ -44,47 +56,56 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        Provider<FavoriteRepository>(
+          create: (_) => getIt<FavoriteRepository>(),
+        ),
         ChangeNotifierProvider<SessionManager>(
-          create: (_) => SessionManager(GetIt.instance<UserRepository>()),
+          create: (_) => getIt<SessionManager>(),
         ),
         ChangeNotifierProvider<VerifyViewModel>(
-          create: (_) => VerifyViewModel(GetIt.instance<UserRepository>()),
+          create: (_) => VerifyViewModel(getIt<UserRepository>()),
         ),
         ChangeNotifierProvider<LoginViewModel>(
-          create: (_) => LoginViewModel(GetIt.instance<UserRepository>()),
+          create: (_) => LoginViewModel(getIt<UserRepository>()),
         ),
         ChangeNotifierProvider<RegisterViewModel>(
-          create: (_) => RegisterViewModel(GetIt.instance<UserRepository>()),
+          create: (_) => RegisterViewModel(getIt<UserRepository>()),
         ),
         ChangeNotifierProvider<AccountViewModel>(
-          create: (_) => AccountViewModel(GetIt.instance<SessionManager>()),
+          create: (_) => AccountViewModel(getIt<SessionManager>()),
         ),
-        ChangeNotifierProvider<DetailProfileViewModel>(
-          create: (_) => DetailProfileViewModel(
-            GetIt.instance<UserRepository>(),
-            GetIt.instance<LocationRepository>(),
+        ChangeNotifierProvider<ProfileDetailViewModel>(
+          create: (_) => ProfileDetailViewModel(
+            getIt<UserRepository>(),
+            getIt<LocationRepository>(),
           ),
         ),
         ChangeNotifierProvider<HomeViewModel>(
           create: (_) => HomeViewModel(
-            GetIt.instance<EventRepository>(),
-            GetIt.instance<SessionManager>()
+            getIt<EventRepository>(),
+            getIt<SessionManager>(),
+            getIt<LocationRepository>(),
+            getIt<FavoriteRepository>(),
           ),
+        ),
+        ChangeNotifierProvider<FavoriteViewModel>(
+          create: (_) => FavoriteViewModel(
+            getIt<FavoriteRepository>(),
+            getIt<SessionManager>(),
+          ),
+        ),
+        ChangeNotifierProvider<EventDetailViewModel>(
+          create: (_) => getIt<EventDetailViewModel>(),
         ),
       ],
       child: MaterialApp.router(
         title: 'Eventorize',
         theme: ThemeData(
           useMaterial3: true,
-          dropdownMenuTheme: DropdownMenuThemeData(
-    inputDecorationTheme: InputDecorationTheme(
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(5)),
-    ),
-  ),
         ),
         routerConfig: AppRouter.router,
         debugShowCheckedModeBanner: false,
       ),
     );
   }
-} 
+}

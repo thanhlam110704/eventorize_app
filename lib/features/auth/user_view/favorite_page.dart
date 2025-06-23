@@ -1,7 +1,15 @@
-import 'package:eventorize_app/common/components/bottom_nav_bar.dart';
-import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:toastification/toastification.dart';
+import 'package:eventorize_app/common/components/bottom_nav_bar.dart';
+import 'package:eventorize_app/common/components/event_list.dart';
+import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
+import 'package:eventorize_app/core/configs/theme/text_styles.dart';
+import 'package:eventorize_app/features/auth/user_view_model/favorite_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/home_view_model.dart';
 
 class FavoritePage extends StatefulWidget {
   const FavoritePage({super.key});
@@ -10,7 +18,7 @@ class FavoritePage extends StatefulWidget {
   FavoritePageState createState() => FavoritePageState();
 }
 
-class FavoritePageState extends State<FavoritePage>{
+class FavoritePageState extends State<FavoritePage> {
   static const smallScreenThreshold = 640.0;
   static const maxContentWidth = 600.0;
 
@@ -19,28 +27,67 @@ class FavoritePageState extends State<FavoritePage>{
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.width <= smallScreenThreshold;
 
-    return Scaffold(
-      backgroundColor: AppColors.whiteBackground,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: buildMainContainer(isSmallScreen, screenSize),
-        ),
-      ),
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Divider(
-            height: 1,
-            thickness: 0.5,
-            color: AppColors.grey,
+    return Consumer<FavoriteViewModel>(
+      builder: (context, viewModel, _) {
+        _handleViewModelErrors(context, viewModel);
+
+        if (viewModel.isInitialLoad || !viewModel.isDataLoaded) {
+          return buildSkeletonUI(
+            isSmallScreen: isSmallScreen,
+            screenSize: screenSize,
+          );
+        }
+
+        return Scaffold(
+          backgroundColor: AppColors.whiteBackground,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              child: viewModel.events.isEmpty
+                  ? buildEmptyState(context, isSmallScreen, screenSize)
+                  : buildMainContainer(
+                      isSmallScreen: isSmallScreen,
+                      viewModel: viewModel,
+                      screenSize: screenSize,
+                    ),
+            ),
           ),
-          const BottomNavBar(),
-        ],
-      ),
+          bottomNavigationBar: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Divider(
+                height: 0.5,
+                thickness: 0.5,
+                color: AppColors.grey,
+              ),
+              const BottomNavBar(),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  Widget buildMainContainer(bool isSmallScreen, Size screenSize) {
+  void _handleViewModelErrors(BuildContext context, FavoriteViewModel viewModel) {
+    if (viewModel.errorMessage != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ToastCustom.show(
+            context: context,
+            title: viewModel.errorTitle ?? 'Lỗi',
+            description: viewModel.errorMessage!,
+            type: ToastificationType.error,
+          );
+          viewModel.clearError();
+        }
+      });
+    }
+  }
+
+  Widget buildMainContainer({
+    required bool isSmallScreen,
+    required Size screenSize,
+    required FavoriteViewModel viewModel,
+  }) {
     return Container(
       width: screenSize.width,
       color: AppColors.whiteBackground,
@@ -60,7 +107,11 @@ class FavoritePageState extends State<FavoritePage>{
               const SizedBox(height: 10),
               buildTitle(),
               const SizedBox(height: 10),
-              buildEventList(),
+              EventList(
+                events: viewModel.events,
+                isLoading: viewModel.isLoading,
+                totalEvents: viewModel.totalEvents,
+              ),
             ],
           ),
         ),
@@ -70,136 +121,180 @@ class FavoritePageState extends State<FavoritePage>{
 
   Widget buildHeader() {
     return Text(
-      'Saved',
-      style: AppTextStyles.title.copyWith(fontSize: 32),
+      'Yêu thích',
+      style: AppTextStyles.title,
     );
   }
 
   Widget buildTitle() {
     return Text(
-      'Events',
+      'Sự kiện',
       style: AppTextStyles.title.copyWith(fontSize: 22),
     );
   }
-  
-  Widget buildEventList() {
-    return Column(
-      children: List.generate(4, (index) => buildEventCard()).toList(),
-    );
-  }
 
-  Widget buildEventCard() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
+  Widget buildEmptyState(BuildContext context, bool isSmallScreen, Size screenSize) {
+    return Container(
+      width: screenSize.width,
+      color: AppColors.whiteBackground,
+      padding: EdgeInsets.fromLTRB(
+        isSmallScreen ? 16 : 24,
+        isSmallScreen ? 20 : 40,
+        isSmallScreen ? 16 : 24,
+        isSmallScreen ? 24 : 32,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: maxContentWidth),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ClipRRect(
-                child: Image.asset(
-                  'assets/images/event.png',
-                  height: 125,
-                  width: 125,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              Positioned(
-                top: 4,
-                right: 4,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Text(
-                    'Free',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
+              buildHeader(),
+              const SizedBox(height: 30),
+              SizedBox(
+                height: screenSize.height / 2,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 300,
+                        child: Text(
+                          'Lưu sự kiện yêu thích của bạn',
+                          style: AppTextStyles.sectionTitle.copyWith(fontWeight: FontWeight.w600),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          softWrap: true,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: () {
+                          final homeViewModel = Provider.of<HomeViewModel>(context, listen: false);
+                          context.goNamed('home');
+                          homeViewModel.fetchEvents(
+                            page: 1,
+                            limit: 10,
+                            city: homeViewModel.selectedCity,
+                            isFromNavigation: true,
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Text(
+                          'Khám phá điều thú vị!',
+                          style: AppTextStyles.button,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Mastering Vendor Development & The Service Provider...',
-                  style: AppTextStyles.title.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start, 
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2), 
-                      child: Icon(Icons.calendar_today, size: 14, color: Colors.black),
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        'Friday, Jan 10, 6:00 - Monday, Jan 13, 8:00',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF9B9B9B),
-                        ),
-                      ),
-                    ),
-                 ],
-                ),
-                const SizedBox(height: 2),
-                Row(
+        ),
+      ),
+    );
+  }
+
+  Widget buildSkeletonUI({
+    required bool isSmallScreen,
+    required Size screenSize,
+  }) {
+    Widget buildSkeletonBox(double width, double height) {
+      return Shimmer.fromColors(
+        baseColor: AppColors.shimmerBase,
+        highlightColor: AppColors.shimmerHighlight,
+        child: Container(
+          width: width,
+          height: height,
+          decoration: BoxDecoration(
+            color: AppColors.skeleton,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+      );
+    }
+
+    Widget buildSkeleton() {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          buildHeader(),
+          const SizedBox(height: 10),
+          buildTitle(),
+          const SizedBox(height: 10),
+          Column(
+            children: List.generate(
+              4,
+              (_) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2), 
-                      child: Icon(Icons.location_on, size: 14, color: Colors.black),
-                    ),
-                    SizedBox(width: 4),
+                    buildSkeletonBox(120, 120),
+                    const SizedBox(width: 12),
                     Expanded(
-                      child: Text(
-                        '53 Nguyen Co Thach, Thu Duc, Ho Chi Minh City',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF9B9B9B),
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          buildSkeletonBox(double.infinity, 20),
+                          const SizedBox(height: 4),
+                          buildSkeletonBox(150, 16),
+                          const SizedBox(height: 4),
+                          buildSkeletonBox(100, 16),
+                          const SizedBox(height: 4),
+                          buildSkeletonBox(80, 16),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    const Icon(Icons.people, size: 14, color: Colors.black),
-                    const SizedBox(width: 4),
-                    const Text(
-                      '2.9k attendees',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF9B9B9B),
-                      ),
-                    ),
-                    const Spacer(),
-                    const Icon(Icons.favorite, color: Colors.black,),
-                  ],
-                ),
-              ],
+              ),
             ),
           ),
+        ],
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: AppColors.whiteBackground,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Container(
+            width: screenSize.width,
+            color: AppColors.whiteBackground,
+            padding: EdgeInsets.fromLTRB(
+              isSmallScreen ? 16 : 24,
+              isSmallScreen ? 20 : 40,
+              isSmallScreen ? 16 : 24,
+              isSmallScreen ? 24 : 32,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: maxContentWidth),
+                child: buildSkeleton(),
+              ),
+            ),
+          ),
+        ),
+      ),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Divider(
+            height: 0.5,
+            thickness: 0.5,
+            color: AppColors.grey,
+          ),
+          const BottomNavBar(),
         ],
       ),
     );

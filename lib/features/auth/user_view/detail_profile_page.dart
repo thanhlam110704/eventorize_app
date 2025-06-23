@@ -10,7 +10,7 @@ import 'package:eventorize_app/common/components/top_nav_bar.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/data/models/user.dart';
-import 'package:eventorize_app/features/auth/user_view_model/detail_profile_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/profile_detail_view_model.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class DetailProfilePage extends StatefulWidget {
@@ -37,7 +37,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (context.mounted) {
-        final viewModel = context.read<DetailProfileViewModel>();
+        final viewModel = context.read<ProfileDetailViewModel>();
         final sessionManager = context.read<SessionManager>();
         await viewModel.loadUser(sessionManager.user); // Gọi loadUser để tải location data
       }
@@ -58,7 +58,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
   @override
   void dispose() {
     _scrollController.dispose();
-    context.read<DetailProfileViewModel>().dispose();
+    context.read<ProfileDetailViewModel>().dispose();
     super.dispose();
   }
 
@@ -68,7 +68,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
     final isSmallScreen = screenSize.width <= smallScreenThreshold;
     final isShortScreen = screenSize.height < 600;
 
-    return Consumer<DetailProfileViewModel>(
+    return Consumer<ProfileDetailViewModel>(
       builder: (context, viewModel, child) {
         if (viewModel.isUpdateSuccessful && !_hasShownSuccessToast && mounted) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -294,7 +294,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
     bool isSmallScreen,
     bool isShortScreen,
     Size screenSize,
-    DetailProfileViewModel viewModel,
+    ProfileDetailViewModel viewModel,
   ) {
     return Container(
       width: screenSize.width,
@@ -421,7 +421,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
     );
   }
 
-  Widget buildFullnameField(DetailProfileViewModel viewModel) {
+  Widget buildFullnameField(ProfileDetailViewModel viewModel) {
     return LabeledInput(
       label: "Full Name",
       child: TextFormField(
@@ -452,7 +452,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
     );
   }
 
-  Widget buildEmailField(DetailProfileViewModel viewModel) {
+  Widget buildEmailField(ProfileDetailViewModel viewModel) {
     return LabeledInput(
       label: "Email Address",
       child: TextFormField(
@@ -479,7 +479,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
     );
   }
 
-  Widget buildPhoneField(DetailProfileViewModel viewModel) {
+  Widget buildPhoneField(ProfileDetailViewModel viewModel) {
     return LabeledInput(
       label: "Phone Number",
       child: TextFormField(
@@ -511,7 +511,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
     );
   }
 
-  Widget buildCityDropdown(DetailProfileViewModel viewModel) {
+  Widget buildCityDropdown(ProfileDetailViewModel viewModel) {
     return LabeledInput(
       label: "City",
       child: DropdownButtonFormField<String>(
@@ -556,7 +556,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
     );
   }
 
-  Widget buildDistrictDropdown(DetailProfileViewModel viewModel) {
+  Widget buildDistrictDropdown(ProfileDetailViewModel viewModel) {
     return LabeledInput(
       label: "District",
       child: DropdownButtonFormField<String>(
@@ -601,7 +601,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
     );
   }
 
-  Widget buildWardDropdown(DetailProfileViewModel viewModel) {
+  Widget buildWardDropdown(ProfileDetailViewModel viewModel) {
     return LabeledInput(
       label: "Ward",
       child: DropdownButtonFormField<String>(
@@ -646,7 +646,7 @@ class DetailProfilePageState extends State<DetailProfilePage> {
     );
   }
 
-  Widget buildUpdateButton(DetailProfileViewModel viewModel) {
+  Widget buildUpdateButton(ProfileDetailViewModel viewModel) {
     return SizedBox(
       width: double.infinity,
       height: buttonHeight,

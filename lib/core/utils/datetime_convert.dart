@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 class DateTimeConverter {
   static String formatDateTime(
     DateTime? dateTime, {
-    String pattern = 'EEEE, MMM d, h:mm a',
+    String pattern = 'E, MMM d, HH:mm',
     String fallback = 'Invalid date',
   }) {
     if (dateTime == null) return fallback;
@@ -20,7 +20,7 @@ class DateTimeConverter {
   static String formatDateRange(
     DateTime? startDate,
     DateTime? endDate, {
-    String pattern = 'EEEE, MMM d, h:mm a',
+    String pattern = 'E, MMM d, HH:mm',
     String separator = ' - ',
     String fallback = 'Invalid date range',
   }) {
@@ -39,7 +39,7 @@ class DateTimeConverter {
   
   static String formatDateString(
     String? dateString, {
-    String pattern = 'EEEE, MMM d, h:mm a',
+    String pattern = 'E, MMM d, HH:mm',
     String fallback = 'Invalid date',
   }) {
     if (dateString == null) return fallback;
@@ -55,7 +55,7 @@ class DateTimeConverter {
   static String formatDateRangeString(
     String? startDateStr,
     String? endDateStr, {
-    String pattern = 'EEEE, MMM d, h:mm a',
+    String pattern = 'E, MMM d, HH:mm',
     String separator = ' - ',
     String fallback = 'Invalid date range',
   }) {

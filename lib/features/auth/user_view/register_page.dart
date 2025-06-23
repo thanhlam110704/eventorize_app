@@ -69,7 +69,7 @@ class RegisterPageState extends State<RegisterPage> {
         context.read<SessionManager>().setUser(viewModel.user!);
         ToastCustom.show(
           context: context,
-          title: 'Registration successful!',
+          title: 'Đăng ký thành công!',
           type: ToastificationType.success,
         );
         context.goNamed(
@@ -193,7 +193,7 @@ class RegisterPageState extends State<RegisterPage> {
     return Padding(
       padding: const EdgeInsets.only(left: 13),
       child: Text(
-        'Create an account',
+        'Tạo tài khoản',
         style: AppTextStyles.title,
       ),
     );
@@ -214,7 +214,7 @@ class RegisterPageState extends State<RegisterPage> {
     return CustomFieldInput(
       key: fullnameInputKey,
       controller: fullnameController,
-      hintText: 'Fullname',
+      hintText: 'Họ tên',
       icon: MdiIcons.accountOutline,
       inputType: InputType.fullname,
     );
@@ -224,7 +224,7 @@ class RegisterPageState extends State<RegisterPage> {
     return CustomFieldInput(
       key: phoneInputKey,
       controller: phoneController,
-      hintText: 'Phone',
+      hintText: 'Số điện thoại',
       icon: MdiIcons.phone,
       inputType: InputType.phone,
     );
@@ -234,7 +234,7 @@ class RegisterPageState extends State<RegisterPage> {
     return CustomFieldInput(
       key: passwordInputKey,
       controller: passwordController,
-      hintText: 'Password',
+      hintText: 'Mật khẩu',
       icon: MdiIcons.lock,
       isPassword: true,
       inputType: InputType.password,
@@ -258,7 +258,7 @@ class RegisterPageState extends State<RegisterPage> {
             elevation: 0,
           ),
           child: Text(
-            'Register',
+            'Đăng ký',
             style: AppTextStyles.text.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w600,
@@ -275,7 +275,7 @@ class RegisterPageState extends State<RegisterPage> {
         Expanded(child: Divider(color: AppColors.grey)),
         const SizedBox(width: 10),
         Text(
-          'or',
+          'hoặc',
           style: AppTextStyles.text.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -300,9 +300,8 @@ class RegisterPageState extends State<RegisterPage> {
                   if (mounted) {
                     ToastCustom.show(
                       context: context,
-                      title: 'Sign-In Canceled',
-                      description: 'Google Sign-In was canceled. Please try again.',
-                      type: ToastificationType.info,
+                      title: 'Đăng nhập với Google thất bại',
+                      type: ToastificationType.error,
                     );
                   }
                   return;
@@ -319,7 +318,7 @@ class RegisterPageState extends State<RegisterPage> {
                   if (viewModel.errorMessage != null && mounted) {
                     ToastCustom.show(
                       context: context,
-                      title: viewModel.errorTitle ?? 'Error',
+                      title: viewModel.errorTitle ?? 'Lỗi',
                       description: viewModel.errorMessage!,
                       type: ToastificationType.error,
                     );
@@ -352,7 +351,7 @@ class RegisterPageState extends State<RegisterPage> {
             ),
             const SizedBox(width: 11),
             Text(
-              'Continue with Google',
+              'Tiếp tục với Google',
               style: AppTextStyles.text.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -370,7 +369,7 @@ class RegisterPageState extends State<RegisterPage> {
           context.goNamed('login');
         },
         child: Text(
-          'Login if you have an account!',
+          'Chưa có tài khoản? Đăng ký ngay!',
           style: AppTextStyles.link,
         ),
       ),

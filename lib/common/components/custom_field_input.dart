@@ -186,7 +186,7 @@ class CustomFieldInputState extends State<CustomFieldInput> {
         isDense: true,
         contentPadding: EdgeInsets.zero,
         hintStyle: AppTextStyles.hint,
-        counterText: '', // Ẩn bộ đếm ký tự
+        counterText: '', 
       ),
       style: AppTextStyles.text,
     );

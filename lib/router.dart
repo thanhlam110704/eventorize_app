@@ -6,8 +6,8 @@ import 'package:eventorize_app/features/auth/user_view/register_page.dart';
 import 'package:eventorize_app/features/auth/user_view/splashscreen_page.dart';
 import 'package:eventorize_app/features/auth/user_view/verify_page.dart';
 import 'package:eventorize_app/features/auth/user_view/account_page.dart';
-import 'package:eventorize_app/features/auth/user_view/eventdetail_page.dart';
-import 'package:eventorize_app/features/auth/user_view/detail_profile_page.dart';
+import 'package:eventorize_app/features/auth/user_view/event_detail_page.dart';
+import 'package:eventorize_app/features/auth/user_view/profile_detail_page.dart';
 import 'package:eventorize_app/features/auth/user_view/favorite_page.dart';
 import 'package:eventorize_app/features/auth/user_view/checkout_page.dart';
 import 'package:eventorize_app/features/auth/user_view/payment_page.dart';
@@ -120,16 +120,6 @@ class AppRouter {
         builder: (context, state) => const FavoritePage(),
       ),
       GoRoute(
-        path: '/event-detail',
-        name: 'event-detail',
-        builder: (context, state) => const EventDetailPage(),
-      ),
-      GoRoute(
-        path: '/detailprof',
-        name: 'detailprof',
-        builder: (context, state) => const DetailProfilePage(),
-      ),
-      GoRoute(
         path: '/account',
         name: 'account',
         builder: (context, state) => const AccountPage(),
@@ -145,19 +135,42 @@ class AppRouter {
         builder: (context, state) => const RegisterPage(),
       ),
       GoRoute(
-      path: '/verify-code',
-      name: 'verify-code',
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        final email = extra?['email'] as String? ?? '';
-        return VerificationCodePage(email: email);
-      },
-    ),
+        path: '/verify-code',
+        name: 'verify-code',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final email = extra?['email'] as String? ?? '';
+          return VerificationCodePage(email: email);
+        },
+      ),
       GoRoute(
-      path: '/home',
-      name: 'home',
-      builder: (context, state) => const HomePage(),
-    ),
+        path: '/home',
+        name: 'home',
+        builder: (context, state) => const HomePage(),
+      ),
+      GoRoute(
+        path: '/event/:id',
+        name: 'event_detail',
+        builder: (context, state) {
+          final eventId = state.pathParameters['id']!;
+          return EventDetailPage(eventId: eventId);
+        },
+      ),
+      GoRoute(
+        path: '/account',
+        name: 'account',
+        builder: (context, state) => const AccountPage(),
+      ),
+      GoRoute(
+        path: '/detail-profile',
+        name: 'detail-profile',
+        builder: (context, state) => const ProfileDetailPage(),
+      ),
+      GoRoute(
+        path: '/favorite',
+        name: 'favorite',
+        builder: (context, state) => const FavoritePage(),
+      ),
     ],
     errorBuilder: (context, state) => Scaffold(
       body: Center(

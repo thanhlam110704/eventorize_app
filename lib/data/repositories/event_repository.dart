@@ -15,6 +15,9 @@ class EventRepository {
     String? fields,
     String? sortBy,
     String? orderBy,
+    String? dateFilter,
+    bool? isOnline,
+    String? city,
   }) async {
     return await _eventApi.getAll(
       page: page,
@@ -24,6 +27,9 @@ class EventRepository {
       fields: fields,
       sortBy: sortBy,
       orderBy: orderBy,
+      dateFilter: dateFilter,
+      isOnline: isOnline,
+      city: city,
     );
   }
 
@@ -111,7 +117,5 @@ class EventRepository {
     await _eventApi.deleteEvent(id);
   }
 
-  Future<List<Event>> getEventsByOrganizerId(String organizerId) async {
-    return await _eventApi.getEventsByOrganizerId(organizerId);
-  }
+  
 }

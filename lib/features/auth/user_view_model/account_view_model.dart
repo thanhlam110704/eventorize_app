@@ -17,7 +17,7 @@ class AccountViewModel extends ChangeNotifier {
     try {
       await _sessionManager.logout();
     } catch (e) {
-      ErrorHandler.handleError(e, 'Logout failed', _errorState);
+      ErrorHandler.handleError(e, 'Lỗi đăng xuất', _errorState);
       rethrow;
     } finally {
       notifyListeners();

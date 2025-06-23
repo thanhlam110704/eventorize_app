@@ -22,7 +22,7 @@ class VerifyViewModel extends ChangeNotifier {
   }) async {
     await _executeVerify(
       () => _userRepository.verifyEmail(email: email, otp: otp),
-      'Verification failed',
+      'Xác nhận tài khoản thất bại',
       (user) {
         _errorState.user = user;
         _errorState.isSuccess = true;
@@ -35,7 +35,7 @@ class VerifyViewModel extends ChangeNotifier {
   }) async {
     await _executeVerify(
       () => _userRepository.resendVerificationEmail(email: email),
-      'Failed to resend code',
+      'Lỗi khi gửi lại mã xác nhận',
       (_) => _errorState.isSuccess = true,
     );
   }

@@ -273,6 +273,6 @@ class UserApi {
       ApiUrl.editAvatar,
       data: data,
     );
-    return User.fromJson(response.data['data']);
+    return User.fromJson(response.data);
   }
 }

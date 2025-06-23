@@ -11,7 +11,7 @@ class LocationRepository {
   }
 
   Future<List<District>> getDistricts({
-    required String provinceCode,
+    required String provinceCode,e
   }) async {
     return await _locationApi.getDistricts(provinceCode);
   }

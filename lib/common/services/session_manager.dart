@@ -56,11 +56,30 @@ class SessionManager extends ChangeNotifier {
     }
   }
 
+
+  Future<void> setUserFromToken(String token) async {
+    _isLoading = true;
+    ErrorHandler.clearError(_errorState);
+    notifyListeners();
+
+    try {
+      await SecureStorage.saveToken(token);
+      _user = await _userRepository.getMe();
+    } catch (e) {
+      ErrorHandler.handleError(e, 'Failed to set user from token', _errorState);
+      _user = null;
+      await SecureStorage.clearToken();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   void setUser(User user) {
     _user = user;
     notifyListeners();
   }
-
+    
   void clearError() {
     ErrorHandler.clearError(_errorState);
     notifyListeners();
