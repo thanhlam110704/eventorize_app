@@ -6,7 +6,8 @@ import 'package:eventorize_app/features/auth/view_model/account_view_model.dart'
 import 'package:eventorize_app/features/auth/view_model/profile_detail_view_model.dart';
 import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
 import 'package:eventorize_app/features/auth/view_model/favorite_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/event_detail_view_model.dart'; 
+import 'package:eventorize_app/features/auth/view_model/event_detail_view_model.dart';
+import 'package:eventorize_app/features/auth/view_model/check_out_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
@@ -16,10 +17,14 @@ import 'package:eventorize_app/data/api/user_api.dart';
 import 'package:eventorize_app/data/api/location_api.dart';
 import 'package:eventorize_app/data/api/event_api.dart';
 import 'package:eventorize_app/data/api/favorite_api.dart';
+import 'package:eventorize_app/data/api/ticket_api.dart';
+import 'package:eventorize_app/data/api/order_api.dart';
 import 'package:eventorize_app/data/repositories/user_repository.dart';
 import 'package:eventorize_app/data/repositories/location_repository.dart';
 import 'package:eventorize_app/data/repositories/event_repository.dart';
 import 'package:eventorize_app/data/repositories/favorite_repository.dart';
+import 'package:eventorize_app/data/repositories/ticket_repository.dart';
+import 'package:eventorize_app/data/repositories/order_repository.dart';
 import 'package:get_it/get_it.dart';
 import 'package:eventorize_app/common/services/location_cache.dart';
 
@@ -35,10 +40,17 @@ void setupDependencies() {
   getIt.registerSingleton<EventRepository>(EventRepository(getIt<EventApi>()));
   getIt.registerSingleton<FavoriteApi>(FavoriteApi(getIt<DioClient>()));
   getIt.registerSingleton<FavoriteRepository>(FavoriteRepository(getIt<FavoriteApi>()));
+  getIt.registerSingleton<TicketApi>(TicketApi(getIt<DioClient>()));
+  getIt.registerSingleton<TicketRepository>(TicketRepository(getIt<TicketApi>()));
+  getIt.registerSingleton<OrderApi>(OrderApi(getIt<DioClient>()));
+  getIt.registerSingleton<OrderRepository>(OrderRepository(getIt<OrderApi>()));
   getIt.registerSingleton<SessionManager>(SessionManager(getIt<UserRepository>()));
   getIt.registerSingleton<LocationCache>(LocationCache());
   getIt.registerFactory<EventDetailViewModel>(
-    () => EventDetailViewModel(eventRepository: getIt<EventRepository>()),
+    () => EventDetailViewModel(
+      eventRepository: getIt<EventRepository>(),
+      ticketRepository: getIt<TicketRepository>(),
+    ),
   );
 }
 
@@ -58,6 +70,9 @@ class MyApp extends StatelessWidget {
       providers: [
         Provider<FavoriteRepository>(
           create: (_) => getIt<FavoriteRepository>(),
+        ),
+        Provider<OrderRepository>(
+          create: (_) => getIt<OrderRepository>(),
         ),
         ChangeNotifierProvider<SessionManager>(
           create: (_) => getIt<SessionManager>(),
@@ -96,6 +111,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<EventDetailViewModel>(
           create: (_) => getIt<EventDetailViewModel>(),
+        ),
+        ChangeNotifierProvider<CheckOutViewModel>(
+          create: (_) => CheckOutViewModel(getIt<OrderRepository>()),
         ),
       ],
       child: MaterialApp.router(

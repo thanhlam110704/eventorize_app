@@ -60,7 +60,8 @@ class TopNavBar extends StatelessWidget {
                 child: Text(
                   title,
                   style: AppTextStyles.pageTitle.copyWith(
-                    color: titleColor ?? AppColors.black,
+                    color: titleColor ?? AppColors.black, 
+                    fontSize: 25,
                   ),
                 ),
               ),

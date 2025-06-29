@@ -29,12 +29,11 @@ class SplashScreenPageState extends State<SplashScreenPage> {
   Future<void> _checkSession(BuildContext context) async {
     final sessionManager = context.read<SessionManager>();
     await sessionManager.checkSession();
-    if (context.mounted) {
-      if (sessionManager.user != null) {
-        context.pushReplacementNamed('home');
-      } else {
-        context.pushReplacementNamed('login');
-      }
+    if (!context.mounted) return;
+    if (sessionManager.user != null) {
+      context.pushReplacementNamed('home');
+    } else {
+      context.pushReplacementNamed('login');
     }
   }
 

@@ -1,10 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:eventorize_app/core/utils/exceptions.dart';
 import 'package:eventorize_app/data/models/event.dart';
+import 'package:eventorize_app/data/models/ticket.dart';
+import 'package:eventorize_app/data/models/order.dart';
 import 'package:eventorize_app/data/repositories/event_repository.dart';
+import 'package:eventorize_app/data/repositories/ticket_repository.dart';
 
 class EventDetailViewModel extends ChangeNotifier {
   final EventRepository _eventRepository;
+  final TicketRepository _ticketRepository;
   final ErrorState _errorState = ErrorState();
 
   bool _isLoading = true;
@@ -12,6 +16,9 @@ class EventDetailViewModel extends ChangeNotifier {
 
   bool _isLoadingRelated = false;
   bool get isLoadingRelated => _isLoadingRelated;
+
+  bool _isLoadingTickets = false;
+  bool get isLoadingTickets => _isLoadingTickets;
 
   String? get errorMessage => _errorState.errorMessage;
   String? get errorTitle => _errorState.errorTitle;
@@ -22,8 +29,14 @@ class EventDetailViewModel extends ChangeNotifier {
   List<Event> _relatedEvents = [];
   List<Event> get relatedEvents => _relatedEvents;
 
-  EventDetailViewModel({required EventRepository eventRepository})
-      : _eventRepository = eventRepository;
+  List<Ticket> _tickets = [];
+  List<Ticket> get tickets => _tickets;
+
+  EventDetailViewModel({
+    required EventRepository eventRepository,
+    required TicketRepository ticketRepository,
+  })  : _eventRepository = eventRepository,
+        _ticketRepository = ticketRepository;
 
   Future<void> fetchEventDetail(String id) async {
     _isLoading = true;
@@ -48,9 +61,7 @@ class EventDetailViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-   
-      final result = await _eventRepository.getAll(
-      );
+      final result = await _eventRepository.getAll();
       _relatedEvents = result['data'] as List<Event>;
       _relatedEvents = _relatedEvents.where((e) => e.id != eventId).toList();
     } catch (e) {
@@ -58,6 +69,42 @@ class EventDetailViewModel extends ChangeNotifier {
     } finally {
       _isLoadingRelated = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> fetchEventTickets(String eventId) async {
+    _isLoadingTickets = true;
+    ErrorHandler.clearError(_errorState);
+    notifyListeners();
+
+    try {
+      final result = await _ticketRepository.getEventTickets(eventId: eventId);
+      _tickets = result['data'] as List<Ticket>;
+    } catch (e) {
+      ErrorHandler.handleError(e, 'Lỗi khi lấy danh sách vé', _errorState);
+    } finally {
+      _isLoadingTickets = false;
+      notifyListeners();
+    }
+  }
+
+  Future<Order> buyTicket({
+    required String eventId,
+    required List<Map<String, dynamic>> orderItems,
+    String? promotionCode,
+    double? overrideAmount,
+  }) async {
+    try {
+      final result = await _ticketRepository.buyTicket(
+        eventId: eventId,
+        orderItems: orderItems,
+        promotionCode: promotionCode,
+        overrideAmount: overrideAmount,
+      );
+      return Order.fromJson(result);
+    } catch (e) {
+      ErrorHandler.handleError(e, 'Lỗi khi mua vé', _errorState);
+      rethrow;
     }
   }
 

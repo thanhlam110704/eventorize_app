@@ -29,14 +29,34 @@ class FavoriteViewModel extends ChangeNotifier {
   List<Event> _events = [];
   List<Event> get events => _events;
 
-  final int _totalEvents = 0;
+  int _totalEvents = 0;
   int get totalEvents => _totalEvents;
 
   Map<String, String> _favoriteIdMap = {};
   Map<String, String> get favoriteIdMap => _favoriteIdMap;
 
   FavoriteViewModel(this._favoriteRepository, this._sessionManager) {
+    _sessionManager.addListener(_handleSessionChange);
     _initializeData();
+  }
+
+  @override
+  void dispose() {
+    _sessionManager.removeListener(_handleSessionChange);
+    super.dispose();
+  }
+
+  void _handleSessionChange() {
+    if (_sessionManager.user == null) {
+      _events = [];
+      _favoriteIdMap = {};
+      _totalEvents = 0;
+      _isDataLoaded = false;
+      _isLoading = false;
+      notifyListeners();
+    } else if (!_isInitialLoad) {
+      fetchFavoriteEvents();
+    }
   }
 
   Future<void> _initializeData() async {
@@ -46,7 +66,14 @@ class FavoriteViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await fetchFavoriteEvents();
+      if (_sessionManager.user == null) {
+        _events = [];
+        _favoriteIdMap = {};
+        _totalEvents = 0;
+        _isDataLoaded = false;
+      } else {
+        await fetchFavoriteEvents();
+      }
       _updateDataLoadedStatus();
       _isInitialLoad = false;
     } catch (e) {
@@ -64,11 +91,19 @@ class FavoriteViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      if (_sessionManager.user == null) {
+        _events = [];
+        _favoriteIdMap = {};
+        _totalEvents = 0;
+        _isDataLoaded = false;
+        return;
+      }
       final favorite = await _favoriteRepository.getMyFavoriteEvents();
       _events = favorite.events ?? [];
       _favoriteIdMap = {
         for (var eventId in favorite.listEventId) eventId: favorite.id
       };
+      _totalEvents = _events.length;
       _updateDataLoadedStatus();
     } catch (e) {
       ErrorHandler.handleError(e, 'Lỗi khi tải danh sách sự kiện yêu thích', _errorState);
@@ -85,7 +120,6 @@ class FavoriteViewModel extends ChangeNotifier {
 
     try {
       if (addFavorite) {
-        // Thêm sự kiện vào danh sách favorite
         if (!_events.any((e) => e.id == event.id)) {
           _events = [..._events, event];
           _favoriteIdMap[event.id] = favoriteId;
@@ -94,6 +128,7 @@ class FavoriteViewModel extends ChangeNotifier {
         _events = _events.where((e) => e.id != event.id).toList();
         _favoriteIdMap.remove(event.id);
       }
+      _totalEvents = _events.length;
       _updateDataLoadedStatus();
     } catch (e) {
       ErrorHandler.handleError(e, 'Lỗi khi cập nhật danh sách yêu thích', _errorState);

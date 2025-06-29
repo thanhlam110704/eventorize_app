@@ -28,34 +28,40 @@ class SessionManager extends ChangeNotifier {
     try {
       final token = await SecureStorage.getToken();
       if (token == null) {
-        throw Exception('No token found');
+        throw Exception('Không tìm thấy token');
       }
       _user = await _userRepository.getMe();
     } catch (e) {
-      ErrorHandler.handleError(e, 'Session check failed', _errorState);
+      ErrorHandler.handleError(e, 'Kiểm tra phiên thất bại', _errorState);
     } finally {
       _isCheckingSession = false;
       notifyListeners();
     }
   }
 
+  Future<void> refreshUser() async {
+    if (_user == null) return;
+    try {
+      _user = await _userRepository.getMe();
+      notifyListeners();
+    } catch (e) {
+      ErrorHandler.handleError(e, 'Làm mới thông tin người dùng thất bại', _errorState);
+    }
+  }
+
   Future<void> logout() async {
     _isLoading = true;
     ErrorHandler.clearError(_errorState);
-    notifyListeners();
-
     try {
       await SecureStorage.clearToken();
       _user = null;
     } catch (e) {
-      ErrorHandler.handleError(e, 'Logout failed', _errorState);
+      ErrorHandler.handleError(e, 'Đăng xuất thất bại', _errorState);
       rethrow;
     } finally {
       _isLoading = false;
-      notifyListeners();
     }
   }
-
 
   Future<void> setUserFromToken(String token) async {
     _isLoading = true;
@@ -66,7 +72,7 @@ class SessionManager extends ChangeNotifier {
       await SecureStorage.saveToken(token);
       _user = await _userRepository.getMe();
     } catch (e) {
-      ErrorHandler.handleError(e, 'Failed to set user from token', _errorState);
+      ErrorHandler.handleError(e, 'Thiết lập người dùng từ token thất bại', _errorState);
       _user = null;
       await SecureStorage.clearToken();
     } finally {
@@ -79,7 +85,7 @@ class SessionManager extends ChangeNotifier {
     _user = user;
     notifyListeners();
   }
-    
+
   void clearError() {
     ErrorHandler.clearError(_errorState);
     notifyListeners();

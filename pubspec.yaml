@@ -102,5 +102,7 @@ flutter:
   - assets/images/event1.png
   - assets/images/fpt.png
   - assets/icons/no_data.svg
+  - assets/icons/credit_logo.png
+  - assets/icons/paypal_logo.png
   - .env/dev.env
  

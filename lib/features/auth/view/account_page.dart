@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:toastification/toastification.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:eventorize_app/common/services/session_manager.dart';
+import 'package:eventorize_app/features/auth/view_model/account_view_model.dart';
 import 'package:eventorize_app/common/components/bottom_nav_bar.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
@@ -35,6 +35,12 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
+    // Refresh user data on initialization
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<AccountViewModel>().refreshUser();
+      }
+    });
   }
 
   @override
@@ -82,21 +88,18 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: maxContentWidth),
-          child: Consumer<SessionManager>(
-            builder: (context, sessionManager, child) {
-              if (sessionManager.errorMessage != null && mounted) {
+          child: Consumer<AccountViewModel>(
+            builder: (context, viewModel, child) {
+              if (viewModel.errorMessage != null) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (mounted) {
                     ToastCustom.show(
                       context: context,
-                      title: sessionManager.errorTitle ?? 'Error',
-                      description: sessionManager.errorMessage!,
+                      title: viewModel.errorTitle ?? 'Lỗi',
+                      description: viewModel.errorMessage!,
                       type: ToastificationType.error,
                     );
-                    sessionManager.clearError();
-                    if (!sessionManager.isLoading && sessionManager.user == null) {
-                      context.pushReplacementNamed('login');
-                    }
+                    viewModel.clearError();
                   }
                 });
               }
@@ -109,9 +112,9 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
                     child: child,
                   );
                 },
-                child: sessionManager.isCheckingSession || sessionManager.isLoading
+                child: viewModel.user == null
                     ? buildSkeletonUI(isSmallScreen, screenSize)
-                    : buildContent(sessionManager.user, context, sessionManager),
+                    : buildContent(viewModel.user, context, viewModel),
               );
             },
           ),
@@ -120,7 +123,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
     );
   }
 
-  Widget buildContent(User? user, BuildContext context, SessionManager sessionManager) {
+  Widget buildContent(User? user, BuildContext context, AccountViewModel viewModel) {
     if (user == null) {
       return const SizedBox.shrink();
     }
@@ -135,7 +138,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
           const SizedBox(height: 15),
           buildUserCard(user),
           const SizedBox(height: 25),
-          buildSetting(context, sessionManager),
+          buildSetting(context, viewModel),
         ],
       ),
     );
@@ -145,7 +148,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
     return Shimmer.fromColors(
       baseColor: AppColors.shimmerBase,
       highlightColor: AppColors.shimmerHighlight,
-      period: const Duration(milliseconds: 1500), 
+      period: const Duration(milliseconds: 1500),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -202,7 +205,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
                         width: double.infinity,
                         decoration: BoxDecoration(
                           color: AppColors.skeleton,
-                          borderRadius: BorderRadius.circular(8), 
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                     ],
@@ -302,7 +305,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
   Widget buildUserCard(User user) {
     final String initials = user.fullname.isNotEmpty
         ? user.fullname.split(' ').map((e) => e[0]).take(2).join()
-        : 'N/A';
+        : '';
     final String name = user.fullname;
     final String email = user.email;
 
@@ -326,6 +329,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
             imageBuilder: (context, imageProvider) => CircleAvatar(
               radius: 34,
               backgroundImage: imageProvider,
+              backgroundColor: Colors.black,
             ),
             placeholder: (context, url) => Shimmer.fromColors(
               baseColor: AppColors.shimmerBase,
@@ -335,21 +339,21 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
                 height: 68,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.skeleton,
+                  color: Colors.black,
                 ),
               ),
             ),
             errorWidget: (context, url, error) => CircleAvatar(
               radius: 34,
-              backgroundColor: AppColors.shimmerBase,
+              backgroundColor: Colors.black,
               child: Text(
                 initials,
                 style: AppTextStyles.avatarInitials,
               ),
             ),
-            memCacheHeight: 136, 
+            memCacheHeight: 136,
             memCacheWidth: 136,
-            fadeInDuration: const Duration(milliseconds: 200), 
+            fadeInDuration: const Duration(milliseconds: 200),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -369,8 +373,11 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
-                    onPressed: () {
-                      context.pushNamed("detail-profile");
+                    onPressed: () async {
+                      await context.pushNamed("detail-profile");
+                      if (mounted) {
+                        context.read<AccountViewModel>().refreshUser();
+                      }
                     },
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: AppColors.black),
@@ -392,7 +399,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
     );
   }
 
-  Widget buildSetting(BuildContext context, SessionManager sessionManager) {
+  Widget buildSetting(BuildContext context, AccountViewModel viewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -445,14 +452,20 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
           width: double.infinity,
           child: OutlinedButton(
             onPressed: () async {
-              await sessionManager.logout();
-              if (context.mounted) {
-                ToastCustom.show(
-                  context: context,
-                  title: 'Đăng xuất thành công!',
-                  type: ToastificationType.success,
-                );
-                context.pushReplacementNamed('login');
+              final toastContext = context;
+              final navigator = Navigator.of(context);
+              await viewModel.logout();
+              if (mounted) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    ToastCustom.show(
+                      context: toastContext,
+                      title: 'Đăng xuất thành công!',
+                      type: ToastificationType.success,
+                    );
+                    navigator.pushReplacementNamed('login');
+                  }
+                });
               }
             },
             style: OutlinedButton.styleFrom(

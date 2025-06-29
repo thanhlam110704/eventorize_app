@@ -10,7 +10,7 @@ class FavoriteApi {
 
   Future<Favorite> getMyFavoriteEvents() async {
     try {
-      final response = await _dioClient.get(ApiUrl.getFavorites);
+      final response = await _dioClient.get(ApiUrl.getMyFavoriteEvents);
       return Favorite.fromJson(response.data);
     } on DioException catch (e) {
       final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';

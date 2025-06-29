@@ -8,6 +8,7 @@ class AccountViewModel extends ChangeNotifier {
   final ErrorState _errorState = ErrorState();
 
   AccountViewModel(this._sessionManager);
+
   String? get errorMessage => _errorState.errorMessage;
   String? get errorTitle => _errorState.errorTitle;
   User? get user => _sessionManager.user;
@@ -19,6 +20,17 @@ class AccountViewModel extends ChangeNotifier {
     } catch (e) {
       ErrorHandler.handleError(e, 'Lỗi đăng xuất', _errorState);
       rethrow;
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  Future<void> refreshUser() async {
+    try {
+      await _sessionManager.refreshUser();
+      ErrorHandler.clearError(_errorState);
+    } catch (e) {
+      ErrorHandler.handleError(e, 'Lỗi khi làm mới dữ liệu người dùng', _errorState);
     } finally {
       notifyListeners();
     }

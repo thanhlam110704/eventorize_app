@@ -30,6 +30,7 @@ class HomeViewModel extends ChangeNotifier {
   bool _isTogglingFavorite = false;
   bool get isTogglingFavorite => _isTogglingFavorite;
 
+  bool _isLoadingFavorites = false;
   String? get errorMessage => _errorState.errorMessage;
   String? get errorTitle => _errorState.errorTitle;
   User? get user => _sessionManager.user;
@@ -43,10 +44,6 @@ class HomeViewModel extends ChangeNotifier {
   List<Province> get provinces => _locationCache.provinces;
   String? _selectedCity;
   String? get selectedCity => _selectedCity;
-  set selectedCity(String? city) {
-    _selectedCity = city;
-    notifyListeners();
-  }
 
   String _selectedCategory = 'Tất cả';
   String get selectedCategory => _selectedCategory;
@@ -63,6 +60,7 @@ class HomeViewModel extends ChangeNotifier {
     _initializeData();
   }
 
+
   Future<void> _initializeData() async {
     _isLoading = true;
     _isInitialLoad = true;
@@ -70,13 +68,72 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      await _sessionManager.refreshUser();
+      if (_sessionManager.user == null) {
+        _favoriteIdMap = {};
+        _events = [];
+        _totalEvents = 0;
+        _isDataLoaded = false;
+        notifyListeners();
+        return;
+      }
       await _loadInitialLocationData();
-      await _loadFavorites();
-      await fetchEvents(page: 1, limit: 10, city: _selectedCity);
+      await fetchEvents(page: 1, limit: 10, city: _selectedCity ?? user?.city);
       _updateDataLoadedStatus();
       _isInitialLoad = false;
     } catch (e) {
       ErrorHandler.handleError(e, 'Lỗi khi tải dữ liệu ban đầu', _errorState);
+      _isDataLoaded = false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> refreshFavorites() async {
+    if (_isLoadingFavorites) return;
+    _isLoadingFavorites = true;
+    ErrorHandler.clearError(_errorState);
+    notifyListeners();
+
+    try {
+      if (_sessionManager.user == null) {
+        _favoriteIdMap = {};
+        notifyListeners();
+        return;
+      }
+      await _loadFavorites();
+    } catch (e) {
+      ErrorHandler.handleError(e, 'Lỗi khi làm mới danh sách yêu thích', _errorState);
+    } finally {
+      _isLoadingFavorites = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> refresh() async {
+    _isLoading = true;
+    ErrorHandler.clearError(_errorState);
+    notifyListeners();
+
+    try {
+      await _sessionManager.refreshUser();
+      if (_sessionManager.user == null) {
+        _favoriteIdMap = {};
+        _events = [];
+        _totalEvents = 0;
+        _isDataLoaded = false;
+        notifyListeners();
+        return;
+      }
+
+      await _loadInitialLocationData();
+      await _loadFavorites();
+      await fetchEvents(page: 1, limit: 10, city: _selectedCity ?? user?.city);
+
+      _updateDataLoadedStatus();
+    } catch (e) {
+      ErrorHandler.handleError(e, 'Lỗi khi làm mới dữ liệu', _errorState);
       _isDataLoaded = false;
     } finally {
       _isLoading = false;
@@ -90,12 +147,18 @@ class HomeViewModel extends ChangeNotifier {
       _locationCache.setProvinces(provinces);
     }
     if (_selectedCity == null && provinces.isNotEmpty) {
-      _selectedCity = provinces[0].name;
+      _selectedCity = user?.city ?? provinces[0].name;
     }
   }
 
   Future<void> _loadFavorites() async {
+    if (_isLoadingFavorites) return;
+    _isLoadingFavorites = true;
     try {
+      if (_sessionManager.user == null) {
+        _favoriteIdMap = {};
+        return;
+      }
       final favorite = await _favoriteRepository.getMyFavoriteEvents();
       _favoriteIdMap = {
         for (var eventId in favorite.listEventId) eventId: favorite.id
@@ -103,7 +166,8 @@ class HomeViewModel extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       ErrorHandler.handleError(e, 'Lỗi khi tải danh sách yêu thích', _errorState);
-      notifyListeners();
+    } finally {
+      _isLoadingFavorites = false;
     }
   }
 
@@ -154,7 +218,6 @@ class HomeViewModel extends ChangeNotifier {
       );
       _events = result['data'] as List<Event>;
       _totalEvents = result['total'] as int;
-      await _loadFavorites();
       _updateDataLoadedStatus();
     } catch (e) {
       ErrorHandler.handleError(e, 'Lỗi khi tải danh sách sự kiện', _errorState);
@@ -180,9 +243,8 @@ class HomeViewModel extends ChangeNotifier {
         _locationCache.setProvinces(provinces);
       }
       if (_selectedCity == null && provinces.isNotEmpty) {
-        _selectedCity = provinces[0].name;
+        _selectedCity = user?.city ?? provinces[0].name;
       }
-      await _loadFavorites();
       await fetchEvents(city: _selectedCity);
       _updateDataLoadedStatus();
     } catch (e) {

@@ -229,6 +229,7 @@ class ProfileDetailViewModel extends ChangeNotifier {
       onSuccess: (updatedUser) {
         try {
           context.read<SessionManager>().setUser(updatedUser as User);
+          context.read<SessionManager>().refreshUser(); 
           user = updatedUser;
           _isUpdateSuccessful = true;
           ErrorHandler.clearError(_errorState);
@@ -259,6 +260,7 @@ class ProfileDetailViewModel extends ChangeNotifier {
       onSuccess: (updatedUser) {
         try {
           context.read<SessionManager>().setUser(updatedUser as User);
+          context.read<SessionManager>().refreshUser();
           user = updatedUser;
           _isUpdateSuccessful = true;
           ErrorHandler.clearError(_errorState);

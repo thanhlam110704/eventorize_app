@@ -29,6 +29,7 @@ class EventDetailPageState extends State<EventDetailPage> {
   static const smallScreenThreshold = 640.0;
   static const maxContentWidth = 600.0;
   late final GeocodingService _geocodingService;
+  bool isExpanded = false;
 
   @override
   void initState() {
@@ -125,9 +126,7 @@ class EventDetailPageState extends State<EventDetailPage> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Skeleton for event banner
           buildSkeletonBox(double.infinity, 200),
-          // Skeleton for main container
           Container(
             width: screenSize.width,
             color: AppColors.whiteBackground,
@@ -143,12 +142,10 @@ class EventDetailPageState extends State<EventDetailPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Skeleton for event title and date
                     buildSkeletonBox(150, 16),
                     const SizedBox(height: 4),
                     buildSkeletonBox(double.infinity, 25),
                     const SizedBox(height: 16),
-                    // Skeleton for event information
                     buildSkeletonBox(200, 20),
                     const SizedBox(height: 8),
                     Row(
@@ -205,7 +202,6 @@ class EventDetailPageState extends State<EventDetailPage> {
                       ],
                     ),
                     const SizedBox(height: 32),
-                    // Skeleton for event description
                     buildSkeletonBox(200, 20),
                     const SizedBox(height: 8),
                     buildSkeletonBox(double.infinity, 16),
@@ -214,7 +210,6 @@ class EventDetailPageState extends State<EventDetailPage> {
                     const SizedBox(height: 4),
                     buildSkeletonBox(100, 16),
                     const SizedBox(height: 32),
-                    // Skeleton for organizer section
                     buildSkeletonBox(200, 20),
                     const SizedBox(height: 12),
                     Container(
@@ -249,7 +244,6 @@ class EventDetailPageState extends State<EventDetailPage> {
                       ),
                     ),
                     const SizedBox(height: 32),
-                    // Skeleton for related events
                     buildSkeletonBox(200, 20),
                     const SizedBox(height: 8),
                     Column(
@@ -314,13 +308,9 @@ class EventDetailPageState extends State<EventDetailPage> {
               ),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 16),
-                  child: buildSkeletonBox(80, 16),
-                ),
-                buildSkeletonBox(120, 36),
+                buildSkeletonBox(300, 44),
               ],
             ),
           ),
@@ -357,7 +347,7 @@ class EventDetailPageState extends State<EventDetailPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Related events",
+                    "Các sự kiện liên quan",
                     style: AppTextStyles.bold.copyWith(fontSize: 20),
                   ),
                   const SizedBox(height: 8),
@@ -431,32 +421,43 @@ class EventDetailPageState extends State<EventDetailPage> {
   }
 
   Widget buildEventDescription(Event event) {
+    final description = event.description ?? 'Chưa có mô tả';
+    final isDescriptionLong = (description.split('\n').length > 3 ||
+        description.length > 100); 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "About this event",
+          "Mô tả sự kiện",
           style: AppTextStyles.bold.copyWith(fontSize: 20),
         ),
         const SizedBox(height: 8),
         Text(
-          event.description ?? 'No description provided',
+          description,
           style: AppTextStyles.text.copyWith(
             fontSize: 16,
-            color: Color(0xFF9B9B9B),
+            color: const Color(0xFF9B9B9B),
           ),
+          maxLines: isExpanded ? null : 3,
+          overflow: isExpanded ? null : TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 9),
-        GestureDetector(
-          onTap: () {},
-          child: Text(
-            "Read more",
-            style: AppTextStyles.medium.copyWith(
-              color: AppColors.linkBlue,
-              fontSize: 16,
+        if (isDescriptionLong) ...[
+          const SizedBox(height: 9),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                isExpanded = !isExpanded;
+              });
+            },
+            child: Text(
+              isExpanded ? "Thu gọn" : "Đọc thêm",
+              style: AppTextStyles.medium.copyWith(
+                color: AppColors.linkBlue,
+                fontSize: 14,
+              ),
             ),
           ),
-        ),
+        ],
       ],
     );
   }
@@ -467,7 +468,7 @@ class EventDetailPageState extends State<EventDetailPage> {
       children: [
         const SizedBox(height: 12),
         Text(
-          "Organized by",
+          "Tổ chức bởi",
           style: AppTextStyles.bold.copyWith(fontSize: 20),
         ),
         const SizedBox(height: 4),
@@ -498,10 +499,10 @@ class EventDetailPageState extends State<EventDetailPage> {
                       style: AppTextStyles.medium.copyWith(fontSize: 16),
                     ),
                     Text(
-                      "22k Followers",
+                      "fptsoftware.com",
                       style: AppTextStyles.text.copyWith(
-                        fontSize: 16,
-                        color: const Color(0xFF9B9B9B),
+                        fontSize: 14,
+                        color: AppColors.mutedText,
                       ),
                     ),
                   ],
@@ -518,7 +519,7 @@ class EventDetailPageState extends State<EventDetailPage> {
                   ),
                 ),
                 child: Text(
-                  "Follow",
+                  "Theo dõi",
                   style: AppTextStyles.bold.copyWith(
                     fontSize: 16,
                     color: Colors.white,
@@ -542,33 +543,29 @@ class EventDetailPageState extends State<EventDetailPage> {
         ),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 16),
-            child: Text(
-              "Miễn phí",
-              style: AppTextStyles.medium.copyWith(fontSize: 16),
-            ),
-          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFFEC0303),
+              backgroundColor: const Color(0xFFEC0303),
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 34, vertical: 8),
+              minimumSize: const Size(300, 44),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(5),
               ),
             ),
-            onPressed: () {
+            onPressed: () async {
+              final viewModel = Provider.of<EventDetailViewModel>(context, listen: false);
+              await viewModel.fetchEventTickets(widget.eventId);
+              if (!mounted) return;
               showDialog(
                 context: context,
                 barrierDismissible: true,
-                builder: (context) => const TicketDialog(),
+                builder: (_) => TicketDialog(eventId: widget.eventId),
               );
             },
             child: const Text(
-              "Get tickets",
+              "Đặt vé ngay",
               style: TextStyle(
                 fontFamily: 'Roboto',
                 fontSize: 16,
@@ -675,7 +672,7 @@ class _MapWidgetState extends State<MapWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Information about this event",
+            "Thông tin sự kiện",
             style: AppTextStyles.bold.copyWith(fontSize: 20),
           ),
           const SizedBox(height: 8),
@@ -689,7 +686,7 @@ class _MapWidgetState extends State<MapWidget> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.event.address ?? 'No address provided',
+                      widget.event.address ?? 'Không có địa chỉ',
                       style: AppTextStyles.text.copyWith(fontSize: 16),
                     ),
                     const SizedBox(height: 4),
@@ -715,7 +712,7 @@ class _MapWidgetState extends State<MapWidget> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            isLoadingLocation ? "Đang tải..." : "Show map",
+                            isLoadingLocation ? "Đang tải..." : "Hiển thị bản đồ",
                             style: AppTextStyles.medium.copyWith(
                               color: AppColors.linkBlue,
                               fontSize: 14,

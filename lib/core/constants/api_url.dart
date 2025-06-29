@@ -30,8 +30,23 @@ class ApiUrl {
   static String deleteEvent(String id) => '/v1/events/$id';
 
 
-  
-  static const String getFavorites = '/v1/favorites/my-events';
+  // Favorite endpoints
+  static const String getMyFavoriteEvents = '/v1/favorites/my-events';
   static String addEventFavorite(String eventId) => '/v1/favorites/add-event/$eventId';
   static String removeEventFavorite(String eventId) => '/v1/favorites/remove-event/$eventId';
+
+  // Ticket endpoints
+  static String getEventTickets(String eventId) => '/v1//home/event/$eventId/tickets';
+  static String getTicketDetail(String eventId, String ticketId) => '/v1/event/$eventId/tickets/$ticketId';
+  static String createTicket(String eventId) => '/v1/event/$eventId/tickets';
+  static String buyTicket(String eventId) => '/v1/event/$eventId/tickets/checkout';
+  static String editTicket(String eventId, String ticketId) => '/v1/event/$eventId/tickets/$ticketId';
+  static String deleteTicket(String ticketId) => '/v1/event/tickets/$ticketId';
+
+  // Order endpoints
+  static String get getOrders => '/v1/orders';
+  static String get exportOrders => '/v1/orders/export';
+  static String getOrderDetail(String id) => '/v1/orders/$id';
+  static String acceptOrder(String id) => '/v1/orders/$id/accept';
+  static String deleteOrder(String id) => '/v1/orders/$id';
 }
