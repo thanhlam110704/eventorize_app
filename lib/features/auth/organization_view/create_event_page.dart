@@ -33,6 +33,9 @@ class CreateEventPageState extends State<CreateEventPage> {
         leadingIcon: Icons.arrow_back_ios,
         title: 'Tạo sự kiện',
         actionIcon: Icons.check,
+        onLeadingPressed: () {
+          Navigator.of(context).pop();
+        },
         onActionPressed: () {
          // Submit logic
         },

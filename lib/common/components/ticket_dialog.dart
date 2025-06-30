@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
+import 'package:go_router/go_router.dart';
 
 class TicketDialog extends StatefulWidget {
   const TicketDialog({super.key});
@@ -96,7 +97,9 @@ class _TicketDialogState extends State<TicketDialog> {
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      context.go('/checkout');
+                    },
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size.fromHeight(48),
                       backgroundColor: const Color(0xFFEC0303),

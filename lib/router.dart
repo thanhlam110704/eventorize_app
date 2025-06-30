@@ -27,7 +27,7 @@ import 'package:eventorize_app/features/auth/organization_view/select_org_page.d
 
 class AppRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: '/createevent',
+    initialLocation: '/splashscreen',
     routes: [
       GoRoute(
         path: '/splashscreen',
@@ -157,19 +157,9 @@ class AppRouter {
         },
       ),
       GoRoute(
-        path: '/account',
-        name: 'account',
-        builder: (context, state) => const AccountPage(),
-      ),
-      GoRoute(
         path: '/detail-profile',
         name: 'detail-profile',
         builder: (context, state) => const ProfileDetailPage(),
-      ),
-      GoRoute(
-        path: '/favorite',
-        name: 'favorite',
-        builder: (context, state) => const FavoritePage(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

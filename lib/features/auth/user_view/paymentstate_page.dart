@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/components/top_nav_bar.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 
 class PaymentSuccessfulPage extends StatefulWidget {
   const PaymentSuccessfulPage({super.key});
@@ -137,7 +138,7 @@ class _PaymentSuccessfulPageState extends State<PaymentSuccessfulPage> {
         width: double.infinity,
         child: ElevatedButton(
           onPressed: () {
-            // todo
+            context.go('/paymentfail');
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
@@ -289,7 +290,7 @@ class _PaymentFailedPageState extends State<PaymentFailedPage> {
         width: double.infinity,
         child: ElevatedButton(
           onPressed: () {
-           // todo
+           context.go('/home');
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,

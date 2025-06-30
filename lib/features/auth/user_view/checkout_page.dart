@@ -2,6 +2,7 @@ import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/components/top_nav_bar.dart';
+import 'package:go_router/go_router.dart';
 
 class CheckOutPage extends StatefulWidget {
   const CheckOutPage({super.key});
@@ -267,7 +268,7 @@ class CheckOutPageState extends State<CheckOutPage>{
             ),
           ),
           onPressed: () {
-            // Handle place order
+            context.go('/payment');
           },
           child: Text(
             'Place order',style: AppTextStyles.bold.copyWith(fontSize: 16,color: Colors.white)

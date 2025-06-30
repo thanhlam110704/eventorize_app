@@ -126,6 +126,7 @@ class SelectOrgPageState extends State<SelectOrgPage> {
                           setState(() {
                             selectedCity = value;
                           });
+                          context.push('/createorg');
                         },
                       ),
                     ],

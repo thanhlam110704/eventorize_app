@@ -357,7 +357,7 @@ class EventDetailPageState extends State<EventDetailPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Related events",
+                    "Các sự kiện liên quan",
                     style: AppTextStyles.bold.copyWith(fontSize: 20),
                   ),
                   const SizedBox(height: 8),
@@ -435,7 +435,7 @@ class EventDetailPageState extends State<EventDetailPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "About this event",
+          "Tổng quan sự kiện",
           style: AppTextStyles.bold.copyWith(fontSize: 20),
         ),
         const SizedBox(height: 8),
@@ -450,7 +450,7 @@ class EventDetailPageState extends State<EventDetailPage> {
         GestureDetector(
           onTap: () {},
           child: Text(
-            "Read more",
+            "Đọc thêm",
             style: AppTextStyles.medium.copyWith(
               color: AppColors.linkBlue,
               fontSize: 16,
@@ -467,7 +467,7 @@ class EventDetailPageState extends State<EventDetailPage> {
       children: [
         const SizedBox(height: 12),
         Text(
-          "Organized by",
+          "Tổ chức bởi",
           style: AppTextStyles.bold.copyWith(fontSize: 20),
         ),
         const SizedBox(height: 4),
@@ -498,7 +498,7 @@ class EventDetailPageState extends State<EventDetailPage> {
                       style: AppTextStyles.medium.copyWith(fontSize: 16),
                     ),
                     Text(
-                      "22k Followers",
+                      "fpt@gmail.com",
                       style: AppTextStyles.text.copyWith(
                         fontSize: 16,
                         color: const Color(0xFF9B9B9B),
@@ -518,7 +518,7 @@ class EventDetailPageState extends State<EventDetailPage> {
                   ),
                 ),
                 child: Text(
-                  "Follow",
+                  "Theo dõi",
                   style: AppTextStyles.bold.copyWith(
                     fontSize: 16,
                     color: Colors.white,
@@ -568,7 +568,7 @@ class EventDetailPageState extends State<EventDetailPage> {
               );
             },
             child: const Text(
-              "Get tickets",
+              "Đặt vé ngay",
               style: TextStyle(
                 fontFamily: 'Roboto',
                 fontSize: 16,
@@ -675,7 +675,7 @@ class _MapWidgetState extends State<MapWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Information about this event",
+            "Thông tin về sự kiện",
             style: AppTextStyles.bold.copyWith(fontSize: 20),
           ),
           const SizedBox(height: 8),
@@ -809,12 +809,12 @@ class _MapWidgetState extends State<MapWidget> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Refund policy",
+                    "Chính sách hoàn tiền",
                     style: AppTextStyles.text.copyWith(fontSize: 16),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    "No refunds",
+                    "Không hoàn tiền",
                     style: AppTextStyles.text.copyWith(
                       fontSize: 14,
                       color: Color(0xFF9B9B9B),

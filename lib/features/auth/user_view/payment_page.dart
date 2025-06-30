@@ -2,6 +2,7 @@ import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/components/top_nav_bar.dart';
+import 'package:go_router/go_router.dart';
 
 class PaymentPage extends StatefulWidget {
   const PaymentPage({super.key});
@@ -134,7 +135,7 @@ class _PaymentPageState extends State<PaymentPage> {
       width: double.infinity,
       child: ElevatedButton(
         onPressed: () {
-          // todo
+          context.go('/paymentsuccess');
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,

@@ -4,7 +4,7 @@ import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
-enum AppPage { orgInfo, eventList, orderList }
+enum AppPage { orgInfo, eventList, orderList, ticketList }
 
 class CustomDrawer extends StatelessWidget {
   final AppPage currentPage;
@@ -72,6 +72,14 @@ class CustomDrawer extends StatelessWidget {
                     },
                   ),
                   _buildDrawerItem(
+                    icon: MdiIcons.ticketConfirmationOutline,
+                    text: "Danh sách vé",
+                    selected: currentPage == AppPage.ticketList,
+                    onTap: () {
+                      context.go('/ticketlist');
+                    },
+                  ),
+                  _buildDrawerItem(
                     icon: MdiIcons.viewGridOutline,
                     text: "Danh sách đơn hàng",
                     selected: currentPage == AppPage.orderList,
@@ -84,7 +92,7 @@ class CustomDrawer extends StatelessWidget {
                     text: "Switch to attending",
                     selected: false,
                     onTap: () {
-                      // 
+                      context.push('/home'); 
                     },
                   ),
                   _buildLogoutItem(),

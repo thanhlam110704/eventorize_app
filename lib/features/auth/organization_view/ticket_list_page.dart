@@ -33,6 +33,9 @@ class TicketListPageState extends State<TicketListPage> {
         leadingIcon: Icons.arrow_back_ios,
         title: 'Tickets',
         actionIcon: Icons.search,
+        onLeadingPressed: () {
+          Navigator.of(context).pop();
+        },
         onActionPressed: () {
          // Submit logic
         },

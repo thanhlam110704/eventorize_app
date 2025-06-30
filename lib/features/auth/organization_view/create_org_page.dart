@@ -4,6 +4,7 @@ import 'package:eventorize_app/common/components/custom_fields.dart';
 import 'package:eventorize_app/common/components/top_nav_org_bar.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class CreateOrgPage extends StatefulWidget {
   const CreateOrgPage({super.key});
@@ -30,8 +31,11 @@ class CreateOrgPageState extends State<CreateOrgPage> {
         leadingIcon: Icons.arrow_back_ios,
         title: 'Tạo nhà tổ chức',
         actionIcon: Icons.check,
+        onLeadingPressed: () {
+          Navigator.of(context).pop();
+        },
         onActionPressed: () {
-         // to do
+          context.go('/eventlist');
         },
       ),
       backgroundColor: AppColors.whiteBackground,

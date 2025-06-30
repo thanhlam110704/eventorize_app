@@ -3,6 +3,7 @@ import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:eventorize_app/common/components/bottom_nav_bar.dart';
+import 'package:go_router/go_router.dart';
 
 class TicketsPage extends StatefulWidget {
   const TicketsPage({super.key});
@@ -80,15 +81,19 @@ class TicketsPageState extends State<TicketsPage> {
       children: ticketCount.map((_) {
         return Padding(
           padding: const EdgeInsets.only(bottom: 20), 
-          child: buildTicketCard(),
+          child: buildTicketCard(context),
         );
       }).toList(),
     );
   }
 
-  Widget buildTicketCard() {
-    return SizedBox(
-      width: 360, 
+  Widget buildTicketCard(BuildContext context) {
+  return GestureDetector(
+    onTap: () {
+      context.push('/tickets-detail'); // or context.pushNamed('tickets-detail');
+    },
+    child: SizedBox(
+      width: 360,
       height: 170,
       child: Stack(
         children: [
@@ -123,13 +128,11 @@ class TicketsPageState extends State<TicketsPage> {
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              Text('Type: ',style: AppTextStyles.semibold.copyWith(fontSize: 13)),
-                              Text('Ticket Vip',style: AppTextStyles.text.copyWith(fontSize: 13)),
-
+                              Text('Type: ', style: AppTextStyles.semibold.copyWith(fontSize: 13)),
+                              Text('Ticket Vip', style: AppTextStyles.text.copyWith(fontSize: 13)),
                               const SizedBox(width: 30),
-
-                              Text('Quantity: ',style: AppTextStyles.semibold.copyWith(fontSize: 13)),
-                              Text('3',style: AppTextStyles.text.copyWith(fontSize: 13)),
+                              Text('Quantity: ', style: AppTextStyles.semibold.copyWith(fontSize: 13)),
+                              Text('3', style: AppTextStyles.text.copyWith(fontSize: 13)),
                             ],
                           ),
                         ],
@@ -161,8 +164,10 @@ class TicketsPageState extends State<TicketsPage> {
           ),
         ],
       ),
-    ); 
-  }
+    ),
+  );
+}
+
 }
 
 class VerticalDashedLine extends StatelessWidget {

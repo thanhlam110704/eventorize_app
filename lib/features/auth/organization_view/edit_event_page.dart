@@ -28,6 +28,9 @@ class EditEventPageState extends State<EditEventPage> {
         leadingIcon: Icons.arrow_back_ios,
         title: 'Chỉnh sửa sự kiện',
         actionIcon: Icons.check,
+        onLeadingPressed: () {
+          Navigator.of(context).pop();
+        },
         onActionPressed: () {
          // Submit logic
         },

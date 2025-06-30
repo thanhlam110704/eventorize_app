@@ -1,7 +1,7 @@
+import 'package:eventorize_app/common/components/ticket_range_slider.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/components/top_nav_org_bar.dart';
 import 'package:eventorize_app/common/components/custom_fields.dart';
-import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:flutter/material.dart';
 
 class CreateTicketPage extends StatefulWidget {
@@ -31,6 +31,9 @@ class CreateTicketPageState extends State<CreateTicketPage> {
         leadingIcon: Icons.arrow_back_ios,
         title: 'Tạo vé',
         actionIcon: Icons.check,
+        onLeadingPressed: () {
+          Navigator.of(context).pop();
+        },
         onActionPressed: () {
          // Submit logic
         },
@@ -79,101 +82,20 @@ class CreateTicketPageState extends State<CreateTicketPage> {
                   },
                   dropdownWidth: 345,
                 ),
-                buildRangeSlider(),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget buildRangeSlider() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          RichText(
-            text: TextSpan(
-              text: 'Per range',
-              style: AppTextStyles.text,
-              children: [
-                TextSpan(
-                  text: ' *',
-                  style: AppTextStyles.text.copyWith(color: Colors.red),
+                PerRangeSlider(
+                  minPer: _minPer,
+                  maxPer: _maxPer,
+                  onChanged: (RangeValues values) {
+                    setState(() {
+                      _minPer = values.start;
+                      _maxPer = values.end;
+                    });
+                  },
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 24),
-          Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  Text("0"),
-                  Text("100"),
-                ],
-              ),
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  RangeSlider(
-                    values: RangeValues(_minPer, _maxPer),
-                    min: 0,
-                    max: 100,
-                    divisions: 100,
-                    activeColor: Colors.blue,
-                    inactiveColor: Colors.blue.withAlpha((0.2 * 255).toInt()),
-                    labels: RangeLabels(
-                      _minPer.round().toString(),
-                      _maxPer.round().toString(),
-                    ),
-                    onChanged: (RangeValues values) {
-                      setState(() {
-                        _minPer = values.start;
-                        _maxPer = values.end;
-                      });
-                    },
-                  ),
-                  Positioned(
-                    left: (_minPer / 100) * MediaQuery.of(context).size.width - 40,
-                    top: -25,
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.blue,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text("Min per", style: AppTextStyles.text.copyWith(color: Colors.white, fontSize: 13)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Positioned(
-                    left: (_maxPer / 100) * MediaQuery.of(context).size.width - 40,
-                    top: -25,
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.blue,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text("Max per", style: AppTextStyles.text.copyWith(color: Colors.white, fontSize: 13)),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }

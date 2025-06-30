@@ -360,7 +360,9 @@ class AccountPageState extends State<AccountPage> {
         buildSettingItem(
           icon: Icons.apartment_outlined,
           title: 'Organization',
-          onTap: () {},
+          onTap: () {
+            context.push('/selectorg');
+          },
           iconColor: AppColors.black,
           textColor: AppColors.black,
           showTrailing: true,
