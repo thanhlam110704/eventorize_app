@@ -28,6 +28,7 @@ class LoginPageState extends State<LoginPage> {
   final formKey = GlobalKey<FormState>();
   final emailInputKey = GlobalKey<CustomFieldInputState>();
   final passwordInputKey = GlobalKey<CustomFieldInputState>();
+  String? _loadingButton; // Tracks which button is loading: 'login' or 'google'
 
   @override
   void initState() {
@@ -42,31 +43,33 @@ class LoginPageState extends State<LoginPage> {
   }
 
   Future<void> handleLogin(LoginViewModel viewModel) async {
-  bool isValid = true;
-  if (emailInputKey.currentState != null) {
-    isValid &= emailInputKey.currentState!.validate();
-  }
-  if (passwordInputKey.currentState != null) {
-    isValid &= passwordInputKey.currentState!.validate();
-  }
-  if (isValid) {
-    final result = await viewModel.login(
-      email: emailController.text.trim(),
-      password: passwordController.text.trim(),
-    );
-    if (mounted) {
-      await context.read<SessionManager>().setUserFromToken(result['token']);
-      if (!mounted) return; 
-      ToastCustom.show(
-        context: context,
-        title: 'Đăng nhập thành công!',
-        description: 'Chào mừng bạn trở lại, ${result['user'].fullname}!',  
-        type: ToastificationType.success,
+    setState(() => _loadingButton = 'login');
+    bool isValid = true;
+    if (emailInputKey.currentState != null) {
+      isValid &= emailInputKey.currentState!.validate();
+    }
+    if (passwordInputKey.currentState != null) {
+      isValid &= passwordInputKey.currentState!.validate();
+    }
+    if (isValid) {
+      final result = await viewModel.login(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
       );
-      context.goNamed('home');
-    } 
+      if (mounted) {
+        await context.read<SessionManager>().setUserFromToken(result['token']);
+        if (!mounted) return;
+        ToastCustom.show(
+          context: context,
+          title: 'Đăng nhập thành công!',
+          description: 'Chào mừng bạn trở lại, ${result['user'].fullname}!',
+          type: ToastificationType.success,
+        );
+        context.goNamed('home');
+      }
+    }
+    if (mounted) setState(() => _loadingButton = null);
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -92,87 +95,78 @@ class LoginPageState extends State<LoginPage> {
               });
             }
 
-            return Stack(
-              children: [
-                SingleChildScrollView(
-                  child: Container(
-                    width: screenSize.width,
-                    color: AppColors.defaultBackground,
-                    padding: EdgeInsets.fromLTRB(
-                      isSmallScreen ? 16 : 24,
-                      isSmallScreen ? 40 : 80,
-                      isSmallScreen ? 16 : 24,
-                      isSmallScreen ? 24 : 32,
-                    ),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: maxContentWidth),
-                        child: Form(
-                          key: formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              buildLogo(),
-                              const SizedBox(height: 3),
-                              buildTitle(),
-                              const SizedBox(height: 36),
-                              buildEmailField(),
-                              const SizedBox(height: 21),
-                              buildPasswordField(),
-                              const SizedBox(height: 21),
-                              Padding(
-                                padding: EdgeInsets.only(top: screenSize.height * 0.05),
-                                child: Column(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 90),
-                                      child: Container(
-                                        width: isSmallScreen ? double.infinity : screenSize.width * 0.9,
-                                        height: buttonHeight,
-                                        margin: const EdgeInsets.only(top: 10),
-                                        child: ElevatedButton(
-                                          onPressed: viewModel.isLoading ? null : () => handleLogin(viewModel),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: AppColors.primary,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(10),
-                                            ),
-                                            elevation: 0,
-                                          ),
-                                          child: Text(
-                                            'Đăng nhập',
-                                            style: AppTextStyles.button,
-                                          ),
+            return SingleChildScrollView(
+              child: Container(
+                width: screenSize.width,
+                color: AppColors.defaultBackground,
+                padding: EdgeInsets.fromLTRB(
+                  isSmallScreen ? 16 : 24,
+                  isSmallScreen ? 40 : 80,
+                  isSmallScreen ? 16 : 24,
+                  isSmallScreen ? 24 : 32,
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: maxContentWidth),
+                    child: Form(
+                      key: formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          buildLogo(),
+                          const SizedBox(height: 3),
+                          buildTitle(),
+                          const SizedBox(height: 36),
+                          buildEmailField(),
+                          const SizedBox(height: 21),
+                          buildPasswordField(),
+                          const SizedBox(height: 21),
+                          Padding(
+                            padding: EdgeInsets.only(top: screenSize.height * 0.05),
+                            child: Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 90),
+                                  child: Container(
+                                    width: isSmallScreen ? double.infinity : screenSize.width * 0.9,
+                                    height: buttonHeight,
+                                    margin: const EdgeInsets.only(top: 10),
+                                    child: ElevatedButton(
+                                      onPressed: _loadingButton != null ? null : () => handleLogin(viewModel),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.primary,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10),
                                         ),
+                                        elevation: 0,
                                       ),
+                                      child: _loadingButton == 'login'
+                                          ? const SpinKitFadingCircle(
+                                              color: Colors.white,
+                                              size: 24.0,
+                                            )
+                                          : Text(
+                                              'Đăng nhập',
+                                              style: AppTextStyles.button,
+                                            ),
                                     ),
-                                    const SizedBox(height: 10),
-                                    buildDivider(),
-                                    const SizedBox(height: 10),
-                                    buildGoogleButton(isSmallScreen, screenSize, viewModel),
-                                    const SizedBox(height: 29),
-                                    buildRegisterLink(),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 10),
+                                buildDivider(),
+                                const SizedBox(height: 10),
+                                buildGoogleButton(isSmallScreen, screenSize, viewModel),
+                                const SizedBox(height: 29),
+                                buildRegisterLink(),
+                              ],
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                   ),
                 ),
-                if (viewModel.isLoading)
-                  Container(
-                    color: Colors.black.withAlpha(128),
-                    child: const Center(
-                      child: SpinKitFadingCircle(
-                        color: AppColors.primary,
-                        size: 50.0,
-                      ),
-                    ),
-                  ),
-              ],
+              ),
             );
           },
         ),
@@ -244,19 +238,21 @@ class LoginPageState extends State<LoginPage> {
       width: isSmallScreen ? double.infinity : screenSize.width * 0.9,
       height: buttonHeight,
       child: ElevatedButton(
-        onPressed: viewModel.isLoading
+        onPressed: _loadingButton != null
             ? null
             : () async {
+                setState(() => _loadingButton = 'google');
                 final googleUser = await GoogleSignInApi.signIn();
                 if (googleUser == null) {
                   if (mounted) {
                     ToastCustom.show(
                       context: context,
-                      title:'Lỗi đăng nhập với Google',
+                      title: 'Lỗi đăng nhập với Google',
                       description: 'Đăng nhập với Google thất bại. Vui lòng thử lại.',
                       type: ToastificationType.error,
                     );
                   }
+                  if (mounted) setState(() => _loadingButton = null);
                   return;
                 }
                 final result = await viewModel.googleSSOAndroid(
@@ -266,7 +262,10 @@ class LoginPageState extends State<LoginPage> {
                   picture: googleUser['avatar']!,
                 );
 
-                if (!mounted) return;
+                if (!mounted) {
+                  setState(() => _loadingButton = null);
+                  return;
+                }
 
                 if (viewModel.errorMessage != null) {
                   ToastCustom.show(
@@ -278,7 +277,10 @@ class LoginPageState extends State<LoginPage> {
                   viewModel.clearError();
                 } else {
                   await context.read<SessionManager>().setUserFromToken(result['token']);
-                  if (!mounted) return;
+                  if (!mounted) {
+                    setState(() => _loadingButton = null);
+                    return;
+                  }
                   ToastCustom.show(
                     context: context,
                     title: 'Đăng nhập thành công!',
@@ -286,6 +288,7 @@ class LoginPageState extends State<LoginPage> {
                   );
                   context.goNamed('home');
                 }
+                if (mounted) setState(() => _loadingButton = null);
               },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
@@ -294,23 +297,28 @@ class LoginPageState extends State<LoginPage> {
           ),
           elevation: 0,
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'assets/icons/logo_google.png',
-              width: screenSize.width * 0.06,
-              height: screenSize.width * 0.06,
-            ),
-            const SizedBox(width: 11),
-            Text(
-              'Tiếp tục với Google',
-              style: AppTextStyles.button.copyWith(
+        child: _loadingButton == 'google'
+            ? const SpinKitFadingCircle(
                 color: AppColors.black,
+                size: 24.0,
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'assets/icons/logo_google.png',
+                    width: screenSize.width * 0.06,
+                    height: screenSize.width * 0.06,
+                  ),
+                  const SizedBox(width: 11),
+                  Text(
+                    'Tiếp tục với Google',
+                    style: AppTextStyles.button.copyWith(
+                      color: AppColors.black,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }

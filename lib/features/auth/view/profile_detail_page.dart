@@ -44,7 +44,7 @@ class ProfileDetailPageState extends State<ProfileDetailPage> {
 
   void _handleScroll() {
     final viewModel = context.read<ProfileDetailViewModel>();
-    if (!viewModel.isDataLoaded) return; 
+    if (!viewModel.isDataLoaded) return;
 
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 100), () {
@@ -95,7 +95,7 @@ class ProfileDetailPageState extends State<ProfileDetailPage> {
                   ),
                 ],
               ),
-              if (viewModel.isLoading || viewModel.isLoadingAnyLocation || viewModel.isUploadingAvatar)
+              if (viewModel.isLoadingAnyLocation || viewModel.isUploadingAvatar)
                 _buildLoadingOverlay(),
             ],
           ),
@@ -183,7 +183,7 @@ class ProfileDetailPageState extends State<ProfileDetailPage> {
       ),
       child: Divider(
         color: AppColors.grey,
-        thickness: 0.5
+        thickness: 0.5,
       ),
     );
   }
@@ -567,7 +567,12 @@ class ProfileDetailPageState extends State<ProfileDetailPage> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(vertical: 12),
         ),
-        child: Text("Cập nhật thông tin", style: AppTextStyles.button),
+        child: viewModel.isLoading
+            ? const SpinKitFadingCircle(
+                color: Colors.white,
+                size: 24.0,
+              )
+            : Text("Cập nhật thông tin", style: AppTextStyles.button),
       ),
     );
   }

@@ -15,6 +15,7 @@ import 'package:eventorize_app/data/api/geocoding_service.dart';
 import 'package:eventorize_app/common/components/ticket_dialog.dart';
 import 'package:eventorize_app/common/components/top_nav_bar.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class EventDetailPage extends StatefulWidget {
   final String eventId;
@@ -30,6 +31,7 @@ class EventDetailPageState extends State<EventDetailPage> {
   static const maxContentWidth = 600.0;
   late final GeocodingService _geocodingService;
   bool isExpanded = false;
+  bool _isLoading = false; // Thêm biến trạng thái loading
 
   @override
   void initState() {
@@ -554,24 +556,33 @@ class EventDetailPageState extends State<EventDetailPage> {
                 borderRadius: BorderRadius.circular(5),
               ),
             ),
-            onPressed: () async {
-              final viewModel = Provider.of<EventDetailViewModel>(context, listen: false);
-              await viewModel.fetchEventTickets(widget.eventId);
-              if (!mounted) return;
-              showDialog(
-                context: context,
-                barrierDismissible: true,
-                builder: (_) => TicketDialog(eventId: widget.eventId),
-              );
-            },
-            child: const Text(
-              "Đặt vé ngay",
-              style: TextStyle(
-                fontFamily: 'Roboto',
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+            onPressed: _isLoading
+                ? null
+                : () async {
+                    setState(() => _isLoading = true);
+                    final viewModel = Provider.of<EventDetailViewModel>(context, listen: false);
+                    await viewModel.fetchEventTickets(widget.eventId);
+                    if (!mounted) return;
+                    showDialog(
+                      context: context,
+                      barrierDismissible: true,
+                      builder: (_) => TicketDialog(eventId: widget.eventId),
+                    );
+                    setState(() => _isLoading = false);
+                  },
+            child: _isLoading
+                ? const SpinKitFadingCircle(
+                    color: Colors.white,
+                    size: 24.0,
+                  )
+                : const Text(
+                    "Đặt vé ngay",
+                    style: TextStyle(
+                      fontFamily: 'Roboto',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
           ),
         ],
       ),
@@ -806,12 +817,12 @@ class _MapWidgetState extends State<MapWidget> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Refund policy",
+                    "Chính sách hoàn vé",
                     style: AppTextStyles.text.copyWith(fontSize: 16),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    "No refunds",
+                    "Không hoàn vé",
                     style: AppTextStyles.text.copyWith(
                       fontSize: 14,
                       color: Color(0xFF9B9B9B),

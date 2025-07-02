@@ -12,6 +12,7 @@ import 'package:eventorize_app/features/auth/view/account_page.dart';
 import 'package:eventorize_app/features/auth/view/profile_detail_page.dart';
 import 'package:eventorize_app/features/auth/view/favorite_page.dart';
 import 'package:eventorize_app/features/auth/view/event_detail_page.dart';
+import 'package:eventorize_app/features/auth/view/payment_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -75,6 +76,19 @@ class AppRouter {
         name: 'detail-profile',
         builder: (context, state) => const ProfileDetailPage(),
         redirect: (context, state) => _authGuard(context),
+      ),
+      GoRoute(
+        name: 'payment',
+        path: '/payment/:orderId',
+        builder: (context, state) {
+          final orderId = state.pathParameters['orderId']!;
+          final extra = state.extra as Map<String, dynamic>;
+          return PaymentPage(
+            orderId: orderId,
+            qrCode: extra['qrCode'] ?? '',
+            qrDataUrl: extra['qrDataUrl'] ?? '',
+          );
+        },
       ),
       GoRoute(
         path: '/favorite',

@@ -7,6 +7,10 @@ import 'package:eventorize_app/common/components/top_nav_bar.dart';
 import 'package:eventorize_app/features/auth/view_model/check_out_view_model.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/data/models/order.dart';
+import 'dart:async';
+import 'package:shimmer/shimmer.dart'; 
+import 'package:go_router/go_router.dart';
+
 
 class CheckOutPage extends StatefulWidget {
   final String orderId;
@@ -22,25 +26,38 @@ class CheckOutPageState extends State<CheckOutPage> {
   static const maxContentWidth = 600.0;
 
   final ScrollController _scrollController = ScrollController();
-  bool _showDivider = false;
+  final _showDividerNotifier = ValueNotifier<bool>(false);
+  Timer? _debounceTimer;
 
   int _selectedMethod = 0;
 
   @override
   void initState() {
     super.initState();
-    _showDivider = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         Provider.of<CheckOutViewModel>(context, listen: false)
             .fetchOrderDetail(widget.orderId);
       }
     });
+    _scrollController.addListener(_handleScroll);
+  }
+
+  void _handleScroll() {
+    final viewModel = context.read<CheckOutViewModel>();
+    if (!viewModel.isLoading) {
+      _debounceTimer?.cancel();
+      _debounceTimer = Timer(const Duration(milliseconds: 100), () {
+        _showDividerNotifier.value = _scrollController.offset > 0;
+      });
+    }
   }
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _scrollController.dispose();
+    _showDividerNotifier.dispose();
     super.dispose();
   }
 
@@ -48,78 +65,101 @@ class CheckOutPageState extends State<CheckOutPage> {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.width <= smallScreenThreshold;
+    final isShortScreen = screenSize.height < 600;
 
     return Scaffold(
       backgroundColor: AppColors.whiteBackground,
-      body: SafeArea(
-        child: Column(
-          children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              child: TopNavBar(title: "Checkout", showBackButton: true),
-            ),
-            if (_showDivider)
-              Container(
-                width: double.infinity,
-                height: 1,
-                decoration: BoxDecoration(
-                  color: AppColors.grey.withAlpha((0.5 * 255).toInt()),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.grey.withAlpha((0.6 * 255).toInt()),
-                      blurRadius: 3,
-                      offset: const Offset(0, 1),
+      body: Column(
+        children: [
+          _buildTopBar(isSmallScreen, isShortScreen),
+          ValueListenableBuilder<bool>(
+            valueListenable: _showDividerNotifier,
+            builder: (context, showDivider, _) {
+              return showDivider ? _buildDivider() : const SizedBox.shrink();
+            },
+          ),
+          Expanded(
+            child: Consumer<CheckOutViewModel>(
+              builder: (context, viewModel, _) {
+                if (viewModel.isLoading) {
+                  return buildSkeletonUI(isSmallScreen, screenSize);
+                }
+                if (viewModel.errorMessage != null) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) {
+                      ToastCustom.show(
+                        context: context,
+                        title: viewModel.errorTitle ?? 'Lỗi',
+                        description: viewModel.errorMessage!,
+                        type: ToastificationType.error,
+                      );
+                      viewModel.clearError();
+                    }
+                  });
+                  return Center(
+                    child: Text(
+                      'Lỗi: ${viewModel.errorMessage}',
+                      style: AppTextStyles.text.copyWith(color: Colors.red),
                     ),
-                  ],
-                ),
-              ),
-            Expanded(
-              child: Consumer<CheckOutViewModel>(
-                builder: (context, viewModel, _) {
-                  if (viewModel.isLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (viewModel.errorMessage != null) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (mounted) {
-                        ToastCustom.show(
-                          context: context,
-                          title: viewModel.errorTitle ?? 'Lỗi',
-                          description: viewModel.errorMessage!,
-                          type: ToastificationType.error,
-                        );
-                        viewModel.clearError();
-                      }
-                    });
-                    return Center(
-                      child: Text(
-                        'Lỗi: ${viewModel.errorMessage}',
-                        style: AppTextStyles.text.copyWith(color: Colors.red),
-                      ),
-                    );
-                  }
-                  if (viewModel.order == null) {
-                    return Center(
-                      child: Text(
-                        'Không tìm thấy đơn hàng',
-                        style: AppTextStyles.text.copyWith(color: Colors.red),
-                      ),
-                    );
-                  }
-                  return SingleChildScrollView(
-                    controller: _scrollController,
-                    child: buildMainContainer(isSmallScreen, screenSize, viewModel.order!),
                   );
-                },
-              ),
+                }
+                if (viewModel.order == null) {
+                  return Center(
+                    child: Text(
+                      'Không tìm thấy đơn hàng',
+                      style: AppTextStyles.text.copyWith(color: Colors.red),
+                    ),
+                  );
+                }
+                return SingleChildScrollView(
+                  controller: _scrollController,
+                  child: buildMainContainer(isSmallScreen, screenSize, viewModel),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget buildMainContainer(bool isSmallScreen, Size screenSize, Order order) {
+  Widget _buildTopBar(bool isSmallScreen, bool isShortScreen) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        isSmallScreen ? 16 : 24,
+        isShortScreen ? 24 : isSmallScreen ? 40 : 80,
+        isSmallScreen ? 16 : 24,
+        0,
+      ),
+      child: const TopNavBar(
+        title: "Thanh toán",
+        showBackButton: true,
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Container(
+      width: double.infinity,
+      height: 0.5,
+      decoration: BoxDecoration(
+        color: AppColors.grey.withAlpha((0.5 * 255).toInt()),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.grey.withAlpha((0.6 * 255).toInt()),
+            blurRadius: 2,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Divider(
+        color: AppColors.grey,
+        thickness: 0.5,
+      ),
+    );
+  }
+
+  Widget buildMainContainer(bool isSmallScreen, Size screenSize, CheckOutViewModel viewModel) {
     return Container(
       width: screenSize.width,
       color: AppColors.whiteBackground,
@@ -135,13 +175,13 @@ class CheckOutPageState extends State<CheckOutPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              buildBillingInfo(order),
+              buildBillingInfo(viewModel.order!),
               const SizedBox(height: 24),
-              buildOrderSummary(order),
+              buildOrderSummary(viewModel.order!),
               const SizedBox(height: 24),
               buildPaymentMethods(),
               const SizedBox(height: 24),
-              buildPriceSection(order),
+              buildPriceSection(viewModel),
               const SizedBox(height: 24),
               buildFooter(),
             ],
@@ -155,11 +195,11 @@ class CheckOutPageState extends State<CheckOutPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Billing information', style: AppTextStyles.bold.copyWith(fontSize: 20)),
+        Text('Thông tin thanh toán', style: AppTextStyles.bold.copyWith(fontSize: 20)),
         const SizedBox(height: 12),
-        buildLabeledInput('Fullname', order.userName ?? 'Không có tên', true),
-        buildLabeledInput('Email address', order.userEmail ?? 'Không có email', true),
-        buildLabeledInput('Phone number', order.userPhone ?? 'Không có số điện thoại', false),
+        buildLabeledInput('Họ tên', order.userName ?? 'Không có tên', true),
+        buildLabeledInput('Email', order.userEmail ?? 'Không có email', true),
+        buildLabeledInput('Số điện thoại', order.userPhone ?? 'Không có số điện thoại', false),
       ],
     );
   }
@@ -218,12 +258,12 @@ class CheckOutPageState extends State<CheckOutPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Order summary', style: AppTextStyles.bold.copyWith(fontSize: 20)),
+        Text('Đơn hàng', style: AppTextStyles.bold.copyWith(fontSize: 20)),
         const SizedBox(height: 12),
-        buildSummaryRow('${ticketCount}x Ticket price', '$ticketPrice VND'),
-        buildSummaryRow('Fees (VAT ${order.taxRate * 100}%)', '$fees VND'),
+        buildSummaryRow('${ticketCount}x Giá vé', '$ticketPrice VND'),
+        buildSummaryRow('Phí (VAT ${order.taxRate * 100}%)', '$fees VND'),
         if (order.discountAmount != null && order.discountAmount! > 0)
-          buildSummaryRow('Discount (${order.promotionCode ?? "N/A"})',
+          buildSummaryRow('Giảm giá (${order.promotionCode ?? "N/A"})',
               '-${order.discountAmount.toString().replaceAllMapped(RegExp(r"(\d)(?=(\d{3})+(?!\d))"), (match) => "${match[1]}.")} VND'),
         const Divider(height: 24, thickness: 1),
         Padding(
@@ -231,7 +271,7 @@ class CheckOutPageState extends State<CheckOutPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Total', style: AppTextStyles.bold.copyWith(fontSize: 16)),
+              Text('Tổng cộng', style: AppTextStyles.bold.copyWith(fontSize: 16)),
               Text('$total VND', style: AppTextStyles.bold.copyWith(fontSize: 16)),
             ],
           ),
@@ -257,9 +297,9 @@ class CheckOutPageState extends State<CheckOutPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Payment method', style: AppTextStyles.bold.copyWith(fontSize: 20)),
+        Text('Phương thức thanh toán', style: AppTextStyles.bold.copyWith(fontSize: 20)),
         const SizedBox(height: 12),
-        buildPaymentOption(0, 'Credit/Debit card', 'assets/icons/credit_logo.png'),
+        buildPaymentOption(0, 'Thẻ ngân hàng', 'assets/icons/credit_logo.png'),
         const SizedBox(height: 8),
         buildPaymentOption(1, 'Paypal', 'assets/icons/paypal_logo.png'),
       ],
@@ -295,7 +335,8 @@ class CheckOutPageState extends State<CheckOutPage> {
     );
   }
 
-  Widget buildPriceSection(Order order) {
+  Widget buildPriceSection(CheckOutViewModel viewModel) {
+    final order = viewModel.order!;
     final total = order.totalAmount.toString().replaceAllMapped(
         RegExp(r"(\d)(?=(\d{3})+(?!\d))"), (match) => "${match[1]}.");
     return Row(
@@ -307,7 +348,7 @@ class CheckOutPageState extends State<CheckOutPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Price',
+              'Giá',
               style: AppTextStyles.bold.copyWith(fontSize: 16),
             ),
             const SizedBox(height: 6),
@@ -323,23 +364,50 @@ class CheckOutPageState extends State<CheckOutPage> {
             ),
           ),
           onPressed: () async {
-            final viewModel = Provider.of<CheckOutViewModel>(context, listen: false);
             final toastContext = context;
-            final navigator = Navigator.of(context);
             try {
-              await viewModel.acceptOrder(widget.orderId);
-              if (mounted) {
+              if (_selectedMethod == 1) {
+                viewModel.setPaypalNotSupported();
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (mounted) {
                     ToastCustom.show(
                       context: toastContext,
-                      title: 'Thành công',
-                      description: 'Xác nhận đơn hàng thành công!',
-                      type: ToastificationType.success,
+                      title: 'Thông tin',
+                      description: viewModel.paypalMessage!,
+                      type: ToastificationType.info,
                     );
-                    navigator.pop();
                   }
                 });
+              } else {
+                await viewModel.generatePayosQr(widget.orderId);
+                if (viewModel.errorMessage != null || viewModel.payment?.qrCode == null) {
+                  throw Exception(viewModel.errorMessage ?? 'Không thể tạo mã QR');
+                }
+                await viewModel.acceptOrder(widget.orderId);
+                if (viewModel.errorMessage != null) {
+                  throw Exception(viewModel.errorMessage ?? 'Không thể xác nhận đơn hàng');
+                }
+
+                if (mounted) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) {
+                      ToastCustom.show(
+                        context: toastContext,
+                        title: 'Thành công',
+                        description: 'Xác nhận đơn hàng thành công!',
+                        type: ToastificationType.success,
+                      );
+                      GoRouter.of(context).pushNamed(
+                      'payment',
+                      pathParameters: {'orderId': widget.orderId},
+                      extra: {
+                        'qrCode': viewModel.payment!.qrCode,
+                        'qrDataUrl': viewModel.payment!.qrCode,
+                        },
+                      );
+                    }
+                  });
+                }
               }
             } catch (e) {
               if (mounted) {
@@ -385,6 +453,84 @@ class CheckOutPageState extends State<CheckOutPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget buildSkeletonUI(bool isSmallScreen, Size screenSize) {
+    Widget buildSkeletonBox(double width, double height) {
+      return Shimmer.fromColors(
+        baseColor: AppColors.shimmerBase,
+        highlightColor: AppColors.shimmerHighlight,
+        child: Container(
+          width: width,
+          height: height,
+          decoration: BoxDecoration(
+            color: AppColors.skeleton,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      width: screenSize.width,
+      color: AppColors.whiteBackground,
+      padding: EdgeInsets.fromLTRB(
+        isSmallScreen ? 16 : 24,
+        isSmallScreen ? 16 : 24,
+        isSmallScreen ? 16 : 24,
+        isSmallScreen ? 24 : 32,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: maxContentWidth),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              buildSkeletonBox(200, 20), 
+              const SizedBox(height: 12),
+              buildSkeletonBox(300, 40), 
+              const SizedBox(height: 12),
+              buildSkeletonBox(300, 40), 
+              const SizedBox(height: 12),
+              buildSkeletonBox(300, 40),
+              const SizedBox(height: 24),
+              buildSkeletonBox(200, 44), 
+              const SizedBox(height: 12),
+              buildSkeletonBox(200, 16),
+              const SizedBox(height: 12),
+              buildSkeletonBox(200, 16),
+              const SizedBox(height: 12),
+              buildSkeletonBox(200, 16), 
+              const SizedBox(height: 12),
+              buildSkeletonBox(200, 16), 
+              const SizedBox(height: 24),
+              buildSkeletonBox(200, 20), 
+              const SizedBox(height: 12),
+              buildSkeletonBox(300, 40), 
+              const SizedBox(height: 12),
+              buildSkeletonBox(300, 40), 
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      buildSkeletonBox(100, 20), 
+                      const SizedBox(height: 6),
+                      buildSkeletonBox(100, 16), 
+                    ],
+                  ),
+                  buildSkeletonBox(150, 40), 
+                ],
+              ),
+              const SizedBox(height: 24),
+              buildSkeletonBox(200, 20), 
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

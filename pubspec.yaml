@@ -36,7 +36,18 @@ dependencies:
   latlong2: ^0.9.1 
   http: ^1.4.0
   flutter_map_marker_popup: ^7.0.0
+  webview_flutter: ^4.0.0
+  qr_flutter: ^4.1.0
+  permission_handler: ^11.0.0
+  gallery_saver_plus: ^3.0.5
+  device_info_plus: ^10.0.0
+  path: ^1.8.0
+  qr: ^3.0.1
+  image: ^4.5.4
+
+
   
+
 
   
   
@@ -101,8 +112,12 @@ flutter:
   - assets/images/event.png
   - assets/images/event1.png
   - assets/images/fpt.png
+  - assets/icons/logo_eventorize_2.png
   - assets/icons/no_data.svg
   - assets/icons/credit_logo.png
   - assets/icons/paypal_logo.png
+  - assets/images/warning.png
   - .env/dev.env
  
+
+  

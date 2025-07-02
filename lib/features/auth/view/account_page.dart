@@ -374,6 +374,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
                   width: double.infinity,
                   child: OutlinedButton(
                     onPressed: () async {
+                      if (!mounted) return;
                       await context.pushNamed("detail-profile");
                       if (mounted) {
                         context.read<AccountViewModel>().refreshUser();
@@ -452,20 +453,35 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
           width: double.infinity,
           child: OutlinedButton(
             onPressed: () async {
+              if (!mounted) return;
               final toastContext = context;
-              final navigator = Navigator.of(context);
-              await viewModel.logout();
-              if (mounted) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) {
-                    ToastCustom.show(
-                      context: toastContext,
-                      title: 'Đăng xuất thành công!',
-                      type: ToastificationType.success,
-                    );
-                    navigator.pushReplacementNamed('login');
-                  }
-                });
+              try {
+                await viewModel.logout();
+                if (mounted) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) {
+                      ToastCustom.show(
+                        context: toastContext,
+                        title: 'Đăng xuất thành công!',
+                        type: ToastificationType.success,
+                      );
+                      GoRouter.of(context).pushReplacementNamed('login');
+                    }
+                  });
+                }
+              } catch (e) {
+                if (mounted) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) {
+                      ToastCustom.show(
+                        context: context,
+                        title: viewModel.errorTitle ?? 'Lỗi',
+                        description: viewModel.errorMessage ?? 'Đăng xuất thất bại',
+                        type: ToastificationType.error,
+                      );
+                    }
+                  });
+                }
               }
             },
             style: OutlinedButton.styleFrom(

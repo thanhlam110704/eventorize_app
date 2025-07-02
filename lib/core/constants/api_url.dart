@@ -49,4 +49,7 @@ class ApiUrl {
   static String getOrderDetail(String id) => '/v1/orders/$id';
   static String acceptOrder(String id) => '/v1/orders/$id/accept';
   static String deleteOrder(String id) => '/v1/orders/$id';
+
+  // Payment endpoints
+  static const String generatePayosQr = '/v1/payments/payos/generate';
 }

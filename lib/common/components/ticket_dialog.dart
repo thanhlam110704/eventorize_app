@@ -7,6 +7,8 @@ import 'package:eventorize_app/features/auth/view_model/event_detail_view_model.
 import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:go_router/go_router.dart';
+import 'package:eventorize_app/features/auth/view_model/check_out_view_model.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class TicketDialog extends StatefulWidget {
   final String eventId;
@@ -20,6 +22,7 @@ class TicketDialog extends StatefulWidget {
 class _TicketDialogState extends State<TicketDialog> {
   Map<String, int> ticketCounts = {};
   Map<String, TextEditingController> ticketControllers = {};
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -49,7 +52,12 @@ class _TicketDialogState extends State<TicketDialog> {
             insetPadding: const EdgeInsets.all(16),
             child: const SizedBox(
               height: 200,
-              child: Center(child: CircularProgressIndicator()),
+              child: Center(
+                child: SpinKitFadingCircle(
+                  color: AppColors.primary,
+                  size: 50,
+                ),
+              ),
             ),
           );
         }
@@ -241,56 +249,64 @@ class _TicketDialogState extends State<TicketDialog> {
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton(
-                        onPressed: total > 0
-                            ? () async {
-                                final viewModel = Provider.of<EventDetailViewModel>(
+                        onPressed: isLoading || total <= 0
+                            ? null
+                            : () async {
+                                setState(() => isLoading = true);
+                                final eventViewModel = Provider.of<EventDetailViewModel>(
+                                  context,
+                                  listen: false,
+                                );
+                                final checkoutViewModel = Provider.of<CheckOutViewModel>(
                                   context,
                                   listen: false,
                                 );
                                 final toastContext = context;
                                 final navigator = Navigator.of(context);
-                                final orderItems = ticketCounts.entries
-                                    .where((entry) => entry.value > 0)
-                                    .map((entry) => {
-                                          'ticket_id': entry.key,
-                                          'quantity': entry.value,
-                                        })
-                                    .toList();
+
                                 try {
-                                  final order = await viewModel.buyTicket(
+                                  final orderItems = ticketCounts.entries
+                                      .where((entry) => entry.value > 0)
+                                      .map((entry) => {
+                                            'ticket_id': entry.key,
+                                            'quantity': entry.value,
+                                          })
+                                      .toList();
+
+                                  final order = await eventViewModel.buyTicket(
                                     eventId: widget.eventId,
                                     orderItems: orderItems,
                                   );
+
+                                  await checkoutViewModel.fetchOrderDetail(order.id);
+
                                   if (mounted) {
                                     WidgetsBinding.instance.addPostFrameCallback((_) {
-                                      if (mounted) {
-                                        navigator.pop();
-                                        ToastCustom.show(
-                                          context: toastContext,
-                                          title: 'Thành công',
-                                          description: 'Đặt vé thành công! Mã đơn hàng: ${order.orderNo}',
-                                          type: ToastificationType.success,
-                                        );
-                                        context.pushNamed('checkout', pathParameters: {'orderId': order.id});
-                                      }
+                                      setState(() => isLoading = false);
+                                      navigator.pop();
+                                      ToastCustom.show(
+                                        context: toastContext,
+                                        title: 'Thành công',
+                                        description: 'Đặt vé thành công! Mã đơn hàng: ${order.orderNo}',
+                                        type: ToastificationType.success,
+                                      );
+                                      context.pushNamed('checkout', pathParameters: {'orderId': order.id});
                                     });
                                   }
                                 } catch (e) {
                                   if (mounted) {
                                     WidgetsBinding.instance.addPostFrameCallback((_) {
-                                      if (mounted) {
-                                        ToastCustom.show(
-                                          context: toastContext,
-                                          title: 'Lỗi',
-                                          description: 'Lỗi: ${e.toString()}',
-                                          type: ToastificationType.error,
-                                        );
-                                      }
+                                      setState(() => isLoading = false);
+                                      ToastCustom.show(
+                                        context: toastContext,
+                                        title: 'Lỗi',
+                                        description: 'Lỗi: ${e.toString()}',
+                                        type: ToastificationType.error,
+                                      );
                                     });
                                   }
                                 }
-                              }
-                            : null,
+                              },
                         style: ElevatedButton.styleFrom(
                           minimumSize: const Size.fromHeight(44),
                           backgroundColor: const Color(0xFFEC0303),
@@ -298,13 +314,18 @@ class _TicketDialogState extends State<TicketDialog> {
                             borderRadius: BorderRadius.circular(5),
                           ),
                         ),
-                        child: Text(
-                          "Mua vé",
-                          style: AppTextStyles.bold.copyWith(
-                            fontSize: 15,
-                            color: Colors.white,
-                          ),
-                        ),
+                        child: isLoading
+                            ? const SpinKitFadingCircle(
+                                color: Colors.white,
+                                size: 24.0,
+                              )
+                            : Text(
+                                "Mua vé",
+                                style: AppTextStyles.bold.copyWith(
+                                  fontSize: 15,
+                                  color: Colors.white,
+                                ),
+                              ),
                       ),
                     ],
                   ),
