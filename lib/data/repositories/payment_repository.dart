@@ -9,4 +9,8 @@ class PaymentRepository {
   Future<Payment> generatePayosQr(String orderId) async {
     return await _paymentApi.generatePayosQr(orderId);
   }
+
+  Future<Payment> getPaymentStatus(String orderNo) async {
+    return await _paymentApi.getPaymentStatus(orderNo);
+  }
 }

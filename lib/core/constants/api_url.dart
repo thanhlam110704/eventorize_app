@@ -52,4 +52,5 @@ class ApiUrl {
 
   // Payment endpoints
   static const String generatePayosQr = '/v1/payments/payos/generate';
+  static const String getPayosStatus = '/v1/payments/payos/status';
 }

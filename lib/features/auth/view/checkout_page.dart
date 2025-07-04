@@ -8,9 +8,8 @@ import 'package:eventorize_app/features/auth/view_model/check_out_view_model.dar
 import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/data/models/order.dart';
 import 'dart:async';
-import 'package:shimmer/shimmer.dart'; 
+import 'package:shimmer/shimmer.dart';
 import 'package:go_router/go_router.dart';
-
 
 class CheckOutPage extends StatefulWidget {
   final String orderId;
@@ -299,7 +298,7 @@ class CheckOutPageState extends State<CheckOutPage> {
       children: [
         Text('Phương thức thanh toán', style: AppTextStyles.bold.copyWith(fontSize: 20)),
         const SizedBox(height: 12),
-        buildPaymentOption(0, 'Thẻ ngân hàng', 'assets/icons/credit_logo.png'),
+        buildPaymentOption(0, 'Thẻ tín dụng/thẻ ghi nợ', 'assets/icons/credit_logo.png'),
         const SizedBox(height: 8),
         buildPaymentOption(1, 'Paypal', 'assets/icons/paypal_logo.png'),
       ],
@@ -398,11 +397,12 @@ class CheckOutPageState extends State<CheckOutPage> {
                         type: ToastificationType.success,
                       );
                       GoRouter.of(context).pushNamed(
-                      'payment',
-                      pathParameters: {'orderId': widget.orderId},
-                      extra: {
-                        'qrCode': viewModel.payment!.qrCode,
-                        'qrDataUrl': viewModel.payment!.qrCode,
+                        'payment',
+                        pathParameters: {'orderId': widget.orderId},
+                        extra: {
+                          'qrCode': viewModel.payment!.qrCode,
+                          'qrDataUrl': viewModel.payment!.qrDataUrl,
+                          'orderCode': viewModel.order!.orderNo,
                         },
                       );
                     }
@@ -487,29 +487,29 @@ class CheckOutPageState extends State<CheckOutPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              buildSkeletonBox(200, 20), 
+              buildSkeletonBox(200, 20),
               const SizedBox(height: 12),
-              buildSkeletonBox(300, 40), 
+              buildSkeletonBox(300, 40),
               const SizedBox(height: 12),
-              buildSkeletonBox(300, 40), 
+              buildSkeletonBox(300, 40),
               const SizedBox(height: 12),
               buildSkeletonBox(300, 40),
               const SizedBox(height: 24),
-              buildSkeletonBox(200, 44), 
+              buildSkeletonBox(200, 44),
               const SizedBox(height: 12),
               buildSkeletonBox(200, 16),
               const SizedBox(height: 12),
               buildSkeletonBox(200, 16),
               const SizedBox(height: 12),
-              buildSkeletonBox(200, 16), 
+              buildSkeletonBox(200, 16),
               const SizedBox(height: 12),
-              buildSkeletonBox(200, 16), 
+              buildSkeletonBox(200, 16),
               const SizedBox(height: 24),
-              buildSkeletonBox(200, 20), 
+              buildSkeletonBox(200, 20),
               const SizedBox(height: 12),
-              buildSkeletonBox(300, 40), 
+              buildSkeletonBox(300, 40),
               const SizedBox(height: 12),
-              buildSkeletonBox(300, 40), 
+              buildSkeletonBox(300, 40),
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -517,16 +517,16 @@ class CheckOutPageState extends State<CheckOutPage> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      buildSkeletonBox(100, 20), 
+                      buildSkeletonBox(100, 20),
                       const SizedBox(height: 6),
-                      buildSkeletonBox(100, 16), 
+                      buildSkeletonBox(100, 16),
                     ],
                   ),
-                  buildSkeletonBox(150, 40), 
+                  buildSkeletonBox(150, 40),
                 ],
               ),
               const SizedBox(height: 24),
-              buildSkeletonBox(200, 20), 
+              buildSkeletonBox(200, 20),
             ],
           ),
         ),

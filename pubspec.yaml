@@ -117,6 +117,8 @@ flutter:
   - assets/icons/credit_logo.png
   - assets/icons/paypal_logo.png
   - assets/images/warning.png
+  - assets/images/fail.svg
+  - assets/images/success.svg
   - .env/dev.env
  
 

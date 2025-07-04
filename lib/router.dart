@@ -13,6 +13,7 @@ import 'package:eventorize_app/features/auth/view/profile_detail_page.dart';
 import 'package:eventorize_app/features/auth/view/favorite_page.dart';
 import 'package:eventorize_app/features/auth/view/event_detail_page.dart';
 import 'package:eventorize_app/features/auth/view/payment_page.dart';
+import 'package:eventorize_app/features/auth/view/payment_state_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -87,8 +88,22 @@ class AppRouter {
             orderId: orderId,
             qrCode: extra['qrCode'] ?? '',
             qrDataUrl: extra['qrDataUrl'] ?? '',
+            orderCode: extra['orderCode']?.toString() ?? '',
           );
         },
+        redirect: (context, state) => _authGuard(context),
+      ),
+      GoRoute(
+        path: '/payment-success',
+        name: 'payment-success',
+        builder: (context, state) => const PaymentSuccessfulPage(),
+        redirect: (context, state) => _authGuard(context),
+      ),
+      GoRoute(
+        path: '/payment-failed',
+        name: 'payment-failed',
+        builder: (context, state) => const PaymentFailedPage(),
+        redirect: (context, state) => _authGuard(context),
       ),
       GoRoute(
         path: '/favorite',
@@ -103,6 +118,7 @@ class AppRouter {
       ),
     ),
   );
+
   static String? _authGuard(BuildContext context) {
     final sessionManager = context.read<SessionManager>();
     if (sessionManager.user == null && !sessionManager.isCheckingSession) {

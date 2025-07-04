@@ -20,4 +20,17 @@ class PaymentApi {
       throw Exception('Failed to generate PayOS QR code: $errorMessage');
     }
   }
+
+  Future<Payment> getPaymentStatus(String orderNo) async {
+    try {
+      final response = await _dioClient.get(
+        ApiUrl.getPayosStatus,
+        queryParameters: {'order_code': orderNo},
+      );
+      return Payment.fromJson(response.data);
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
+      throw Exception('Failed to get PayOS payment status: $errorMessage');
+    }
+  }
 }

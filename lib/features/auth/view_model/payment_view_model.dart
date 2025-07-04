@@ -1,21 +1,32 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:gallery_saver_plus/gallery_saver.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/rendering.dart';
 import 'dart:ui';
+import 'package:eventorize_app/data/repositories/payment_repository.dart';
+
 
 class PaymentViewModel extends ChangeNotifier {
+  final PaymentRepository _paymentRepository;
+
   bool _isLoading = false;
   String? _errorMessage;
   String? _errorTitle;
+  Timer? _statusCheckTimer;
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   String? get errorTitle => _errorTitle;
+
+  PaymentViewModel({
+    required PaymentRepository paymentRepository,
+  }) : _paymentRepository = paymentRepository;
 
   Future<void> captureAndSaveQRCode(String orderId, String qrData, GlobalKey boundaryKey) async {
     if (_isLoading) return;
@@ -78,9 +89,96 @@ class PaymentViewModel extends ChangeNotifier {
     return byteData?.buffer.asUint8List() ?? (throw Exception('Failed to convert image to byte data'));
   }
 
+  void startPaymentStatusCheck(String orderId, String orderNo, BuildContext context) {
+    _statusCheckTimer?.cancel();
+    if (orderNo.isEmpty) {
+      _errorTitle = 'Lỗi';
+      _errorMessage = 'Mã đơn hàng không hợp lệ';
+      notifyListeners();
+      return;
+    }
+    _statusCheckTimer = Timer.periodic(Duration(seconds: 5), (timer) async {
+      if (!context.mounted) {
+        timer.cancel();
+        return;
+      }
+      try {
+        final payment = await _paymentRepository.getPaymentStatus(orderNo);
+        if (payment.status == 'success' && payment.qrStatus == 'PAID') {
+          timer.cancel();
+          if (context.mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              context.go('/payment-success');
+            });
+          }
+        } else if (payment.qrStatus == 'CANCELLED' || payment.qrStatus == 'EXPIRED') {
+          timer.cancel();
+          if (context.mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              context.go('/payment-failed');
+            });
+          }
+        }
+      } catch (e) {
+        if (context.mounted) {
+          _errorTitle = 'Lỗi';
+          _errorMessage = e.toString().contains('422')
+              ? 'Mã đơn hàng không hợp lệ hoặc không tồn tại'
+              : 'Không thể kiểm tra trạng thái thanh toán: $e';
+          notifyListeners();
+        }
+      }
+    });
+  }
+
+  Future<void> checkPaymentStatusOnce(String orderId, String orderNo, BuildContext context) async {
+    if (orderNo.isEmpty) {
+      _errorTitle = 'Lỗi';
+      _errorMessage = 'Mã đơn hàng không hợp lệ';
+      notifyListeners();
+      return;
+    }
+    try {
+      final payment = await _paymentRepository.getPaymentStatus(orderNo);
+      if (payment.status == 'success' && payment.qrStatus == 'PAID') {
+        if (context.mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            context.go('/payment-success');
+          });
+        }
+      } else if (payment.qrStatus == 'CANCELLED' || payment.qrStatus == 'EXPIRED') {
+        if (context.mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            context.go('/payment-failed');
+          });
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        _errorTitle = 'Lỗi';
+        _errorMessage = e.toString().contains('422')
+            ? 'Mã đơn hàng không hợp lệ hoặc không tồn tại'
+            : 'Không thể kiểm tra trạng thái thanh toán: $e';
+        notifyListeners();
+      }
+    }
+  }
+
+  void stopPaymentStatusCheck() {
+    _statusCheckTimer?.cancel();
+    _statusCheckTimer = null;
+    notifyListeners();
+  }
+
   void clearError() {
     _errorMessage = null;
     _errorTitle = null;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _statusCheckTimer?.cancel();
+    super.dispose();
   }
 }

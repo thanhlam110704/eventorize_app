@@ -58,7 +58,9 @@ void setupDependencies() {
     ),
   );
   getIt.registerFactory<PaymentViewModel>(
-    () => PaymentViewModel(),
+    () => PaymentViewModel(
+      paymentRepository: getIt<PaymentRepository>(),
+    ),
   );
 }
 
@@ -130,7 +132,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
         ChangeNotifierProvider<PaymentViewModel>(
-          create: (_) => getIt<PaymentViewModel>(), 
+          create: (_) => getIt<PaymentViewModel>(),
         ),
       ],
       child: MaterialApp.router(

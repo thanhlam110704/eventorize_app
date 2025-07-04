@@ -22,6 +22,7 @@ class CheckOutViewModel extends ChangeNotifier {
   String? get errorMessage => _errorState.errorMessage;
   String? get errorTitle => _errorState.errorTitle;
   String? get paypalMessage => _paypalMessage;
+  String? get orderNo => _order?.orderNo;
 
   Future<void> fetchOrderDetail(String orderId) async {
     _isLoading = true;

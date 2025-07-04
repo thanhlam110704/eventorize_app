@@ -92,10 +92,20 @@ class _TicketDialogState extends State<TicketDialog> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      "Không có vé",
-                      style: AppTextStyles.bold.copyWith(fontSize: 20),
-                      textAlign: TextAlign.center,
+                    Row(
+                      children: [
+                        const Spacer(),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 24, color: Colors.black),
+                          padding: EdgeInsets.zero,
+                          splashRadius: 20,
+                          onPressed: () {
+                            if (mounted) {
+                              Navigator.of(context).pop();
+                            }
+                          },
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     const Icon(
@@ -104,31 +114,13 @@ class _TicketDialogState extends State<TicketDialog> {
                       color: Color(0xFF9B9B9B),
                     ),
                     const SizedBox(height: 16),
-                    Text(
-                      "Hiện tại không có vé nào khả dụng cho sự kiện này.",
-                      style: AppTextStyles.text.copyWith(fontSize: 16, color: Color(0xFF616161)),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: () {
-                        if (mounted) {
-                          Navigator.of(context).pop();
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(44),
-                        backgroundColor: const Color(0xFFEC0303),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
+                    Flexible(
                       child: Text(
-                        "Đóng",
-                        style: AppTextStyles.bold.copyWith(
-                          fontSize: 15,
-                          color: Colors.white,
-                        ),
+                        "Không có vé khả dụng",
+                        style: AppTextStyles.text.copyWith(fontSize: 16, color: Color(0xFF616161)),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
                       ),
                     ),
                   ],

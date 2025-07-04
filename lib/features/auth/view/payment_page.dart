@@ -10,24 +10,30 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:eventorize_app/data/repositories/payment_repository.dart';
+import 'package:eventorize_app/data/api/payment_api.dart';
+import 'package:eventorize_app/common/services/dio_client.dart';
+import 'package:eventorize_app/features/auth/view/payment_state_page.dart';
 
 class PaymentPage extends StatefulWidget {
   final String orderId;
   final String qrCode;
   final String qrDataUrl;
+  final String orderCode;
 
   const PaymentPage({
     super.key,
     required this.orderId,
     required this.qrCode,
     required this.qrDataUrl,
+    required this.orderCode,
   });
 
   @override
   State<PaymentPage> createState() => _PaymentPageState();
 }
 
-class _PaymentPageState extends State<PaymentPage> {
+class _PaymentPageState extends State<PaymentPage> with WidgetsBindingObserver {
   static const smallScreenThreshold = 640.0;
   static const maxContentWidth = 600.0;
   static const buttonHeight = 50.0;
@@ -37,23 +43,71 @@ class _PaymentPageState extends State<PaymentPage> {
   final GlobalKey _qrKey = GlobalKey();
   Timer? _timer;
   Duration _remainingTime = countdownDuration;
+  DateTime? _lastPaused; 
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _startCountdownTimer();
+    _startPaymentStatusCheck();
+  }
+
+  void _startCountdownTimer() {
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_remainingTime.inSeconds > 0) {
         setState(() => _remainingTime -= const Duration(seconds: 1));
       } else {
         timer.cancel();
+        if (context.mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => PaymentFailedPage()),
+          );
+        }
       }
     });
   }
 
+  void _startPaymentStatusCheck() {
+    final viewModel = Provider.of<PaymentViewModel>(context, listen: false);
+    viewModel.startPaymentStatusCheck(widget.orderId, widget.orderCode, context);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    final viewModel = Provider.of<PaymentViewModel>(context, listen: false);
+    if (state == AppLifecycleState.resumed) {
+      if (context.mounted) {
+        if (_lastPaused != null) {
+          final elapsed = DateTime.now().difference(_lastPaused!);
+          setState(() {
+            _remainingTime = _remainingTime - elapsed;
+            if (_remainingTime.inSeconds < 0) _remainingTime = Duration.zero;
+          });
+          _lastPaused = null;
+        }
+        if (_remainingTime.inSeconds > 0) {
+          _startCountdownTimer();
+        }
+        viewModel.checkPaymentStatusOnce(widget.orderId, widget.orderCode, context);
+        _startPaymentStatusCheck();
+      }
+    } else if (state == AppLifecycleState.paused) {
+      _lastPaused = DateTime.now();
+      _timer?.cancel();
+      viewModel.stopPaymentStatusCheck(); 
+    }
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _scrollController.dispose();
+    Provider.of<PaymentViewModel>(context, listen: false).stopPaymentStatusCheck();
     super.dispose();
   }
 
@@ -64,7 +118,9 @@ class _PaymentPageState extends State<PaymentPage> {
     final isShortScreen = screenSize.height < 600;
 
     return ChangeNotifierProvider(
-      create: (_) => PaymentViewModel(),
+      create: (_) => PaymentViewModel(
+        paymentRepository: PaymentRepository(PaymentApi(DioClient())),
+      ),
       child: Consumer<PaymentViewModel>(
         builder: (context, viewModel, child) {
           if (viewModel.errorMessage != null && context.mounted) {
@@ -150,7 +206,7 @@ class _PaymentPageState extends State<PaymentPage> {
                                     _buildQrCode(),
                                     const SizedBox(height: 16),
                                     Text(
-                                      'Thời gian còn lại: ${(_remainingTime.inSeconds ~/ 60).toString().padLeft(2, '0')}:${(_remainingTime.inSeconds % 60).toString().padLeft(2, '0')}',
+                                      'Thời gian còn lại: ${(_remainingTime.inSeconds ~/ 60).toString().padLeft(1, '0')}:${(_remainingTime.inSeconds % 60).toString().padLeft(2, '0')}',
                                       style: AppTextStyles.text.copyWith(
                                         fontSize: 18,
                                         color: Colors.red,

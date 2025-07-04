@@ -31,7 +31,7 @@ class EventDetailPageState extends State<EventDetailPage> {
   static const maxContentWidth = 600.0;
   late final GeocodingService _geocodingService;
   bool isExpanded = false;
-  bool _isLoading = false; // Thêm biến trạng thái loading
+  bool _isLoading = false; 
 
   @override
   void initState() {
