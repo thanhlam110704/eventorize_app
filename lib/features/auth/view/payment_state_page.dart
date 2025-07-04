@@ -216,8 +216,8 @@ class _PaymentFailedPageState extends State<PaymentFailedPage> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Center(
-            child: SvgPicture.asset(
-              'assets/images/fail.svg',
+            child: Image.asset(
+              'assets/images/fail.png',
               width: 110,
               height: 110,
             ),

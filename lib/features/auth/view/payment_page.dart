@@ -13,7 +13,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:eventorize_app/data/repositories/payment_repository.dart';
 import 'package:eventorize_app/data/api/payment_api.dart';
 import 'package:eventorize_app/common/services/dio_client.dart';
-import 'package:eventorize_app/features/auth/view/payment_state_page.dart';
+import 'package:go_router/go_router.dart';
 
 class PaymentPage extends StatefulWidget {
   final String orderId;
@@ -43,7 +43,7 @@ class _PaymentPageState extends State<PaymentPage> with WidgetsBindingObserver {
   final GlobalKey _qrKey = GlobalKey();
   Timer? _timer;
   Duration _remainingTime = countdownDuration;
-  DateTime? _lastPaused; 
+  DateTime? _lastPaused;
 
   @override
   void initState() {
@@ -61,10 +61,7 @@ class _PaymentPageState extends State<PaymentPage> with WidgetsBindingObserver {
       } else {
         timer.cancel();
         if (context.mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => PaymentFailedPage()),
-          );
+          context.go('/payment-failed'); 
         }
       }
     });
@@ -85,7 +82,10 @@ class _PaymentPageState extends State<PaymentPage> with WidgetsBindingObserver {
           final elapsed = DateTime.now().difference(_lastPaused!);
           setState(() {
             _remainingTime = _remainingTime - elapsed;
-            if (_remainingTime.inSeconds < 0) _remainingTime = Duration.zero;
+            if (_remainingTime.inSeconds <= 0) {
+              _remainingTime = Duration.zero;
+              context.go('/payment-failed'); 
+            }
           });
           _lastPaused = null;
         }
@@ -98,7 +98,7 @@ class _PaymentPageState extends State<PaymentPage> with WidgetsBindingObserver {
     } else if (state == AppLifecycleState.paused) {
       _lastPaused = DateTime.now();
       _timer?.cancel();
-      viewModel.stopPaymentStatusCheck(); 
+      viewModel.stopPaymentStatusCheck();
     }
   }
 
@@ -215,19 +215,6 @@ class _PaymentPageState extends State<PaymentPage> with WidgetsBindingObserver {
                                       textAlign: TextAlign.center,
                                     ),
                                     const SizedBox(height: 20),
-                                  ],
-                                  if (isExpired) ...[
-                                    Image.asset('assets/images/warning.png', height: 120, width: 120),
-                                    const SizedBox(height: 10),
-                                    Text(
-                                      'Đơn hàng của bạn đã hết hạn',
-                                      style: AppTextStyles.medium.copyWith(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.red,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
                                   ],
                                 ],
                               ),

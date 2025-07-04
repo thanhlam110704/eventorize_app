@@ -97,7 +97,7 @@ class PaymentViewModel extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    _statusCheckTimer = Timer.periodic(Duration(seconds: 5), (timer) async {
+    _statusCheckTimer = Timer.periodic(Duration(seconds: 30), (timer) async {
       if (!context.mounted) {
         timer.cancel();
         return;
