@@ -11,6 +11,7 @@ import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/features/auth/view_model/favorite_view_model.dart';
 import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
 
+
 class FavoritePage extends StatefulWidget {
   const FavoritePage({super.key});
 
@@ -156,8 +157,13 @@ class FavoritePageState extends State<FavoritePage> {
                 child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      Image.asset(
+                        'assets/images/discover.png',
+                        width: 150,
+                        height: 150,
+                      ),
+                      const SizedBox(height: 24),
                       SizedBox(
                         width: 300,
                         child: Text(

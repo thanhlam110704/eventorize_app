@@ -14,6 +14,8 @@ import 'package:eventorize_app/features/auth/view/favorite_page.dart';
 import 'package:eventorize_app/features/auth/view/event_detail_page.dart';
 import 'package:eventorize_app/features/auth/view/payment_page.dart';
 import 'package:eventorize_app/features/auth/view/payment_state_page.dart';
+import 'package:eventorize_app/features/auth/view/ticket_page.dart';
+import 'package:eventorize_app/features/auth/view/ticket_detail_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -109,6 +111,21 @@ class AppRouter {
         path: '/favorite',
         name: 'favorite',
         builder: (context, state) => const FavoritePage(),
+        redirect: (context, state) => _authGuard(context),
+      ),
+      GoRoute(
+        path: '/ticket',
+        name: 'ticket',
+        builder: (context, state) => const TicketPage(),
+        redirect: (context, state) => _authGuard(context),
+      ),
+      GoRoute(
+        path: '/ticket/:orderId',
+        name: 'ticketDetail',
+        builder: (context, state) {
+          final orderId = state.pathParameters['orderId']!;
+          return TicketDetailPage(orderId: orderId);
+        },
         redirect: (context, state) => _authGuard(context),
       ),
     ],

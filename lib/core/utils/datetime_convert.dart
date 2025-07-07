@@ -1,16 +1,22 @@
 import 'package:intl/intl.dart';
-
+import 'package:intl/date_symbol_data_local.dart';
 
 class DateTimeConverter {
+  static Future<void> initialize() async {
+    await initializeDateFormatting('vi_VN', null);
+  }
+
   static String formatDateTime(
     DateTime? dateTime, {
-    String pattern = 'E, MMM d, HH:mm',
-    String fallback = 'Invalid date',
+    String pattern = 'E, dd \'thg\' M, HH:mm',
+    String fallback = 'Ngày giờ không hợp lệ',
   }) {
-    if (dateTime == null) return fallback;
+    if (dateTime == null) {
+      return fallback;
+    }
 
     try {
-      final formatter = DateFormat(pattern);
+      final formatter = DateFormat(pattern, 'vi_VN');
       return formatter.format(dateTime);
     } catch (e) {
       return fallback;
@@ -20,15 +26,24 @@ class DateTimeConverter {
   static String formatDateRange(
     DateTime? startDate,
     DateTime? endDate, {
-    String pattern = 'E, MMM d, HH:mm',
+    String pattern = 'E, dd \'thg\' M, HH:mm',
     String separator = ' - ',
-    String fallback = 'Invalid date range',
+    String fallback = 'Khoảng ngày giờ không hợp lệ',
   }) {
-    if (startDate == null || endDate == null) return fallback;
+    if (startDate == null || endDate == null) {
+      return fallback;
+    }
 
     try {
-      final formatter = DateFormat(pattern);
+      final formatter = DateFormat(pattern, 'vi_VN');
       final formattedStart = formatter.format(startDate);
+      if (startDate.year == endDate.year &&
+          startDate.month == endDate.month &&
+          startDate.day == endDate.day) {
+        final timeFormatter = DateFormat('HH:mm', 'vi_VN');
+        final formattedEndTime = timeFormatter.format(endDate);
+        return '$formattedStart$separator$formattedEndTime';
+      }
       final formattedEnd = formatter.format(endDate);
       return '$formattedStart$separator$formattedEnd';
     } catch (e) {
@@ -36,13 +51,14 @@ class DateTimeConverter {
     }
   }
 
-  
   static String formatDateString(
     String? dateString, {
-    String pattern = 'E, MMM d, HH:mm',
-    String fallback = 'Invalid date',
+    String pattern = 'E, dd \'thg\' M, HH:mm',
+    String fallback = 'Ngày giờ không hợp lệ',
   }) {
-    if (dateString == null) return fallback;
+    if (dateString == null) {
+      return fallback;
+    }
 
     try {
       final dateTime = DateTime.parse(dateString);
@@ -55,11 +71,13 @@ class DateTimeConverter {
   static String formatDateRangeString(
     String? startDateStr,
     String? endDateStr, {
-    String pattern = 'E, MMM d, HH:mm',
+    String pattern = 'E, dd \'thg\' M, HH:mm',
     String separator = ' - ',
-    String fallback = 'Invalid date range',
+    String fallback = 'Khoảng ngày giờ không hợp lệ',
   }) {
-    if (startDateStr == null || endDateStr == null) return fallback;
+    if (startDateStr == null || endDateStr == null) {
+      return fallback;
+    }
 
     try {
       final startDate = DateTime.parse(startDateStr);

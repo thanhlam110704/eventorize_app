@@ -17,7 +17,7 @@ class Order extends Equatable {
   final String? userPhone;
   final List<OrderItem> orderItems;
   final DateTime createdAt;
-  final String createdBy;
+  final String createdBy; 
   final DateTime? updatedAt;
   final String? updatedBy;
   final DateTime? deletedAt;

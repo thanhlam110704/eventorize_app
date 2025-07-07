@@ -60,7 +60,6 @@ class HomeViewModel extends ChangeNotifier {
     _initializeData();
   }
 
-
   Future<void> _initializeData() async {
     _isLoading = true;
     _isInitialLoad = true;
@@ -276,7 +275,7 @@ class HomeViewModel extends ChangeNotifier {
     }
   }
 
-  Future<List<String>> fetchEventTitles(String query) async {
+  Future<List<Map<String, String>>> fetchEventTitles(String query) async {
     try {
       final result = await _eventRepository.getAll(
         search: query.isNotEmpty ? query : null,
@@ -284,7 +283,7 @@ class HomeViewModel extends ChangeNotifier {
         fields: '_id,organizer_id,title,start_date,end_date,is_online',
       );
       final events = result['data'] as List<Event>;
-      return events.map((event) => event.title).toSet().toList();
+      return events.map((event) => {'title': event.title, 'id': event.id}).toList();
     } catch (e) {
       ErrorHandler.handleError(e, 'Lỗi khi tải dữ liệu tìm kiếm', _errorState);
       return [];

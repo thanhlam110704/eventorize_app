@@ -9,6 +9,9 @@ import 'package:eventorize_app/features/auth/view_model/favorite_view_model.dart
 import 'package:eventorize_app/features/auth/view_model/event_detail_view_model.dart';
 import 'package:eventorize_app/features/auth/view_model/check_out_view_model.dart';
 import 'package:eventorize_app/features/auth/view_model/payment_view_model.dart';
+import 'package:eventorize_app/features/auth/view_model/ticket_view_model.dart';
+import 'package:eventorize_app/features/auth/view_model/ticket_detail_view_model.dart';
+import 'package:eventorize_app/core/utils/datetime_convert.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
@@ -30,6 +33,7 @@ import 'package:eventorize_app/data/repositories/order_repository.dart';
 import 'package:eventorize_app/data/repositories/payment_repository.dart';
 import 'package:get_it/get_it.dart';
 import 'package:eventorize_app/common/services/location_cache.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 final getIt = GetIt.instance;
 
@@ -62,10 +66,22 @@ void setupDependencies() {
       paymentRepository: getIt<PaymentRepository>(),
     ),
   );
+  getIt.registerFactory<TicketViewModel>(
+    () => TicketViewModel(
+      orderRepository: getIt<OrderRepository>(),
+    ),
+  );
+  getIt.registerFactory<TicketDetailViewModel>(
+    () => TicketDetailViewModel(
+      orderRepository: getIt<OrderRepository>(),
+    ),
+  );
 }
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('vi_VN', null);
+  await DateTimeConverter.initialize();
   await dotenv.load(fileName: ".env/dev.env");
   setupDependencies();
   runApp(const MyApp());
@@ -133,6 +149,16 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<PaymentViewModel>(
           create: (_) => getIt<PaymentViewModel>(),
+        ),
+        ChangeNotifierProvider<TicketViewModel>(
+          create: (_) => TicketViewModel(
+            orderRepository: getIt<OrderRepository>(),
+          ),
+        ),
+        ChangeNotifierProvider<TicketDetailViewModel>(
+          create: (_) => TicketDetailViewModel(
+            orderRepository: getIt<OrderRepository>(),
+          ),
         ),
       ],
       child: MaterialApp.router(

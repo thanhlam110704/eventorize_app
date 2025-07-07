@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:toastification/toastification.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart'; // Thêm SpinKit
 import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/common/components/bottom_nav_bar.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/common/components/event_list.dart';
+import 'package:eventorize_app/features/auth/view/event_detail_page.dart'; // Import EventDetailPage
 import 'dart:async';
 
 class HomePage extends StatefulWidget {
@@ -25,7 +27,7 @@ class HomePageState extends State<HomePage> {
   OverlayEntry? _overlayEntry;
   String? _activeItem;
   Timer? _debounce;
-  List<String> _initialSuggestions = [];
+  List<Map<String, String>> _initialSuggestions = []; // Danh sách map cho gợi ý
   String? _lastSessionError; 
   String? _lastViewModelError; 
 
@@ -100,7 +102,21 @@ class HomePageState extends State<HomePage> {
           activeItem: _activeItem,
           viewModel: Provider.of<HomeViewModel>(context, listen: false),
           initialSuggestions: _initialSuggestions,
-          onItemSelected: (item) {
+          onSuggestionSelected: (item) {
+            setState(() {
+              _searchController.text = item['title']!;
+              _addRecentSearch(item['title']!);
+              _searchFocusNode.unfocus();
+              // Điều hướng đến EventDetailPage với id
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EventDetailPage(eventId: item['id']!),
+                ),
+              );
+            });
+          },
+          onRecentSearchSelected: (item) {
             setState(() {
               _searchController.text = item;
               _addRecentSearch(item);
@@ -160,7 +176,6 @@ class HomePageState extends State<HomePage> {
           }
         });
 
- 
         if (viewModel.isLoading || sessionManager.isCheckingSession) {
           return buildSkeletonUI(
             isSmallScreen: isSmallScreen,
@@ -460,13 +475,13 @@ class HomePageState extends State<HomePage> {
       );
 
   Widget buildSuggestionItem({
-    required String suggestion,
+    required Map<String, String> suggestion,
     required String? activeItem,
-    required ValueChanged<String> onItemSelected,
+    required ValueChanged<Map<String, String>> onItemSelected,
     required ValueChanged<String?> onActiveItemChanged,
     required double activeRectHeight,
   }) => InkWell(
-        onTapDown: (TapDownDetails _) => onActiveItemChanged(suggestion),
+        onTapDown: (TapDownDetails _) => onActiveItemChanged(suggestion['title']),
         onTapUp: (TapUpDetails _) => onActiveItemChanged(null),
         onTapCancel: () => onActiveItemChanged(null),
         onTap: () => onItemSelected(suggestion),
@@ -474,7 +489,7 @@ class HomePageState extends State<HomePage> {
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
           child: Container(
             decoration: BoxDecoration(
-              color: activeItem == suggestion ? const Color(0xFFF3F3F3) : null,
+              color: activeItem == suggestion['title'] ? const Color(0xFFF3F3F3) : null,
               borderRadius: BorderRadius.circular(4),
             ),
             child: Row(
@@ -489,7 +504,7 @@ class HomePageState extends State<HomePage> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: Text(
-                            suggestion,
+                            suggestion['title']!,
                             style: const TextStyle(color: AppColors.darkGrey),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -556,9 +571,9 @@ class HomePageState extends State<HomePage> {
       );
 
   Widget buildSuggestionsList({
-    required List<String> suggestions,
+    required List<Map<String, String>> suggestions,
     required String? activeItem,
-    required ValueChanged<String> onItemSelected,
+    required ValueChanged<Map<String, String>> onItemSelected,
     required ValueChanged<String?> onActiveItemChanged,
     required double activeRectHeight,
   }) => Column(
@@ -607,8 +622,9 @@ class HomePageState extends State<HomePage> {
     required TextEditingController searchController,
     required String? activeItem,
     required HomeViewModel viewModel,
-    required List<String> initialSuggestions,
-    required ValueChanged<String> onItemSelected,
+    required List<Map<String, String>> initialSuggestions,
+    required ValueChanged<Map<String, String>> onSuggestionSelected,
+    required ValueChanged<String> onRecentSearchSelected,
     required ValueChanged<String?> onActiveItemChanged,
     required ValueChanged<String> onDeleteRecentSearch,
     double activeRectHeight = 40.0,
@@ -645,7 +661,7 @@ class HomePageState extends State<HomePage> {
                         buildSuggestionsList(
                           suggestions: initialSuggestions,
                           activeItem: activeItem,
-                          onItemSelected: onItemSelected,
+                          onItemSelected: onSuggestionSelected,
                           onActiveItemChanged: onActiveItemChanged,
                           activeRectHeight: activeRectHeight,
                         ),
@@ -653,7 +669,7 @@ class HomePageState extends State<HomePage> {
                         buildRecentSearchesList(
                           recentSearches: recentSearches,
                           activeItem: activeItem,
-                          onItemSelected: onItemSelected,
+                          onItemSelected: onRecentSearchSelected,
                           onActiveItemChanged: onActiveItemChanged,
                           onDeleteRecentSearch: onDeleteRecentSearch,
                           activeRectHeight: activeRectHeight,
@@ -669,31 +685,16 @@ class HomePageState extends State<HomePage> {
                     ],
                   )
                 else
-                  FutureBuilder<List<String>>(
+                  FutureBuilder<List<Map<String, String>>>(
                     future: viewModel.fetchEventTitles(query),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return Padding(
                           padding: const EdgeInsets.all(16),
-                          child: Shimmer.fromColors(
-                            baseColor: AppColors.shimmerBase,
-                            highlightColor: AppColors.shimmerHighlight,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: List.generate(
-                                3,
-                                (_) => Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 8),
-                                  child: Container(
-                                    width: double.infinity,
-                                    height: 20,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.skeleton,
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                  ),
-                                ),
-                              ),
+                          child: Center(
+                            child: SpinKitCircle(
+                              color: AppColors.primary,
+                              size: 30.0,
                             ),
                           ),
                         );
@@ -713,7 +714,7 @@ class HomePageState extends State<HomePage> {
                           buildSuggestionsList(
                             suggestions: snapshot.data!,
                             activeItem: activeItem,
-                            onItemSelected: onItemSelected,
+                            onItemSelected: onSuggestionSelected,
                             onActiveItemChanged: onActiveItemChanged,
                             activeRectHeight: activeRectHeight,
                           ),
@@ -721,7 +722,7 @@ class HomePageState extends State<HomePage> {
                             buildRecentSearchesList(
                               recentSearches: recentSearches,
                               activeItem: activeItem,
-                              onItemSelected: onItemSelected,
+                              onItemSelected: onRecentSearchSelected,
                               onActiveItemChanged: onActiveItemChanged,
                               onDeleteRecentSearch: onDeleteRecentSearch,
                               activeRectHeight: activeRectHeight,

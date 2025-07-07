@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:toastification/toastification.dart';
-import 'package:go_router/go_router.dart'; // Thêm import go_router
+import 'package:go_router/go_router.dart'; 
 import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/core/utils/datetime_convert.dart';
@@ -99,7 +99,7 @@ class EventList extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               const Text(
-                'No events found',
+                'Không có sự kiện nào',
                 style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
             ],
@@ -189,8 +189,8 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
       if (mounted) {
         ToastCustom.show(
           context: context,
-          title: 'Error',
-          description: 'Invalid event ID',
+          title: 'Lỗi',
+          description: 'ID sự kiện không hợp lệ',
           type: ToastificationType.error,
         );
         setState(() {
@@ -208,8 +208,8 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
         if (mounted) {
           ToastCustom.show(
             context: context,
-            title: 'Success',
-            description: 'Event added to favorites',
+            title: 'Thành công',
+            description: 'Sự kiện đã được thêm vào',
             type: ToastificationType.success,
           );
         }
@@ -239,7 +239,7 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
         ToastCustom.show(
           context: context,
           title: 'Lỗi',
-          description: e.toString().replaceFirst('Exception: ', ''),
+          description: e.toString().replaceFirst('Lỗi: ', ''),
           type: ToastificationType.error,
         );
         setState(() {
@@ -253,7 +253,7 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        context.push('/event/${widget.event.id}'); // Điều hướng đến EventDetailPage với eventId
+        context.push('/event/${widget.event.id}'); 
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -288,7 +288,7 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
                     ),
                   ),
                 ),
-                Positioned(
+                /* Positioned(
                   top: 4,
                   right: 4,
                   child: Container(
@@ -306,7 +306,7 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
                       ),
                     ),
                   ),
-                ),
+                ), */
               ],
             ),
             const SizedBox(width: 12),
@@ -361,7 +361,7 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          widget.event.address ?? 'No address provided',
+                          widget.event.address ?? 'Không có địa chỉ',
                           style: const TextStyle(fontSize: 12, color: AppColors.mutedText),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -375,7 +375,7 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
                       Icon(Icons.people, size: 14, color: Colors.black),
                       SizedBox(width: 4),
                       Text(
-                        '2.9k attendees',
+                        '2.9k tham gia',
                         style: TextStyle(fontSize: 12, color: AppColors.mutedText),
                       ),
                     ],
