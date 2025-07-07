@@ -12,6 +12,7 @@ import 'package:eventorize_app/common/services/dio_client.dart';
 import 'package:eventorize_app/features/auth/view_model/ticket_detail_view_model.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/core/utils/datetime_convert.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:eventorize_app/data/models/order_item.dart';
 
 class TicketDetailPage extends StatefulWidget {
@@ -147,7 +148,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                              padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
                               child: ClipRRect(
                                 borderRadius: const BorderRadius.only(
                                   topLeft: Radius.circular(10),
@@ -267,17 +268,42 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
                     child: ClipRRect(
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(10),
                         topRight: Radius.circular(10),
                       ),
-                      child: Image.asset(
-                        'assets/images/event2.png',
-                        fit: BoxFit.fill,
-                        width: double.infinity,
-                        height: 160,
+                      child: CachedNetworkImage(
+                        imageUrl: ticket?.eventThumbnail ?? 'https://via.placeholder.com/600x200',
+                        imageBuilder: (context, imageProvider) => Container(
+                          width: double.infinity,
+                          height: 160,
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: imageProvider,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        placeholder: (context, url) => Shimmer.fromColors(
+                          baseColor: AppColors.shimmerBase,
+                          highlightColor: AppColors.shimmerHighlight,
+                          child: Container(
+                            width: double.infinity,
+                            height: 160,
+                            color: AppColors.skeleton,
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          width: double.infinity,
+                          height: 160,
+                          color: AppColors.skeleton,
+                          child: const Center(child: Icon(Icons.error, color: AppColors.red)),
+                        ),
+                        memCacheHeight: 320,
+                        memCacheWidth: 600,
+                        fadeInDuration: const Duration(milliseconds: 200),
                       ),
                     ),
                   ),
@@ -354,7 +380,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
             Text.rich(
               TextSpan(
                 children: [
-                  TextSpan(text: 'Quantity: ', style: AppTextStyles.semibold),
+                  TextSpan(text: 'Số lượng: ', style: AppTextStyles.semibold),
                   TextSpan(text: ticket.quantity.toString(), style: AppTextStyles.text),
                 ],
               ),
@@ -365,7 +391,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
         ),
         const SizedBox(height: 10),
         Text(
-          'Date and time:',
+          'Thời gian diễn ra:',
           style: AppTextStyles.semibold,
         ),
         const SizedBox(height: 4),
@@ -380,7 +406,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
         ),
         const SizedBox(height: 10),
         Text(
-          'Venue:',
+          'Địa điểm:',
           style: AppTextStyles.semibold,
         ),
         const SizedBox(height: 4),

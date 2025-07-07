@@ -17,6 +17,7 @@ class OrderItem extends Equatable {
   final DateTime eventEndDate;
   final DateTime? updatedAt;
   final String? updatedBy;
+  final String? eventThumbnail; 
 
   const OrderItem({
     required this.id,
@@ -35,6 +36,7 @@ class OrderItem extends Equatable {
     required this.eventEndDate,
     this.updatedAt,
     this.updatedBy,
+    this.eventThumbnail, 
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
@@ -59,6 +61,7 @@ class OrderItem extends Equatable {
       eventEndDate: parseDateTime(json['event_end_date'] as String),
       updatedAt: json['updated_at'] != null ? parseDateTime(json['updated_at'] as String) : null,
       updatedBy: json['updated_by'] as String?,
+      eventThumbnail: json['event_thumbnail'] as String?,
     );
   }
 
@@ -87,6 +90,7 @@ class OrderItem extends Equatable {
       'event_end_date': formatDateTime(eventEndDate),
       'updated_at': formatDateTime(updatedAt),
       'updated_by': updatedBy,
+      'event_thumbnail': eventThumbnail, 
     };
   }
 
@@ -108,5 +112,6 @@ class OrderItem extends Equatable {
         eventEndDate,
         updatedAt,
         updatedBy,
+        eventThumbnail, 
       ];
 }

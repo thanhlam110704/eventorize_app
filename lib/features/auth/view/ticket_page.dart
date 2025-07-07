@@ -129,7 +129,7 @@ class TicketPageState extends State<TicketPage> {
 
   Widget buildHeader() {
     return Text(
-      'Ticket',
+      'Lịch sử đặt vé',
       style: AppTextStyles.title,
     );
   }
@@ -201,13 +201,13 @@ class TicketPageState extends State<TicketPage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  buildSkeletonBox(double.infinity, 20),
+                                  buildSkeletonBox(220, 40), 
+                                  const SizedBox(height: 10),
+                                  buildSkeletonBox(220, 20), 
+                                  const SizedBox(height: 10),
+                                  buildSkeletonBox(200, 16), 
                                   const SizedBox(height: 10),
                                   buildSkeletonBox(200, 16),
-                                  const SizedBox(height: 10),
-                                  buildSkeletonBox(180, 16),
-                                  const SizedBox(height: 10),
-                                  buildSkeletonBox(140, 14), 
                                 ],
                               ),
                             ),
@@ -222,6 +222,12 @@ class TicketPageState extends State<TicketPage> {
                           ],
                         ),
                       ),
+                    ),
+                    Positioned(
+                      left: 0.72 * 360 - 0.5,
+                      top: 0,
+                      bottom: 0,
+                      child: const VerticalDashedLine(),
                     ),
                     Positioned.fill(
                       child: IgnorePointer(
@@ -247,7 +253,7 @@ class TicketPageState extends State<TicketPage> {
         // Find the order containing this ticket
         final order = viewModel.orders.firstWhere(
           (order) => order.orderItems.contains(ticket),
-          orElse: () => throw Exception('Order not found for ticket'),
+          orElse: () => throw Exception('Không có đơn hàng'),
         );
         return Padding(
           padding: const EdgeInsets.only(bottom: 35),
@@ -380,8 +386,8 @@ class TicketPageState extends State<TicketPage> {
                               const SizedBox(height: 8),
                               Text(
                                 DateTimeConverter.formatDateRange(
-                                  ticket.eventStartDate, 
-                                  ticket.eventEndDate,   
+                                  ticket.eventStartDate,
+                                  ticket.eventEndDate,
                                   pattern: 'dd \'thg\' M, HH:mm',
                                 ),
                                 style: AppTextStyles.medium.copyWith(
@@ -394,10 +400,10 @@ class TicketPageState extends State<TicketPage> {
                               const SizedBox(height: 8),
                               Row(
                                 children: [
-                                  Text('Type: ', style: AppTextStyles.semibold.copyWith(fontSize: 13)),
+                                  Text('Loại vé: ', style: AppTextStyles.semibold.copyWith(fontSize: 13)),
                                   Text(ticket.ticketTitle, style: AppTextStyles.text.copyWith(fontSize: 13)),
                                   const SizedBox(width: 30),
-                                  Text('Quantity: ', style: AppTextStyles.semibold.copyWith(fontSize: 13)),
+                                  Text('Số lượng: ', style: AppTextStyles.semibold.copyWith(fontSize: 13)),
                                   Text(
                                     ticket.quantity.toString(),
                                     style: AppTextStyles.text.copyWith(fontSize: 13),

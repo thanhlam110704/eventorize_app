@@ -377,11 +377,6 @@ class EventDetailPageState extends State<EventDetailPage> {
           fit: BoxFit.cover,
           width: double.infinity,
           placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-          errorWidget: (context, url, error) => Image.asset(
-            'assets/images/event1.png',
-            fit: BoxFit.cover,
-            width: double.infinity,
-          ),
         ),
         Positioned(
           top: 16,

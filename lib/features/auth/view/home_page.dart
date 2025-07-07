@@ -9,7 +9,7 @@ import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/common/components/event_list.dart';
-import 'package:eventorize_app/features/auth/view/event_detail_page.dart'; // Import EventDetailPage
+import 'package:eventorize_app/features/auth/view/event_detail_page.dart'; 
 import 'dart:async';
 
 class HomePage extends StatefulWidget {
@@ -27,7 +27,7 @@ class HomePageState extends State<HomePage> {
   OverlayEntry? _overlayEntry;
   String? _activeItem;
   Timer? _debounce;
-  List<Map<String, String>> _initialSuggestions = []; // Danh sách map cho gợi ý
+  List<Map<String, String>> _initialSuggestions = []; 
   String? _lastSessionError; 
   String? _lastViewModelError; 
 
@@ -107,7 +107,6 @@ class HomePageState extends State<HomePage> {
               _searchController.text = item['title']!;
               _addRecentSearch(item['title']!);
               _searchFocusNode.unfocus();
-              // Điều hướng đến EventDetailPage với id
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -271,13 +270,13 @@ class HomePageState extends State<HomePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          buildSkeletonBox(double.infinity, 20),
+                          buildSkeletonBox(double.infinity, 40),
                           const SizedBox(height: 4),
                           buildSkeletonBox(150, 16),
                           const SizedBox(height: 4),
-                          buildSkeletonBox(100, 16),
+                          buildSkeletonBox(130, 16),
                           const SizedBox(height: 4),
-                          buildSkeletonBox(80, 16),
+                          buildSkeletonBox(100, 16),
                         ],
                       ),
                     ),
@@ -819,7 +818,7 @@ class HomePageState extends State<HomePage> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFF2177AE) : const Color(0xFFE8E1E1),
+                color: isSelected ? AppColors.primary : const Color(0xFFE8E1E1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -839,7 +838,7 @@ class HomePageState extends State<HomePage> {
 
   Widget buildTrendingHeader() {
     return const Text(
-      'Các sự kiện nổi bật trong thành phố',
+      'Các sự kiện nổi bật',
       style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
     );
   }

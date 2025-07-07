@@ -330,7 +330,7 @@ class LoginPageState extends State<LoginPage> {
           context.goNamed('register');
         },
         child: Text(
-          'Đã có tài khoản? Đăng nhập ngay!!',
+          'Đã có tài khoản? Đăng nhập ngay!',
           style: AppTextStyles.link,
         ),
       ),

@@ -77,7 +77,7 @@ class HomeViewModel extends ChangeNotifier {
         return;
       }
       await _loadInitialLocationData();
-      await fetchEvents(page: 1, limit: 10, city: _selectedCity ?? user?.city);
+      await fetchEvents(page: 1, limit: 10, city: _selectedCity ?? 'Thành phố Hồ Chí Minh');
       _updateDataLoadedStatus();
       _isInitialLoad = false;
     } catch (e) {
@@ -128,7 +128,7 @@ class HomeViewModel extends ChangeNotifier {
 
       await _loadInitialLocationData();
       await _loadFavorites();
-      await fetchEvents(page: 1, limit: 10, city: _selectedCity ?? user?.city);
+      await fetchEvents(page: 1, limit: 10, city: _selectedCity ?? 'Thành phố Hồ Chí Minh');
 
       _updateDataLoadedStatus();
     } catch (e) {
@@ -146,7 +146,7 @@ class HomeViewModel extends ChangeNotifier {
       _locationCache.setProvinces(provinces);
     }
     if (_selectedCity == null && provinces.isNotEmpty) {
-      _selectedCity = user?.city ?? provinces[0].name;
+      _selectedCity = 'Thành phố Hồ Chí Minh'; // Đặt mặc định là "Thành phố Hồ Chí Minh"
     }
   }
 
@@ -208,7 +208,7 @@ class HomeViewModel extends ChangeNotifier {
         limit: limit,
         query: query,
         search: search,
-        city: city ?? _selectedCity,
+        city: city ?? _selectedCity ?? 'Thành phố Hồ Chí Minh',
         fields: fields,
         sortBy: sortBy,
         orderBy: orderBy,
@@ -242,7 +242,7 @@ class HomeViewModel extends ChangeNotifier {
         _locationCache.setProvinces(provinces);
       }
       if (_selectedCity == null && provinces.isNotEmpty) {
-        _selectedCity = user?.city ?? provinces[0].name;
+        _selectedCity = 'Thành phố Hồ Chí Minh'; // Đặt mặc định là "Thành phố Hồ Chí Minh"
       }
       await fetchEvents(city: _selectedCity);
       _updateDataLoadedStatus();
@@ -279,7 +279,7 @@ class HomeViewModel extends ChangeNotifier {
     try {
       final result = await _eventRepository.getAll(
         search: query.isNotEmpty ? query : null,
-        limit: 10,
+        limit: 3,
         fields: '_id,organizer_id,title,start_date,end_date,is_online',
       );
       final events = result['data'] as List<Event>;

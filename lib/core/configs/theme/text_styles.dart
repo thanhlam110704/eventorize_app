@@ -5,7 +5,7 @@ class AppTextStyles {
   static const TextStyle title = TextStyle(
     fontFamily: 'Roboto',
     fontWeight: FontWeight.w700,
-    fontSize: 36,
+    fontSize: 28,
     color: AppColors.black,
   );
 
