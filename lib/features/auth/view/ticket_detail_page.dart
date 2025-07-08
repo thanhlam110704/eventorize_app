@@ -275,7 +275,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                         topRight: Radius.circular(10),
                       ),
                       child: CachedNetworkImage(
-                        imageUrl: ticket?.eventThumbnail ?? 'https://via.placeholder.com/600x200',
+                        imageUrl: ticket?.eventThumbnail ?? '',
                         imageBuilder: (context, imageProvider) => Container(
                           width: double.infinity,
                           height: 160,
@@ -357,7 +357,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          ticket.eventTitle,
+          ticket.eventTitle ?? '',
           style: AppTextStyles.semibold.copyWith(fontSize: 20),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -411,7 +411,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
         ),
         const SizedBox(height: 4),
         Text(
-          ticket.eventAddress,
+          ticket.eventAddress?? '',
           style: AppTextStyles.text,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,

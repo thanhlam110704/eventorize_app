@@ -16,6 +16,8 @@ import 'package:eventorize_app/features/auth/view/payment_page.dart';
 import 'package:eventorize_app/features/auth/view/payment_state_page.dart';
 import 'package:eventorize_app/features/auth/view/ticket_page.dart';
 import 'package:eventorize_app/features/auth/view/ticket_detail_page.dart';
+import 'package:eventorize_app/features/auth/view/privacy_policy_page.dart';
+import 'package:eventorize_app/features/auth/view/terms_of_service_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -126,6 +128,18 @@ class AppRouter {
           final orderId = state.pathParameters['orderId']!;
           return TicketDetailPage(orderId: orderId);
         },
+        redirect: (context, state) => _authGuard(context),
+      ),
+      GoRoute(
+        path: '/terms-of-service',
+        name: 'termsOfService',
+        builder: (context, state) => const TOSPage(),
+        redirect: (context, state) => _authGuard(context),
+      ),
+      GoRoute(
+        path: '/privacy-policy',
+        name: 'privacyPolicy',
+        builder: (context, state) => const PrivacyPolicyPage(),
         redirect: (context, state) => _authGuard(context),
       ),
     ],

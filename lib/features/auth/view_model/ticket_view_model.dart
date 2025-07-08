@@ -37,7 +37,7 @@ class TicketViewModel extends ChangeNotifier {
         limit: limit,
         search: "active",
       );
-      _orders = response['data'] as List<Order>; // Store orders
+      _orders = response['data'] as List<Order>;
       _tickets = _orders.expand((order) => order.orderItems).toList();
       notifyListeners();
     } catch (e) {

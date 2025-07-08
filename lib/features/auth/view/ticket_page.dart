@@ -368,14 +368,14 @@ class TicketPageState extends State<TicketPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                ticket.eventTitle,
+                                ticket.eventTitle ?? '',
                                 style: AppTextStyles.semibold.copyWith(fontSize: 16),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                ticket.eventAddress,
+                                ticket.eventAddress ?? '',
                                 style: AppTextStyles.medium.copyWith(
                                   fontSize: 13,
                                   color: AppColors.grey,
@@ -401,7 +401,7 @@ class TicketPageState extends State<TicketPage> {
                               Row(
                                 children: [
                                   Text('Loại vé: ', style: AppTextStyles.semibold.copyWith(fontSize: 13)),
-                                  Text(ticket.ticketTitle, style: AppTextStyles.text.copyWith(fontSize: 13)),
+                                  Text(ticket.ticketTitle ?? '', style: AppTextStyles.text.copyWith(fontSize: 13)),
                                   const SizedBox(width: 30),
                                   Text('Số lượng: ', style: AppTextStyles.semibold.copyWith(fontSize: 13)),
                                   Text(

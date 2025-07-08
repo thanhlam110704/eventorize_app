@@ -432,7 +432,11 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
         buildSettingItem(
           icon: MdiIcons.fileDocumentOutline,
           title: 'Điều khoản dịch vụ',
-          onTap: () {},
+          onTap: () {
+            if (mounted) {
+              context.pushNamed('termsOfService');
+            }
+          },
           iconColor: AppColors.black,
           textColor: AppColors.black,
           showTrailing: true,
@@ -442,7 +446,11 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
         buildSettingItem(
           icon: MdiIcons.lockOutline,
           title: 'Chính sách bảo mật',
-          onTap: () {},
+          onTap: () {
+            if (mounted) {
+              context.pushNamed('privacyPolicy');
+            }
+          },
           iconColor: AppColors.black,
           textColor: AppColors.black,
           showTrailing: true,
