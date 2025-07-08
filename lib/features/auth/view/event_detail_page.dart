@@ -372,11 +372,28 @@ class EventDetailPageState extends State<EventDetailPage> {
   Widget buildEventBanner(Event event) {
     return Stack(
       children: [
-        CachedNetworkImage(
-          imageUrl: event.thumbnail ?? 'https://via.placeholder.com/600x200',
-          fit: BoxFit.cover,
-          width: double.infinity,
-          placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+        SizedBox(
+          width: double.infinity, 
+          height: 220, 
+          child: CachedNetworkImage(
+            imageUrl: event.thumbnail ?? 'https://via.placeholder.com/600x200',
+            imageBuilder: (context, imageProvider) => Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: imageProvider,
+                  fit: BoxFit.contain, 
+                ),
+              ),
+            ),
+            placeholder: (context, url) => Container(
+              color: Colors.grey[300], 
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            errorWidget: (context, url, error) => Container(
+              color: Colors.grey[300],
+              child: Center(child: Icon(Icons.error)),
+            ),
+          ),
         ),
         Positioned(
           top: 16,
