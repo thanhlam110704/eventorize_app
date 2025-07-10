@@ -110,19 +110,30 @@ class EventApi {
     String? thumbnailUrl,
   }) async {
     try {
+      // Format dates as YYYY-MM-DD HH:MM:SS
+      String formatDate(DateTime date) {
+        final year = date.year.toString().padLeft(4, '0');
+        final month = date.month.toString().padLeft(2, '0');
+        final day = date.day.toString().padLeft(2, '0');
+        final hour = date.hour.toString().padLeft(2, '0');
+        final minute = date.minute.toString().padLeft(2, '0');
+        final second = date.second.toString().padLeft(2, '0');
+        return '$year-$month-$day $hour:$minute:$second';
+      }
+
       final data = FormData.fromMap({
         'organizer_id': organizerId,
         'title': title,
-        'description': description,
-        'link': link,
-        'start_date': startDate.toIso8601String(),
-        'end_date': endDate.toIso8601String(),
+        if (description != null) 'description': description,
+        if (link != null) 'link': link,
+        'start_date': formatDate(startDate),
+        'end_date': formatDate(endDate),
         'is_online': isOnline,
-        'address': address,
-        'district': district,
-        'ward': ward,
-        'city': city,
-        'country': country,
+        if (address != null) 'address': address,
+        if (district != null) 'district': district,
+        if (ward != null) 'ward': ward,
+        if (city != null) 'city': city,
+        if (country != null) 'country': country,
         if (thumbnailUrl != null) 'thumbnail': thumbnailUrl,
       });
 
@@ -156,14 +167,25 @@ class EventApi {
     String? country,
   }) async {
     try {
+      // Format dates as YYYY-MM-DD HH:MM:SS
+      String formatDate(DateTime date) {
+        final year = date.year.toString().padLeft(4, '0');
+        final month = date.month.toString().padLeft(2, '0');
+        final day = date.day.toString().padLeft(2, '0');
+        final hour = date.hour.toString().padLeft(2, '0');
+        final minute = date.minute.toString().padLeft(2, '0');
+        final second = date.second.toString().padLeft(2, '0');
+        return '$year-$month-$day $hour:$minute:$second';
+      }
+
       final response = await _dioClient.put(
         ApiUrl.editEvent(id),
         data: {
           if (title != null) 'title': title,
           if (description != null) 'description': description,
           if (link != null) 'link': link,
-          if (startDate != null) 'start_date': startDate.toIso8601String(),
-          if (endDate != null) 'end_date': endDate.toIso8601String(),
+          if (startDate != null) 'start_date': formatDate(startDate),
+          if (endDate != null) 'end_date': formatDate(endDate),
           if (isOnline != null) 'is_online': isOnline,
           if (address != null) 'address': address,
           if (district != null) 'district': district,
@@ -217,7 +239,7 @@ class EventApi {
     try {
       final response = await _dioClient.get(
         ApiUrl.getEvents,
-        queryParameters: {'query': 'organizer_id=$organizerId'},
+        queryParameters: {'organizer_id': organizerId},
       );
       return (response.data['results'] as List)
           .map((json) => Event.fromJson(json))

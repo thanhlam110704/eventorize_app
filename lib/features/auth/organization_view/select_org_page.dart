@@ -1,142 +1,209 @@
+import 'dart:ui';
 import 'package:eventorize_app/common/components/custom_fields.dart';
 import 'package:eventorize_app/common/components/side_bar.dart';
+import 'package:eventorize_app/common/components/toast_custom.dart';
+import 'package:eventorize_app/common/services/dio_client.dart';
+import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/components/top_nav_org_bar.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
+import 'package:eventorize_app/data/api/organizer_api.dart';
+import 'package:eventorize_app/data/repositories/organizer_repository.dart';
+import 'package:eventorize_app/features/auth/organization_view_model/select_org_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:ui';
+import 'package:provider/provider.dart';
+import 'package:toastification/toastification.dart';
 
 class SelectOrgPage extends StatefulWidget {
   const SelectOrgPage({super.key});
 
   @override
-  SelectOrgPageState createState() => SelectOrgPageState();
+  State<SelectOrgPage> createState() => _SelectOrgPageState();
 }
 
-class SelectOrgPageState extends State<SelectOrgPage> {
-  static const smallScreenThreshold = 640.0;
-  static const maxContentWidth = 600.0;
-
+class _SelectOrgPageState extends State<SelectOrgPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool showPopup = true;
-  String? selectedCity;
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: AppColors.whiteBackground,
+      appBar: TopNavOrgBar(
+        leadingIcon: Icons.menu,
+        onLeadingPressed: () {
+          if (mounted) _scaffoldKey.currentState?.openDrawer();
+        },
+        title: 'Danh sách sự kiện',
+        actionIcon: Icons.search,
+        onActionPressed: () {},
+      ),
+      drawer: const CustomDrawer(currentPage: AppPage.eventList),
+      body: SafeArea(
+        child: Consumer<SessionManager>(
+          builder: (context, sessionManager, _) {
+            return ChangeNotifierProvider(
+              create: (_) => SelectOrgViewModel(
+                organizerRepository: OrganizerRepository(OrganizerApi(DioClient())),
+                sessionManager: sessionManager,
+              ),
+              child: Consumer<SelectOrgViewModel>(
+                builder: (context, viewModel, _) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) _handleErrors(context, sessionManager, viewModel);
+                  });
+
+                  if (sessionManager.isCheckingSession || sessionManager.isLoading || viewModel.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (sessionManager.user == null) {
+                    return const SizedBox.shrink();
+                  }
+
+                  return Stack(
+                    children: [
+                      const SizedBox.expand(),
+                      if (showPopup) _buildOrganizerPopup(viewModel),
+                    ],
+                  );
+                },
+              ),
+            );
+          },
+        ),
+      ),
+      floatingActionButton: _buildFAB(),
+    );
+  }
+
+  void _handleErrors(
+    BuildContext context,
+    SessionManager session,
+    SelectOrgViewModel viewModel,
+  ) {
+    if (session.errorMessage != null) {
+      ToastCustom.show(
+        context: context,
+        title: session.errorTitle ?? 'Error',
+        description: session.errorMessage!,
+        type: ToastificationType.error,
+      );
+      session.clearError();
+      if (!session.isLoading && session.user == null) {
+        context.pushReplacementNamed('login');
+      }
+    }
+
+    if (viewModel.errorMessage != null) {
+      ToastCustom.show(
+        context: context,
+        title: viewModel.errorTitle ?? 'Error',
+        description: viewModel.errorMessage!,
+        type: ToastificationType.error,
+      );
+      viewModel.clearError();
+    }
+  }
+
+  Widget _buildOrganizerPopup(SelectOrgViewModel viewModel) {
     return Stack(
       children: [
-        Scaffold(
-          key: _scaffoldKey,
-          appBar: TopNavOrgBar(
-            leadingIcon: Icons.menu,
-            onLeadingPressed: () {
-              _scaffoldKey.currentState?.openDrawer();
-            },
-            title: 'Danh sách sự kiện',
-            actionIcon: Icons.search,
-            onActionPressed: () {
-              // 
-            },
+        Positioned.fill(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 3.0, sigmaY: 3.0),
+            child: Container(color: Colors.black.withAlpha(0)),
           ),
-          drawer: const CustomDrawer(currentPage: AppPage.eventList),
-          backgroundColor: AppColors.whiteBackground,
-          body: const SizedBox.expand(), 
-          floatingActionButton: Padding(
-            padding: const EdgeInsets.fromLTRB(0, 0, 20, 50),
-            child: SizedBox(
-              width: 70,
-              height: 70,
-              child: FloatingActionButton(
-                onPressed: () {
-                  context.go('/createevent');
-                },
-                backgroundColor: const Color(0xFF194185),
-                elevation: 6,
-                shape: const CircleBorder(),
-                child: const Icon(
-                  Icons.add,
-                  color: Colors.white,
-                  size: 32,
-                ),
+        ),
+        Center(
+          child: Material(
+            borderRadius: BorderRadius.circular(10),
+            color: Colors.white,
+            child: Container(
+              width: 350,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.grey, width: 1),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Lựa chọn nhà tổ chức', style: AppTextStyles.bold),
+                      GestureDetector(
+                        onTap: () => setState(() => showPopup = false),
+                        child: const Icon(Icons.close),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Chọn nhà tổ chức quản lý sự kiện',
+                    style: AppTextStyles.text.copyWith(
+                      color: AppColors.grey,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  CustomDropdownField(
+                    label: '',
+                    hintText: 'Chọn nhà tổ chức',
+                    items: viewModel.organizers.map((org) => org.name).toList(),
+                    selectedValue: viewModel.selectedOrganizerId != null
+                        ? viewModel.organizers
+                            .firstWhere((org) => org.id == viewModel.selectedOrganizerId)
+                            .name
+                        : null,
+                    dropdownWidth: 300,
+                    onChanged: (value) async {
+                      if (!mounted || value == null) return;
+                      try {
+                        final selectedOrg = viewModel.organizers.firstWhere((org) => org.name == value);
+                        viewModel.selectOrganizer(selectedOrg.id);
+                        await Future.delayed(const Duration(milliseconds: 100));
+                        if (mounted) context.push('/eventlist/${selectedOrg.id}');
+                      } catch (_) {
+                        if (mounted) {
+                          ToastCustom.show(
+                            context: context,
+                            title: 'Error',
+                            description: 'Lỗi khi chọn nhà tổ chức',
+                            type: ToastificationType.error,
+                          );
+                        }
+                      }
+                    },
+                  ),
+                ],
               ),
             ),
           ),
         ),
-        if (showPopup) ...[
-          Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 3.0, sigmaY: 3.0),
-              child: Container(
-                color: Colors.black.withOpacity(0), 
-              ),
-            ),
-          ),
-          Center(
-              child: Material(
-                borderRadius: BorderRadius.circular(10),
-                color: Colors.white,
-                child: Container(
-                  width: 350,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: AppColors.grey,
-                      width: 1,
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Lựa chọn nhà tổ chức',
-                            style: AppTextStyles.bold,
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                showPopup = false;
-                              });
-                            },
-                            child: const Icon(Icons.close),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Chọn nhà tổ chức quản lý sự kiện',
-                        style: AppTextStyles.text.copyWith(
-                          color: AppColors.grey,
-                          fontSize: 13,
-                        ),
-                      ),
-                      CustomDropdownField(
-                        label: '',
-                        hintText: "Chọn nhà tổ chức",
-                        items: ['Huflit', 'Huflit', 'Huflit', 'Huflit'],
-                        selectedValue: selectedCity,
-                        dropdownWidth: 300,
-                        onChanged: (value) {
-                          setState(() {
-                            selectedCity = value;
-                          });
-                          context.push('/createorg');
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            
-          ),
-        ]
       ],
+    );
+  }
+
+  Widget _buildFAB() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 0, 20, 50),
+      child: SizedBox(
+        width: 70,
+        height: 70,
+        child: FloatingActionButton(
+          onPressed: () => context.go('/createevent'),
+          backgroundColor: const Color(0xFF194185),
+          elevation: 6,
+          shape: const CircleBorder(),
+          child: const Icon(Icons.add, color: Colors.white, size: 32),
+        ),
+      ),
     );
   }
 }

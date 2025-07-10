@@ -5,6 +5,7 @@ import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/features/auth/organization_view/edit_ticket_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:eventorize_app/common/components/side_bar.dart';
 
 class TicketListPage extends StatefulWidget {
   const TicketListPage({super.key});
@@ -16,6 +17,8 @@ class TicketListPage extends StatefulWidget {
 class TicketListPageState extends State<TicketListPage> {
   static const smallScreenThreshold = 640.0;
   static const maxContentWidth = 600.0; 
+
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final List<Map<String, dynamic>> tickets = [
     {'title': 'Ticket A', 'sold': 0},
@@ -29,17 +32,19 @@ class TicketListPageState extends State<TicketListPage> {
     final isSmallScreen = screenSize.width <= smallScreenThreshold;
 
     return Scaffold(
+      key: _scaffoldKey,
       appBar: TopNavOrgBar(
-        leadingIcon: Icons.arrow_back_ios,
+        leadingIcon: Icons.menu,
         title: 'Tickets',
         actionIcon: Icons.search,
         onLeadingPressed: () {
-          Navigator.of(context).pop();
+          _scaffoldKey.currentState?.openDrawer(); 
         },
         onActionPressed: () {
          // Submit logic
         },
       ),
+      drawer: const CustomDrawer(currentPage: AppPage.ticketList),
       backgroundColor: AppColors.whiteBackground,
       floatingActionButton: Padding(
         padding: const EdgeInsets.fromLTRB(0,0,20,50),
@@ -48,7 +53,7 @@ class TicketListPageState extends State<TicketListPage> {
           height: 70, 
           child: FloatingActionButton(
             onPressed: () {
-              context.go('/createtickett');
+              context.go('/createticket');
             },
             backgroundColor: const Color(0xFF194185),
             elevation: 6,

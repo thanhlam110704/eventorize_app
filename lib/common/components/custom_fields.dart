@@ -70,6 +70,8 @@ class CustomTextField extends StatelessWidget {
   final int maxLines;
   final String? initialValue;
   final bool readOnly;
+  final TextEditingController? controller;
+  final String? Function(String?)? validator;
 
   const CustomTextField({
     super.key,
@@ -81,6 +83,8 @@ class CustomTextField extends StatelessWidget {
     this.maxLines = 1,
     this.initialValue,
     this.readOnly = false,
+    this.controller,
+    this.validator,
   });
 
   @override
@@ -109,12 +113,13 @@ class CustomTextField extends StatelessWidget {
           const SizedBox(height: 8),
           Opacity(
             opacity: readOnly ? 0.6 : 1.0,
-            child: TextField(
-              controller: TextEditingController(text: initialValue),
+            child: TextFormField(
+              controller: controller ?? TextEditingController(text: initialValue),
               keyboardType: keyboardType,
               maxLines: maxLines,
               readOnly: readOnly,
               style: AppTextStyles.text,
+              validator: validator,
               decoration: InputDecoration(
                 hintText: hintText,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(5)),

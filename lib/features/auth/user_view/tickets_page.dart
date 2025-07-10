@@ -90,7 +90,7 @@ class TicketsPageState extends State<TicketsPage> {
   Widget buildTicketCard(BuildContext context) {
   return GestureDetector(
     onTap: () {
-      context.push('/tickets-detail'); // or context.pushNamed('tickets-detail');
+      context.push('/tickets-detail'); 
     },
     child: SizedBox(
       width: 360,

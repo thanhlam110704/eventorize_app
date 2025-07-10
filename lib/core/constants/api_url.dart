@@ -29,16 +29,15 @@ class ApiUrl {
   static String editEventThumbnail(String id) => '/v1/events/$id/thumbnail';
   static String deleteEvent(String id) => '/v1/events/$id';
 
-  // Ticket endpoints
-  static String get getTickets => '/v1/tickets';
-  static String createTicket(String eventId) => '/v1/events/$eventId/tickets';
-  static String editTicket(String ticketId) => '/v1/tickets/$ticketId';
-  static String getTicketsByEvent(String eventId) => '/v1/events/$eventId/tickets';
-  static String deleteTicket(String ticketId) => '/v1/tickets/$ticketId';
-  
   // Organizer endpoints
   static String get getOrganizers => '/v1/organizers';
   static String get createOrganizers => '/v1/organizers';
+  static String get exportOrganizers => '/v1/organizers/export';
+  static String getOrganizerDetail(String id) => '/v1/organizers/$id';
+  static String editOrganizer(String id) => '/v1/organizers/$id';
+  static String deleteOrganizer(String id) => '/v1/organizers/$id';
+  static String getOrganizerDetailPublic(String id) => '/v1/home/organizers/$id';
+  static String editOrganizerLogo(String id) => '/v1/organizers/$id/logo';
 
   // Favorite endpoints
   static const String getFavorites = '/v1/favorites/my-events';

@@ -1,15 +1,24 @@
 import 'package:eventorize_app/common/components/side_bar.dart';
+import 'package:eventorize_app/common/components/toast_custom.dart';
+import 'package:eventorize_app/common/services/dio_client.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/components/top_nav_org_bar.dart';
-import 'package:eventorize_app/common/components/custom_event_menu.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
+import 'package:eventorize_app/data/api/event_api.dart';
+import 'package:eventorize_app/data/repositories/event_repository.dart';
+import 'package:eventorize_app/features/auth/organization_view_model/event_list_view_model.dart';
+import 'package:flutter/material.dart';
+import 'package:eventorize_app/data/models/event.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:toastification/toastification.dart';
+import 'package:eventorize_app/common/components/custom_event_menu.dart';
 import 'package:eventorize_app/features/auth/organization_view/edit_event_page.dart';
 
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-
 class EventListPage extends StatefulWidget {
-  const EventListPage({super.key});
+  final String organizerId;
+
+  const EventListPage({super.key, required this.organizerId});
 
   @override
   EventListPageState createState() => EventListPageState();
@@ -23,32 +32,27 @@ class EventListPageState extends State<EventListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    final isSmallScreen = screenSize.width <= smallScreenThreshold;
-
     return Scaffold(
       key: _scaffoldKey,
       appBar: TopNavOrgBar(
         leadingIcon: Icons.menu,
         onLeadingPressed: () {
-          _scaffoldKey.currentState?.openDrawer(); 
+          _scaffoldKey.currentState?.openDrawer();
         },
         title: 'Danh sách sự kiện',
         actionIcon: Icons.search,
-        onActionPressed: () {
-          //
-        },
+        onActionPressed: () {},
       ),
       drawer: const CustomDrawer(currentPage: AppPage.eventList),
       backgroundColor: AppColors.whiteBackground,
       floatingActionButton: Padding(
-        padding: const EdgeInsets.fromLTRB(0,0,20,50),
+        padding: const EdgeInsets.fromLTRB(0, 0, 20, 50),
         child: SizedBox(
-          width: 70, 
-          height: 70, 
+          width: 70,
+          height: 70,
           child: FloatingActionButton(
             onPressed: () {
-              context.go('/createevent');
+              context.go('/createevent/${widget.organizerId}');
             },
             backgroundColor: const Color(0xFF194185),
             elevation: 6,
@@ -56,20 +60,50 @@ class EventListPageState extends State<EventListPage> {
             child: const Icon(
               Icons.add,
               color: Colors.white,
-              size: 32, 
+              size: 32,
             ),
           ),
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: buildMainContainer(isSmallScreen, screenSize),
+        child: ChangeNotifierProvider(
+          create: (_) => EventListViewModel(
+            eventRepository: EventRepository(EventApi(DioClient())),
+            organizerId: widget.organizerId,
+          ),
+          child: Consumer<EventListViewModel>(
+            builder: (context, viewModel, _) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted && viewModel.errorMessage != null) {
+                  ToastCustom.show(
+                    context: context,
+                    title: viewModel.errorTitle ?? 'Error',
+                    description: viewModel.errorMessage!,
+                    type: ToastificationType.error,
+                  );
+                  viewModel.clearError();
+                }
+              });
+
+              if (viewModel.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              return SingleChildScrollView(
+                child: buildMainContainer(
+                  MediaQuery.of(context).size.width <= smallScreenThreshold,
+                  MediaQuery.of(context).size,
+                  viewModel,
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
   }
 
-  Widget buildMainContainer(bool isSmallScreen, Size screenSize) {
+  Widget buildMainContainer(bool isSmallScreen, Size screenSize, EventListViewModel viewModel) {
     return Container(
       width: screenSize.width,
       color: AppColors.whiteBackground,
@@ -81,7 +115,7 @@ class EventListPageState extends State<EventListPage> {
       ),
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.only(left: 10), 
+          padding: const EdgeInsets.only(left: 10),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: maxContentWidth),
             child: Column(
@@ -89,7 +123,7 @@ class EventListPageState extends State<EventListPage> {
               children: [
                 buildFilterBar(),
                 const SizedBox(height: 16),
-                buildEventList(),
+                buildEventList(viewModel),
                 const SizedBox(height: 80),
               ],
             ),
@@ -101,11 +135,9 @@ class EventListPageState extends State<EventListPage> {
 
   Widget buildFilterBar() {
     return GestureDetector(
-      onTap: () {
-        // 
-      },
+      onTap: () {},
       child: Row(
-        mainAxisSize: MainAxisSize.min, 
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             'Tất cả',
@@ -118,19 +150,22 @@ class EventListPageState extends State<EventListPage> {
     );
   }
 
-  Widget buildEventList() {
-    List<Map<String, String>> events = List.generate(5, (_) => {
-      'title': 'Mastering Vendor Development',
-      'time': 'Friday, Jan 10, 6:00 - Monday, Jan 13, 8:00',
-      'status': 'Offline',
-      'image': 'assets/images/event1.png',
-    });
+  Widget buildEventList(EventListViewModel viewModel) {
+    if (viewModel.events.isEmpty) {
+      return const Center(
+        child: Text(
+          'Không có sự kiện nào',
+          style: AppTextStyles.text,
+        ),
+      );
+    }
+
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: events.length,
+      itemCount: viewModel.events.length,
       itemBuilder: (context, index) {
-        final event = events[index];
+        final event = viewModel.events[index];
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: buildEventCard(event),
@@ -139,79 +174,92 @@ class EventListPageState extends State<EventListPage> {
     );
   }
 
-  Widget buildEventCard(Map<String, String> event) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Stack(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: Image.asset(
-                        event['image']!,
-                        width: 80,
-                        height: 80,
-                        fit: BoxFit.cover,
-                      ),
+  Widget buildEventCard(Event event) {
+    return Stack(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: event.thumbnail != null
+                        ? Image.network(
+                            event.thumbnail!,
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              width: 80,
+                              height: 80,
+                              color: AppColors.grey,
+                              child: const Icon(Icons.image_not_supported),
+                            ),
+                          )
+                        : Container(
+                            width: 80,
+                            height: 80,
+                            color: AppColors.grey,
+                            child: const Icon(Icons.image_not_supported),
+                          ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          event.title,
+                          style: AppTextStyles.semibold,
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          '${event.startDate.day}/${event.startDate.month}/${event.startDate.year} - ${event.endDate.day}/${event.endDate.month}/${event.endDate.year}',
+                          style: AppTextStyles.medium.copyWith(fontSize: 12, color: AppColors.grey),
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          event.isOnline ? 'Online' : 'Offline',
+                          style: AppTextStyles.text.copyWith(
+                            fontSize: 12,
+                            color: event.isOnline ? Colors.green : Colors.red,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            event['title']!,
-                            style: AppTextStyles.semibold,
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            event['time']!,
-                            style: AppTextStyles.medium.copyWith(fontSize: 12, color: AppColors.grey),
-                          ),
-                          const SizedBox(height: 1),
-                          Text(
-                            'Offline',
-                            style: AppTextStyles.text.copyWith(fontSize: 12, color: Colors.red),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 30),
-            ],
-          ),
-          Positioned(
-            right: 0,
-            top: 0,
-            child: Builder(
-              builder: (context) => IconButton(
-                icon: const Icon(Icons.more_vert, color: Colors.black54),
-                onPressed: () {
-                  final RenderBox box = context.findRenderObject() as RenderBox;
-                  final position = box.localToGlobal(Offset.zero);
-                  showEventMenu(context, position, () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => EditEventPage()),
-                    );
-                  }, () {
-                    //delete
-                  });
-                },
+                  ),
+                ],
               ),
             ),
+            const SizedBox(width: 30),
+          ],
+        ),
+        Positioned(
+          right: 0,
+          top: 0,
+          child: Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.more_vert, color: Colors.black54),
+              onPressed: () {
+                final RenderBox box = context.findRenderObject() as RenderBox;
+                final position = box.localToGlobal(Offset.zero);
+                showEventMenu(context, position, () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => EditEventPage()),
+                  );
+                }, () {
+                  // Delete action placeholder
+                });
+              },
+            ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

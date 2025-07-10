@@ -1,3 +1,5 @@
+import 'package:eventorize_app/features/auth/user_view/privacy_policy.dart';
+import 'package:eventorize_app/features/auth/user_view/terms_of_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:eventorize_app/features/auth/user_view/login_page.dart';
@@ -50,9 +52,12 @@ class AppRouter {
         builder: (context, state) => const SelectOrgPage(),
       ),
       GoRoute(
-        path: '/eventlist',
+        path: '/eventlist/:organizerId',
         name: 'eventlist',
-        builder: (context, state) => const EventListPage(),
+        builder: (context, state) {
+          final organizerId = state.pathParameters['organizerId']!;
+          return EventListPage(organizerId: organizerId);
+        },
       ),
       GoRoute(
         path: '/orderlist',
@@ -85,9 +90,12 @@ class AppRouter {
         builder: (context, state) => const CreateOrgPage(),
       ),
       GoRoute(
-        path: '/createevent',
+        path: '/createevent/:organizerId',
         name: 'createevent',
-        builder: (context, state) => const CreateEventPage(),
+        builder: (context, state) {
+          final organizerId = state.pathParameters['organizerId']!;
+          return CreateEventPage(organizerId: organizerId);
+        },
       ),
       GoRoute(
         path: '/tickets-detail',
@@ -160,6 +168,16 @@ class AppRouter {
         path: '/detail-profile',
         name: 'detail-profile',
         builder: (context, state) => const ProfileDetailPage(),
+      ),
+      GoRoute(
+        path: '/tos',
+        name: 'tos',
+        builder: (context, state) => const TOSPage(),
+      ),
+      GoRoute(
+        path: '/privacypol',
+        name: 'privacypol',
+        builder: (context, state) => const PrivacyPolicyPage(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

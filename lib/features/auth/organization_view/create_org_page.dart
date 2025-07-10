@@ -1,10 +1,23 @@
 import 'package:dotted_border/dotted_border.dart';
+import 'package:eventorize_app/common/components/toast_custom.dart';
+import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/components/custom_fields.dart';
 import 'package:eventorize_app/common/components/top_nav_org_bar.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
+import 'package:eventorize_app/data/api/organizer_api.dart';
+import 'package:eventorize_app/features/auth/organization_view_model/create_org_view_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:dio/dio.dart';
+import 'package:provider/provider.dart';
+import 'package:eventorize_app/data/repositories/organizer_repository.dart';
+import 'package:eventorize_app/common/services/dio_client.dart';
+import 'dart:developer' as developer;
+import 'package:toastification/toastification.dart';
+import 'dart:io';
 
 class CreateOrgPage extends StatefulWidget {
   const CreateOrgPage({super.key});
@@ -17,101 +30,253 @@ class CreateOrgPageState extends State<CreateOrgPage> {
   static const smallScreenThreshold = 640.0;
   static const maxContentWidth = 600.0;
 
-  String? selectedCity;
-  String? selectedDistrict;
-  String? selectedWard;
+  final _formKey = GlobalKey<FormState>();
+  final nameController = TextEditingController();
+  final emailController = TextEditingController();
+  final phoneController = TextEditingController();
+  final overviewController = TextEditingController();
+  final addressController = TextEditingController();
+  final facebookController = TextEditingController();
+  final twitterController = TextEditingController();
+  final instagramController = TextEditingController();
+  final linkedInController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    final isSmallScreen = screenSize.width <= smallScreenThreshold;
-
     return Scaffold(
+      backgroundColor: AppColors.whiteBackground,
+      extendBodyBehindAppBar: true,
       appBar: TopNavOrgBar(
         leadingIcon: Icons.arrow_back_ios,
         title: 'Tạo nhà tổ chức',
         actionIcon: Icons.check,
         onLeadingPressed: () {
-          Navigator.of(context).pop();
+          context.pop();
         },
-        onActionPressed: () {
-          context.go('/eventlist');
+        onActionPressed: () async {
+          if (!_formKey.currentState!.validate()) {
+            ToastCustom.show(
+              context: context,
+              title: 'Lỗi',
+              description: 'Vui lòng kiểm tra lại thông tin!',
+              type: ToastificationType.error,
+            );
+            return;
+          }
+
+          final viewModel = Provider.of<CreateOrgViewModel>(context, listen: false);
+          viewModel.updateName(nameController.text);
+          viewModel.updateEmail(emailController.text);
+          viewModel.updatePhone(phoneController.text);
+          viewModel.updateDescription(overviewController.text);
+          viewModel.updateFacebook(facebookController.text);
+          viewModel.updateTwitter(twitterController.text);
+          viewModel.updateInstagram(instagramController.text);
+          viewModel.updateLinkedin(linkedInController.text);
+
+          await viewModel.createOrganizer();
+
+          if (viewModel.organizer != null && context.mounted) {
+            ToastCustom.show(
+              context: context,
+              title: 'Success',
+              description: 'Tạo nhà tổ chức thành công!',
+              type: ToastificationType.success,
+            );
+            context.go('/eventlist');
+          } else if (viewModel.errorMessage != null && context.mounted) {
+            developer.log('Toast error: ${viewModel.errorMessage}');
+            ToastCustom.show(
+              context: context,
+              title: viewModel.errorTitle ?? 'Error',
+              description: viewModel.errorMessage!,
+              type: ToastificationType.error,
+            );
+          }
         },
       ),
-      backgroundColor: AppColors.whiteBackground,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: buildMainContainer(isSmallScreen, screenSize),
-        ),
+      body: Consumer<SessionManager>(
+        builder: (context, sessionManager, _) {
+          if (sessionManager.errorMessage != null && mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                ToastCustom.show(
+                  context: context,
+                  title: sessionManager.errorTitle ?? 'Error',
+                  description: sessionManager.errorMessage!,
+                  type: ToastificationType.error,
+                );
+                sessionManager.clearError();
+                if (!sessionManager.isLoading && sessionManager.user == null) {
+                  context.pushReplacementNamed('login');
+                }
+              }
+            });
+          }
+          if (sessionManager.isCheckingSession || sessionManager.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (sessionManager.user == null) {
+            return const SizedBox.shrink();
+          }
+          return ChangeNotifierProvider(
+            create: (_) => CreateOrgViewModel(
+              organizerRepository: OrganizerRepository(OrganizerApi(DioClient())),
+              sessionManager: sessionManager,
+            ),
+            child: Consumer<CreateOrgViewModel>(
+              builder: (context, viewModel, _) => SingleChildScrollView(
+                child: buildMainContainer(viewModel),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget buildMainContainer(bool isSmallScreen, Size screenSize) {
+  Widget buildMainContainer(CreateOrgViewModel viewModel) {
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width <= smallScreenThreshold;
+
     return Container(
       width: screenSize.width,
       color: AppColors.whiteBackground,
       padding: EdgeInsets.fromLTRB(
         isSmallScreen ? 16 : 24,
-        isSmallScreen ? 20 : 40,
+        isSmallScreen ? 100 : 150,
         isSmallScreen ? 16 : 24,
         isSmallScreen ? 24 : 32,
       ),
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16), 
+          padding: const EdgeInsets.symmetric(horizontal: 16,),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: maxContentWidth),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                buildImagePicker(),
-                const SizedBox(height: 16),
-                CustomTextField(label: "Tên tổ chức", hintText: "Tên tổ chức", isRequired: true, isBold: true),
-                CustomTextField(label: "Email", hintText: "Email", isRequired: true, keyboardType: TextInputType.emailAddress, isBold: true),
-                CustomTextField(label: "Số điện thoại", hintText: "Số điện thoại", isRequired: true, keyboardType: TextInputType.phone, isBold: true),
-                CustomTextField(label: "Tổng quan", hintText: "Tổng quan", isRequired: true, maxLines: 4, isBold: true),
-                CustomTextField(label: "Ngày thành lập", hintText: "YYYY-MM-DD to YYYY-MM-DD", isRequired: true, isBold: true),
-                buildLocationSection(),
-                buildSocialLinksSection(),
-              ],
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  buildImagePicker(viewModel),
+                  const SizedBox(height: 16),
+                  CustomTextField(
+                    label: "Tên tổ chức",
+                    controller: nameController,
+                    hintText: "Tên tổ chức",
+                    isRequired: true,
+                    isBold: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Tên tổ chức không được để trống';
+                      return null;
+                    },
+                  ),
+                  CustomTextField(
+                    label: "Email",
+                    controller: emailController,
+                    hintText: "Email",
+                    isRequired: true,
+                    isBold: true,
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Email không được để trống';
+                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w]{2,4}').hasMatch(value)) {
+                        return 'Email không hợp lệ';
+                      }
+                      return null;
+                    },
+                  ),
+                  CustomTextField(
+                    label: "Số điện thoại",
+                    controller: phoneController,
+                    hintText: "Số điện thoại",
+                    isRequired: true,
+                    isBold: true,
+                    keyboardType: TextInputType.phone,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Số điện thoại không được để trống';
+                      return null;
+                    },
+                  ),
+                  CustomTextField(
+                    label: "Tổng quan",
+                    controller: overviewController,
+                    hintText: "Tổng quan",
+                    isRequired: true,
+                    isBold: true,
+                    maxLines: 4,
+                  ),
+                  buildLocationSection(viewModel),
+                  buildSocialLinksSection(viewModel),
+                  if (viewModel.isLoading) const Center(child: CircularProgressIndicator()),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
-  
-  Widget buildImagePicker() {
+
+  Widget buildImagePicker(CreateOrgViewModel viewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text("Ảnh", style: AppTextStyles.bold),
         const SizedBox(height: 8),
-        DottedBorder(
-          color: AppColors.grey,
-          dashPattern: [6, 4],
-          borderType: BorderType.RRect,
-          radius: const Radius.circular(5),
-          child: Container(
-            height: 140,
-            width: double.infinity,
-            color: AppColors.inputBackground,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'assets/icons/upload.png',
-                    width: 50,
-                    height: 50,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Kéo và thả ảnh hoặc tải ảnh lên",
-                    style: AppTextStyles.text.copyWith(color: AppColors.grey, fontSize:13),
-                  ),
-                ],
+        GestureDetector(
+          onTap: () async {
+            final picker = ImagePicker();
+            final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+            if (pickedFile != null) {
+              final file = await MultipartFile.fromFile(pickedFile.path);
+              viewModel.setImage(file, File(pickedFile.path));
+            }
+          },
+          child: DottedBorder(
+            color: AppColors.grey,
+            dashPattern: const [6, 4],
+            borderType: BorderType.RRect,
+            radius: const Radius.circular(5),
+            child: Container(
+              height: 140,
+              width: double.infinity,
+              color: AppColors.inputBackground,
+              child: Center(
+                child: viewModel.imageFile != null
+                    ? Image.file(
+                        viewModel.imageFile!,
+                        height: 140,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      )
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            'assets/icons/upload.png',
+                            width: 50,
+                            height: 50,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            "Kéo và thả ảnh hoặc tải ảnh lên",
+                            style: AppTextStyles.text.copyWith(
+                              color: AppColors.grey,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
               ),
             ),
           ),
@@ -120,52 +285,39 @@ class CreateOrgPageState extends State<CreateOrgPage> {
     );
   }
 
-  Widget buildLocationSection() {
+  Widget buildLocationSection(CreateOrgViewModel viewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text("Địa điểm", style: AppTextStyles.bold),
         const SizedBox(height: 12),
         Padding(
-          padding: const EdgeInsets.only(left: 5), 
+          padding: const EdgeInsets.only(left: 5),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CustomTextField(label: "Địa chỉ", hintText: "Địa chỉ",),
               CustomDropdownField(
                 label: "Thành phố",
                 hintText: "Chọn thành phố",
-                items: ["Hà Nội", "TP.HCM"],
-                selectedValue: selectedCity,
-                onChanged: (value) {
-                  setState(() {
-                    selectedCity = value;
-                  });
-                },
+                items: const ["Hà Nội", "TP.HCM"],
+                selectedValue: viewModel.selectedCity,
+                onChanged: viewModel.updateCity,
                 dropdownWidth: 345,
               ),
               CustomDropdownField(
                 label: "Quận",
                 hintText: "Chọn quận",
-                items: ["Quận 1", "Quận 2"],
-                selectedValue: selectedDistrict,
-                onChanged: (value) {
-                  setState(() {
-                    selectedDistrict = value;
-                  });
-                },
+                items: const ["Quận 1", "Quận 2"],
+                selectedValue: viewModel.selectedDistrict,
+                onChanged: viewModel.updateDistrict,
                 dropdownWidth: 345,
               ),
               CustomDropdownField(
                 label: "Phường/huyện",
                 hintText: "Chọn phường/huyện",
-                items: ["Phường A", "Phường B"],
-                selectedValue: selectedWard,
-                onChanged: (value) {
-                  setState(() {
-                    selectedWard = value;
-                  });
-                },
+                items: const ["Phường A", "Phường B"],
+                selectedValue: viewModel.selectedWard,
+                onChanged: viewModel.updateWard,
                 dropdownWidth: 345,
               ),
             ],
@@ -175,7 +327,7 @@ class CreateOrgPageState extends State<CreateOrgPage> {
     );
   }
 
-  Widget buildSocialLinksSection() {
+  Widget buildSocialLinksSection(CreateOrgViewModel viewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -187,10 +339,26 @@ class CreateOrgPageState extends State<CreateOrgPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CustomTextField(label: "Facebook", hintText: "Facebook url",),
-              CustomTextField(label: "Twitter", hintText: "Twitter url",),
-              CustomTextField(label: "Instagram", hintText: "Instagram url",),
-              CustomTextField(label: "LinkedIn", hintText: "LinkedIn url",),
+              CustomTextField(
+                label: "Facebook",
+                controller: facebookController,
+                hintText: "Facebook url",
+              ),
+              CustomTextField(
+                label: "Twitter",
+                controller: twitterController,
+                hintText: "Twitter url",
+              ),
+              CustomTextField(
+                label: "Instagram",
+                controller: instagramController,
+                hintText: "Instagram url",
+              ),
+              CustomTextField(
+                label: "LinkedIn",
+                controller: linkedInController,
+                hintText: "LinkedIn url",
+              ),
             ],
           ),
         ),

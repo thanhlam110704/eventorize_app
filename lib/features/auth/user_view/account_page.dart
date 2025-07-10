@@ -1,3 +1,5 @@
+import 'package:eventorize_app/common/services/dio_client.dart';
+import 'package:eventorize_app/data/api/organizer_api.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +12,7 @@ import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/data/models/user.dart';
+import 'package:eventorize_app/data/repositories/organizer_repository.dart';
 
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
@@ -339,6 +342,7 @@ class AccountPageState extends State<AccountPage> {
   }
 
   Widget buildSetting(BuildContext context, SessionManager sessionManager) {
+    final organizerRepository = OrganizerRepository(OrganizerApi(DioClient()));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -360,9 +364,26 @@ class AccountPageState extends State<AccountPage> {
         buildSettingItem(
           icon: Icons.apartment_outlined,
           title: 'Organization',
-          onTap: () {
-            context.push('/selectorg');
-          },
+          onTap: () async {
+          try {
+            final response = await organizerRepository.getAll();
+            final organizers = response['data'] as List<dynamic>;
+            
+            if (!context.mounted) return;
+            if (organizers.isNotEmpty) {
+              context.push('/selectorg');
+            } else {
+              context.push('/createorg');
+            }
+          } catch (e) {
+            ToastCustom.show(
+              context: context,
+              title: 'Error',
+              description: 'Failed to fetch organizers: $e',
+              type: ToastificationType.error,
+            );
+          }
+        },
           iconColor: AppColors.black,
           textColor: AppColors.black,
           showTrailing: true,
