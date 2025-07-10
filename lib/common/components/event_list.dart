@@ -9,8 +9,8 @@ import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/core/utils/datetime_convert.dart';
 import 'package:eventorize_app/data/models/event.dart';
 import 'package:eventorize_app/data/repositories/favorite_repository.dart';
-import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/favorite_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/home_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/favorite_view_model.dart';
 import 'package:shimmer/shimmer.dart';
 
 class EventList extends StatelessWidget {

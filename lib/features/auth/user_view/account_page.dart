@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:toastification/toastification.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:eventorize_app/features/auth/view_model/account_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/account_view_model.dart';
 import 'package:eventorize_app/common/components/bottom_nav_bar.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
@@ -422,7 +422,11 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
         buildSettingItem(
           icon: Icons.apartment_outlined,
           title: 'Nhà tổ chức',
-          onTap: () {},
+          onTap: () {
+            if (mounted) {
+              context.go('/select-org');
+            }
+          },
           iconColor: AppColors.black,
           textColor: AppColors.black,
           showTrailing: true,

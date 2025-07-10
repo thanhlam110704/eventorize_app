@@ -18,4 +18,5 @@ class AppColors {
   static const Color shimmerHighlight = Color.fromRGBO(245, 245, 245, 1);
   static const Color loadingOverlay = Color.fromRGBO(0, 0, 0, 0.5);
   static const Color mutedText = Color(0x8A000000); 
+  static const Color primaryOrganizer = Color(0xFF1E266D);
 }

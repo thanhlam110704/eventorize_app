@@ -2,22 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:eventorize_app/common/services/session_manager.dart';
-import 'package:eventorize_app/features/auth/view/login_page.dart';
-import 'package:eventorize_app/features/auth/view/home_page.dart';
-import 'package:eventorize_app/features/auth/view/checkout_page.dart';
-import 'package:eventorize_app/features/auth/view/register_page.dart';
-import 'package:eventorize_app/features/auth/view/splashscreen_page.dart';
-import 'package:eventorize_app/features/auth/view/verify_page.dart';
-import 'package:eventorize_app/features/auth/view/account_page.dart';
-import 'package:eventorize_app/features/auth/view/profile_detail_page.dart';
-import 'package:eventorize_app/features/auth/view/favorite_page.dart';
-import 'package:eventorize_app/features/auth/view/event_detail_page.dart';
-import 'package:eventorize_app/features/auth/view/payment_page.dart';
-import 'package:eventorize_app/features/auth/view/payment_state_page.dart';
-import 'package:eventorize_app/features/auth/view/ticket_page.dart';
-import 'package:eventorize_app/features/auth/view/ticket_detail_page.dart';
-import 'package:eventorize_app/features/auth/view/privacy_policy_page.dart';
-import 'package:eventorize_app/features/auth/view/terms_of_service_page.dart';
+import 'package:eventorize_app/features/auth/user_view/login_page.dart';
+import 'package:eventorize_app/features/auth/user_view/home_page.dart';
+import 'package:eventorize_app/features/auth/user_view/checkout_page.dart';
+import 'package:eventorize_app/features/auth/user_view/register_page.dart';
+import 'package:eventorize_app/features/auth/user_view/splashscreen_page.dart';
+import 'package:eventorize_app/features/auth/user_view/verify_page.dart';
+import 'package:eventorize_app/features/auth/user_view/account_page.dart';
+import 'package:eventorize_app/features/auth/user_view/profile_detail_page.dart';
+import 'package:eventorize_app/features/auth/user_view/favorite_page.dart';
+import 'package:eventorize_app/features/auth/user_view/event_detail_page.dart';
+import 'package:eventorize_app/features/auth/user_view/payment_page.dart';
+import 'package:eventorize_app/features/auth/user_view/payment_state_page.dart';
+import 'package:eventorize_app/features/auth/user_view/ticket_page.dart';
+import 'package:eventorize_app/features/auth/user_view/ticket_detail_page.dart';
+import 'package:eventorize_app/features/auth/user_view/privacy_policy_page.dart';
+import 'package:eventorize_app/features/auth/user_view/terms_of_service_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/select_org_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -140,6 +141,12 @@ class AppRouter {
         path: '/privacy-policy',
         name: 'privacyPolicy',
         builder: (context, state) => const PrivacyPolicyPage(),
+        redirect: (context, state) => _authGuard(context),
+      ),
+       GoRoute(
+        path: '/select-org',
+        name: 'selectOrg',
+        builder: (context, state) => const SelectOrgPage(),
         redirect: (context, state) => _authGuard(context),
       ),
     ],

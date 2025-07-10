@@ -9,11 +9,11 @@ import 'package:eventorize_app/data/api/order_api.dart';
 import 'package:eventorize_app/data/models/order_item.dart';
 import 'package:eventorize_app/data/repositories/order_repository.dart';
 import 'package:eventorize_app/common/services/dio_client.dart';
-import 'package:eventorize_app/features/auth/view_model/ticket_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/ticket_view_model.dart';
 import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/home_view_model.dart';
 import 'package:eventorize_app/core/utils/datetime_convert.dart';
 
 class TicketPage extends StatefulWidget {

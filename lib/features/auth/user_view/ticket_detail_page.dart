@@ -9,7 +9,7 @@ import 'package:dotted_line/dotted_line.dart';
 import 'package:eventorize_app/data/api/order_api.dart';
 import 'package:eventorize_app/data/repositories/order_repository.dart';
 import 'package:eventorize_app/common/services/dio_client.dart';
-import 'package:eventorize_app/features/auth/view_model/ticket_detail_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/ticket_detail_view_model.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/core/utils/datetime_convert.dart';
 import 'package:cached_network_image/cached_network_image.dart';

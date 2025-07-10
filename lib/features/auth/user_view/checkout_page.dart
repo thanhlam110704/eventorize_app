@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/components/top_nav_bar.dart';
-import 'package:eventorize_app/features/auth/view_model/check_out_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/check_out_view_model.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/data/models/order.dart';
 import 'dart:async';

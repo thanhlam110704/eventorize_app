@@ -1,16 +1,17 @@
 import 'package:eventorize_app/common/services/session_manager.dart';
-import 'package:eventorize_app/features/auth/view_model/register_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/login_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/verify_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/account_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/profile_detail_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/favorite_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/event_detail_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/check_out_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/payment_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/ticket_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/ticket_detail_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/register_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/login_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/verify_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/account_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/profile_detail_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/home_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/favorite_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/event_detail_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/check_out_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/payment_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/ticket_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/ticket_detail_view_model.dart';
+import 'package:eventorize_app/features/auth/organization_view_model/select_org_view_model.dart';
 import 'package:eventorize_app/core/utils/datetime_convert.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -79,6 +80,12 @@ void setupDependencies() {
   getIt.registerFactory<TicketDetailViewModel>(
     () => TicketDetailViewModel(
       orderRepository: getIt<OrderRepository>(),
+    ),
+  );
+  getIt.registerFactory<SelectOrgViewModel>(
+    () => SelectOrgViewModel(
+      organizerRepository: getIt<OrganizerRepository>(),
+      sessionManager: getIt<SessionManager>(),
     ),
   );
 }
@@ -163,6 +170,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<TicketDetailViewModel>(
           create: (_) => getIt<TicketDetailViewModel>(),
+        ),
+        ChangeNotifierProvider<SelectOrgViewModel>(
+          create: (_) => getIt<SelectOrgViewModel>(),
         ),
       ],
       child: MaterialApp.router(

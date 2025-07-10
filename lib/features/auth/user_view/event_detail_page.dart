@@ -6,7 +6,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/core/utils/datetime_convert.dart';
 import 'package:eventorize_app/data/models/event.dart';
-import 'package:eventorize_app/features/auth/view_model/event_detail_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/event_detail_view_model.dart';
 import 'package:eventorize_app/common/components/event_list.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';

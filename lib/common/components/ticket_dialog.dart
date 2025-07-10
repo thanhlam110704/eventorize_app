@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
-import 'package:eventorize_app/features/auth/view_model/event_detail_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/event_detail_view_model.dart';
 import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:go_router/go_router.dart';
-import 'package:eventorize_app/features/auth/view_model/check_out_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/check_out_view_model.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class TicketDialog extends StatefulWidget {

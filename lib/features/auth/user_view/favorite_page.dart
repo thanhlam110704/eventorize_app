@@ -8,8 +8,8 @@ import 'package:eventorize_app/common/components/event_list.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
-import 'package:eventorize_app/features/auth/view_model/favorite_view_model.dart';
-import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/favorite_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/home_view_model.dart';
 
 
 class FavoritePage extends StatefulWidget {

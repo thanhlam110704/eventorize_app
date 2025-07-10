@@ -11,7 +11,7 @@ import 'package:eventorize_app/common/components/top_nav_bar.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/data/models/user.dart';
-import 'package:eventorize_app/features/auth/view_model/profile_detail_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/profile_detail_view_model.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'dart:async';
 import 'dart:io';

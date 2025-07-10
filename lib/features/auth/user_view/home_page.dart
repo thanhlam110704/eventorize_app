@@ -6,10 +6,10 @@ import 'package:flutter_spinkit/flutter_spinkit.dart'; // Thêm SpinKit
 import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/common/components/bottom_nav_bar.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
-import 'package:eventorize_app/features/auth/view_model/home_view_model.dart';
+import 'package:eventorize_app/features/auth/user_view_model/home_view_model.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/common/components/event_list.dart';
-import 'package:eventorize_app/features/auth/view/event_detail_page.dart'; 
+import 'package:eventorize_app/features/auth/user_view/event_detail_page.dart'; 
 import 'dart:async';
 
 class HomePage extends StatefulWidget {
