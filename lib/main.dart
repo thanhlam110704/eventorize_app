@@ -24,6 +24,7 @@ import 'package:eventorize_app/data/api/favorite_api.dart';
 import 'package:eventorize_app/data/api/ticket_api.dart';
 import 'package:eventorize_app/data/api/order_api.dart';
 import 'package:eventorize_app/data/api/payment_api.dart';
+import 'package:eventorize_app/data/api/organizer_api.dart';
 import 'package:eventorize_app/data/repositories/user_repository.dart';
 import 'package:eventorize_app/data/repositories/location_repository.dart';
 import 'package:eventorize_app/data/repositories/event_repository.dart';
@@ -31,6 +32,7 @@ import 'package:eventorize_app/data/repositories/favorite_repository.dart';
 import 'package:eventorize_app/data/repositories/ticket_repository.dart';
 import 'package:eventorize_app/data/repositories/order_repository.dart';
 import 'package:eventorize_app/data/repositories/payment_repository.dart';
+import 'package:eventorize_app/data/repositories/organizer_repository.dart';
 import 'package:get_it/get_it.dart';
 import 'package:eventorize_app/common/services/location_cache.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -53,12 +55,15 @@ void setupDependencies() {
   getIt.registerSingleton<OrderRepository>(OrderRepository(getIt<OrderApi>()));
   getIt.registerSingleton<PaymentApi>(PaymentApi(getIt<DioClient>()));
   getIt.registerSingleton<PaymentRepository>(PaymentRepository(getIt<PaymentApi>()));
+  getIt.registerSingleton<OrganizerApi>(OrganizerApi(getIt<DioClient>()));
+  getIt.registerSingleton<OrganizerRepository>(OrganizerRepository(getIt<OrganizerApi>()));
   getIt.registerSingleton<SessionManager>(SessionManager(getIt<UserRepository>()));
   getIt.registerSingleton<LocationCache>(LocationCache());
   getIt.registerFactory<EventDetailViewModel>(
     () => EventDetailViewModel(
       eventRepository: getIt<EventRepository>(),
       ticketRepository: getIt<TicketRepository>(),
+      organizerRepository: getIt<OrganizerRepository>(),
     ),
   );
   getIt.registerFactory<PaymentViewModel>(
@@ -102,6 +107,9 @@ class MyApp extends StatelessWidget {
         ),
         Provider<PaymentRepository>(
           create: (_) => getIt<PaymentRepository>(),
+        ),
+        Provider<OrganizerRepository>(
+          create: (_) => getIt<OrganizerRepository>(),
         ),
         ChangeNotifierProvider<SessionManager>(
           create: (_) => getIt<SessionManager>(),
@@ -151,14 +159,10 @@ class MyApp extends StatelessWidget {
           create: (_) => getIt<PaymentViewModel>(),
         ),
         ChangeNotifierProvider<TicketViewModel>(
-          create: (_) => TicketViewModel(
-            orderRepository: getIt<OrderRepository>(),
-          ),
+          create: (_) => getIt<TicketViewModel>(),
         ),
         ChangeNotifierProvider<TicketDetailViewModel>(
-          create: (_) => TicketDetailViewModel(
-            orderRepository: getIt<OrderRepository>(),
-          ),
+          create: (_) => getIt<TicketDetailViewModel>(),
         ),
       ],
       child: MaterialApp.router(

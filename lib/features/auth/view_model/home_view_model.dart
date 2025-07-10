@@ -146,7 +146,7 @@ class HomeViewModel extends ChangeNotifier {
       _locationCache.setProvinces(provinces);
     }
     if (_selectedCity == null && provinces.isNotEmpty) {
-      _selectedCity = 'Thành phố Hồ Chí Minh'; // Đặt mặc định là "Thành phố Hồ Chí Minh"
+      _selectedCity = 'Thành phố Hồ Chí Minh';
     }
   }
 

@@ -3,7 +3,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 
-enum InputType { email, fullname, phone, password, number }
+enum InputType { email, fullname, phone, password, number, confirmPassword }
 
 class CustomFieldInput extends StatefulWidget {
   final TextEditingController controller;
@@ -15,6 +15,7 @@ class CustomFieldInput extends StatefulWidget {
   final int? maxLength;
   final TextAlign? textAlign;
   final ValueChanged<String>? onChanged;
+  final TextEditingController? passwordController; // Thêm để so sánh confirmPassword
 
   const CustomFieldInput({
     super.key,
@@ -27,6 +28,7 @@ class CustomFieldInput extends StatefulWidget {
     this.maxLength,
     this.textAlign,
     this.onChanged,
+    this.passwordController, 
   });
 
   @override
@@ -61,31 +63,36 @@ class CustomFieldInputState extends State<CustomFieldInput> {
 
   String? validateInput(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your ${widget.hintText.toLowerCase()}';
+      return 'Vui lòng nhập ${widget.hintText.toLowerCase()}';
     }
     if (widget.inputType == InputType.email &&
         !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-      return 'Please enter a valid email';
+      return 'Vui lòng nhập email hợp lệ';
     }
     if (widget.inputType == InputType.fullname &&
-        !RegExp(r"^[a-zA-Z\s'-]{2,}$").hasMatch(value)) {
-      return 'Please enter a valid name';
+        !RegExp(r"^[a-zA-ZÀ-ỹ\s'-]{2,}$").hasMatch(value)) { 
+      return 'Vui lòng nhập họ tên hợp lệ';
     }
     if (widget.inputType == InputType.phone &&
         !RegExp(r'^\+?\d{7,15}$').hasMatch(value)) {
-      return 'Please enter a valid phone number';
+      return 'Vui lòng nhập số điện thoại hợp lệ';
     }
     if (widget.inputType == InputType.password && value.length < 6) {
-      return 'Password must be at least 6 characters long';
+      return 'Mật khẩu phải có ít nhất 6 ký tự';
     }
     if (widget.inputType == InputType.number &&
         !RegExp(r'^\d+$').hasMatch(value)) {
-      return 'Please enter valid numbers';
+      return 'Vui lòng nhập số hợp lệ';
     }
     if (widget.inputType == InputType.number &&
         widget.maxLength != null &&
         value.length != widget.maxLength) {
-      return 'Must be ${widget.maxLength} digits';
+      return 'Phải có ${widget.maxLength} chữ số';
+    }
+    if (widget.inputType == InputType.confirmPassword &&
+        widget.passwordController != null &&
+        value != widget.passwordController!.text) {
+      return 'Mật khẩu xác nhận không khớp';
     }
     return null;
   }
@@ -186,7 +193,7 @@ class CustomFieldInputState extends State<CustomFieldInput> {
         isDense: true,
         contentPadding: EdgeInsets.zero,
         hintStyle: AppTextStyles.hint,
-        counterText: '', 
+        counterText: '',
       ),
       style: AppTextStyles.text,
     );

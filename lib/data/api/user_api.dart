@@ -51,10 +51,10 @@ class UserApi {
     );
     final data = response.data as Map<String, dynamic>?;
     if (data == null) {
-      throw Exception('Registration failed: Empty response data');
+      throw Exception('Đăng ký thất bại: Dữ liệu trả về trống');
     }
     final token = data['access_token'] as String? ??
-        (throw Exception('Registration failed: Missing token'));
+        (throw Exception('Đăng ký thất bại: Thiếu token'));
     await SecureStorage.saveToken(token);
 
     return {
@@ -81,10 +81,10 @@ class UserApi {
       );
       final data = response.data as Map<String, dynamic>?;
       if (data == null) {
-        throw Exception('Google SSO failed: Empty response data');
+        throw Exception('Đăng nhập Google SSO thất bại: Dữ liệu trả về trống');
       }
       final token = data['access_token'] as String? ??
-          (throw Exception('Google SSO failed: Missing token'));
+          (throw Exception('Đăng nhập Google SSO thất bại: Thiếu token'));
       await SecureStorage.saveToken(token);
 
       return {
@@ -92,8 +92,8 @@ class UserApi {
         'token': token,
       };
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Google SSO failed: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Đăng nhập Google SSO thất bại: $errorMessage');
     }
   }
 
@@ -112,21 +112,21 @@ class UserApi {
 
       final userData = response.data as Map<String, dynamic>?;
       if (userData == null) {
-        throw Exception('Verification failed: Empty response data');
+        throw Exception('Xác minh email thất bại: Dữ liệu trả về trống');
       }
 
       final user = User.fromJson(userData);
       if (!user.isVerified) {
-        throw Exception('Verification failed: User is not verified');
+        throw Exception('Xác minh email thất bại: Tài khoản chưa được xác minh');
       }
 
       return user;
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
-        throw Exception('Verification endpoint not found. Please check the API URL.');
+        throw Exception('Điểm cuối xác minh không tìm thấy. Vui lòng kiểm tra URL API.');
       }
-      final errorMessage = e.response?.data?['message'] ?? e.message ?? 'Unknown error';
-      throw Exception('Verification failed: $errorMessage');
+      final errorMessage = e.response?.data?['message'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Xác minh email thất bại: $errorMessage');
     }
   }
 
@@ -142,11 +142,11 @@ class UserApi {
       );
       final data = response.data as Map<String, dynamic>?;
       if (data == null || data['status'] != 'success') {
-        throw Exception('Resend verification email failed: Server error');
+        throw Exception('Gửi lại email xác minh thất bại: Lỗi server');
       }
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['message'] ?? e.message ?? 'Unknown error';
-      throw Exception('Resend verification email failed: $errorMessage');
+      final errorMessage = e.response?.data?['message'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Gửi lại email xác minh thất bại: $errorMessage');
     }
   }
 
@@ -163,17 +163,16 @@ class UserApi {
     );
     final data = response.data as Map<String, dynamic>?;
     if (data == null) {
-      throw Exception('Login failed: Empty response data');
+      throw Exception('Đăng nhập thất bại: Dữ liệu trả về trống');
     }
     final token = data['access_token'] as String? ??
-        (throw Exception('Login failed: Missing token'));
+        (throw Exception('Đăng nhập thất bại: Thiếu token'));
     await SecureStorage.saveToken(token);
     return {
       'user': User.fromJson(data),
       'token': token,
     };
   }
-
 
   Future<User> getMe({String? fields}) async {
     final response = await _dioClient.get(

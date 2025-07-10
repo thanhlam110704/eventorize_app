@@ -28,7 +28,7 @@ class LoginPageState extends State<LoginPage> {
   final formKey = GlobalKey<FormState>();
   final emailInputKey = GlobalKey<CustomFieldInputState>();
   final passwordInputKey = GlobalKey<CustomFieldInputState>();
-  String? _loadingButton; // Tracks which button is loading: 'login' or 'google'
+  String? _loadingButton; 
 
   @override
   void initState() {
@@ -330,7 +330,7 @@ class LoginPageState extends State<LoginPage> {
           context.goNamed('register');
         },
         child: Text(
-          'Đã có tài khoản? Đăng nhập ngay!',
+          'Chưa có tài khoản? Đăng ký ngay!',
           style: AppTextStyles.link,
         ),
       ),

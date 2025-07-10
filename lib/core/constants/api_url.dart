@@ -29,6 +29,15 @@ class ApiUrl {
   static String editEventThumbnail(String id) => '/v1/events/$id/thumbnail';
   static String deleteEvent(String id) => '/v1/events/$id';
 
+  // Organizer endpoints
+  static String get getOrganizers => '/v1/organizers';
+  static String get exportOrganizers => '/v1/organizers/export';
+  static String getOrganizerDetail(String id) => '/v1/organizers/$id';
+  static String getOrganizerDetailPublic(String id) => '/v1/home/organizers/$id';
+  static String get createOrganizer => '/v1/organizers';
+  static String editOrganizer(String id) => '/v1/organizers/$id';
+  static String editOrganizerThumbnail(String id) => '/v1/organizers/$id/logo';
+  static String deleteOrganizer(String id) => '/v1/organizers/$id';
 
   // Favorite endpoints
   static const String getMyFavoriteEvents = '/v1/favorites/my-events';

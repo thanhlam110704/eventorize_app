@@ -295,7 +295,7 @@ class VerificationCodePageState extends State<VerificationCodePage> {
             ? () => handleResendCode(viewModel)
             : null,
         child: Text(
-          _remainingTime.inSeconds > 0 ? countdownText : 'Resend',
+          _remainingTime.inSeconds > 0 ? countdownText : 'Gửi lại',
           style: AppTextStyles.link.copyWith(
             color: _remainingTime.inSeconds > 0 ? AppColors.grey : AppColors.primary,
             fontWeight: FontWeight.bold,

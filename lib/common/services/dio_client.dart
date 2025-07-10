@@ -36,42 +36,42 @@ class DioClient {
 
             String detail = data is Map<String, dynamic> && data['message'] != null
                 ? data['message'] as String
-                : 'An unknown error occurred';
+                : 'Đã xảy ra lỗi không xác định';
             String type = 'general/unknown';
-            String title = 'Error';
+            String title = 'Lỗi';
 
             switch (statusCode) {
               case 400:
                 type = 'general/bad-request';
-                title = 'Invalid Request';
+                title = 'Yêu cầu không hợp lệ';
                 detail = data is Map<String, dynamic> && data['detail'] != null
                     ? data['detail'] as String
-                    : 'The request data is invalid';
+                    : 'Dữ liệu yêu cầu không hợp lệ';
                 break;
               case 401:
                 type = 'auth/unauthorized';
-                title = 'Unauthorized';
-                detail = 'Please check your credentials';
+                title = 'Không được phép';
+                detail = 'Vui lòng kiểm tra thông tin đăng nhập';
                 break;
               case 403:
                 type = 'auth/forbidden';
-                title = 'Forbidden';
-                detail = 'You do not have access';
+                title = 'Truy cập bị cấm';
+                detail = 'Bạn không có quyền truy cập';
                 break;
               case 404:
                 type = 'general/not-found';
-                title = 'Not Found';
-                detail = 'The resource does not exist';
+                title = 'Không tìm thấy';
+                detail = 'Tài nguyên không tồn tại';
                 break;
               case 429:
                 type = 'general/too-many-requests';
-                title = 'Too Many Requests';
-                detail = 'Please try again later';
+                title = 'Quá nhiều yêu cầu';
+                detail = 'Vui lòng thử lại sau';
                 break;
               case 500:
                 type = 'general/server-error';
-                title = 'Server Error';
-                detail = 'Please try again later';
+                title = 'Lỗi máy chủ';
+                detail = 'Vui lòng thử lại sau';
                 break;
             }
 
@@ -89,21 +89,20 @@ class DioClient {
               ),
             );
           } else {
-            // Handle network errors
             String type = 'general/unknown';
-            String title = 'Network Error';
-            String detail = 'An unknown error occurred';
+            String title = 'Lỗi mạng';
+            String detail = 'Đã xảy ra lỗi không xác định';
 
             if (e.type == DioExceptionType.connectionTimeout) {
               type = 'network/connection-timeout';
-              title = 'Connection Timeout';
-              detail = 'Please check your internet connection';
+              title = 'Hết thời gian kết nối';
+              detail = 'Vui lòng kiểm tra kết nối mạng';
             } else if (e.type == DioExceptionType.receiveTimeout) {
               type = 'network/receive-timeout';
-              title = 'Receive Timeout';
-              detail = 'Please try again later';
+              title = 'Hết thời gian nhận dữ liệu';
+              detail = 'Vui lòng thử lại sau';
             } else {
-              detail = e.message ?? 'An unknown error occurred';
+              detail = e.message ?? 'Đã xảy ra lỗi không xác định';
             }
 
             return handler.reject(

@@ -53,15 +53,15 @@ class ErrorHandler {
     String errorPrefix,
     ErrorState state,
   ) {
-    state.errorTitle = 'Error';
+    state.errorTitle = 'Lỗi';
     state.isSuccess = false;
     if (error is DioException) {
       if (error.error is CustomException) {
         final customError = error.error as CustomException;
-        state.errorTitle = 'Error ${customError.status}';
+        state.errorTitle = 'Lỗi ${customError.status}';
         state.errorMessage = customError.detail;
       } else {
-        state.errorMessage = error.response?.data?['detail'] ?? '$errorPrefix. Please try again.';
+        state.errorMessage = error.response?.data?['detail'] ?? '$errorPrefix. Hãy thử lại sau.';
       }
     } else {
       state.errorMessage = '$errorPrefix: ${error.toString()}';

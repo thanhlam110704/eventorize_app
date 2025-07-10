@@ -28,11 +28,13 @@ class RegisterPageState extends State<RegisterPage> {
   final fullnameController = TextEditingController();
   final phoneController = TextEditingController();
   final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController(); 
   final formKey = GlobalKey<FormState>();
   final emailInputKey = GlobalKey<CustomFieldInputState>();
   final fullnameInputKey = GlobalKey<CustomFieldInputState>();
   final phoneInputKey = GlobalKey<CustomFieldInputState>();
   final passwordInputKey = GlobalKey<CustomFieldInputState>();
+  final confirmPasswordInputKey = GlobalKey<CustomFieldInputState>();
 
   @override
   void dispose() {
@@ -40,6 +42,7 @@ class RegisterPageState extends State<RegisterPage> {
     fullnameController.dispose();
     phoneController.dispose();
     passwordController.dispose();
+    confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -56,6 +59,9 @@ class RegisterPageState extends State<RegisterPage> {
     }
     if (passwordInputKey.currentState != null) {
       isValid &= passwordInputKey.currentState!.validate();
+    }
+    if (confirmPasswordInputKey.currentState != null) {
+      isValid &= confirmPasswordInputKey.currentState!.validate(); 
     }
 
     if (isValid) {
@@ -138,6 +144,8 @@ class RegisterPageState extends State<RegisterPage> {
                               const SizedBox(height: 21),
                               buildPasswordField(),
                               const SizedBox(height: 21),
+                              buildConfirmPasswordField(),
+                              const SizedBox(height: 10),
                               Padding(
                                 padding: EdgeInsets.only(top: screenSize.height * 0.05),
                                 child: Column(
@@ -241,6 +249,18 @@ class RegisterPageState extends State<RegisterPage> {
     );
   }
 
+  Widget buildConfirmPasswordField() {
+    return CustomFieldInput(
+      key: confirmPasswordInputKey,
+      controller: confirmPasswordController,
+      hintText: 'Xác nhận mật khẩu',
+      icon: MdiIcons.lockCheck,
+      isPassword: true,
+      inputType: InputType.confirmPassword,
+      passwordController: passwordController, 
+    );
+  }
+
   Widget buildRegisterButton(bool isSmallScreen, Size screenSize, RegisterViewModel viewModel) {
     return Padding(
       padding: const EdgeInsets.only(top: 0),
@@ -327,7 +347,7 @@ class RegisterPageState extends State<RegisterPage> {
                     context.read<SessionManager>().setUser(viewModel.user!);
                     ToastCustom.show(
                       context: context,
-                      title: 'Registration successful!',
+                      title: 'Đăng ký thành công!',
                       type: ToastificationType.success,
                     );
                     context.goNamed('account');
@@ -369,7 +389,7 @@ class RegisterPageState extends State<RegisterPage> {
           context.goNamed('login');
         },
         child: Text(
-          'Chưa có tài khoản? Đăng ký ngay!',
+          'Đã có tài khoản? Đăng nhập ngay!',
           style: AppTextStyles.link,
         ),
       ),

@@ -343,7 +343,7 @@ class EventDetailPageState extends State<EventDetailPage> {
               const SizedBox(height: 32),
               buildEventDescription(event),
               const SizedBox(height: 32),
-              buildOrganizerSection(),
+              buildOrganizerSection(viewModel),
               const SizedBox(height: 32),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -476,7 +476,8 @@ class EventDetailPageState extends State<EventDetailPage> {
     );
   }
 
-  Widget buildOrganizerSection() {
+  Widget buildOrganizerSection(EventDetailViewModel viewModel) {
+    final organizer = viewModel.organizer;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -490,6 +491,7 @@ class EventDetailPageState extends State<EventDetailPage> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
           decoration: BoxDecoration(
             color: const Color(0xFFE8E1E1),
+            borderRadius: BorderRadius.circular(4),
           ),
           child: Row(
             children: [
@@ -501,7 +503,13 @@ class EventDetailPageState extends State<EventDetailPage> {
                   color: Colors.white,
                   shape: BoxShape.circle,
                 ),
-                child: Image.asset("assets/images/fpt.png"),
+                child: organizer?.logo != null
+                    ? CachedNetworkImage(
+                        imageUrl: organizer!.logo!,
+                        fit: BoxFit.contain,
+                        placeholder: (context, url) => const CircularProgressIndicator(),
+                      )
+                    : Image.asset("assets/images/fpt.png"),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -509,13 +517,13 @@ class EventDetailPageState extends State<EventDetailPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "FPT Software",
-                      style: AppTextStyles.medium.copyWith(fontSize: 16),
+                      organizer?.name ?? "Chưa có thông tin",
+                      style: AppTextStyles.bold.copyWith(fontSize: 16),
                     ),
                     Text(
-                      "fptsoftware.com",
+                      organizer?.email ?? "Chưa có thông tin",
                       style: AppTextStyles.text.copyWith(
-                        fontSize: 14,
+                        fontSize: 13,
                         color: AppColors.mutedText,
                       ),
                     ),

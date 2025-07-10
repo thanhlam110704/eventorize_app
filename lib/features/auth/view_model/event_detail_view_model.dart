@@ -3,12 +3,14 @@ import 'package:eventorize_app/core/utils/exceptions.dart';
 import 'package:eventorize_app/data/models/event.dart';
 import 'package:eventorize_app/data/models/ticket.dart';
 import 'package:eventorize_app/data/models/order.dart';
+import 'package:eventorize_app/data/models/organizer.dart';
 import 'package:eventorize_app/data/repositories/event_repository.dart';
 import 'package:eventorize_app/data/repositories/ticket_repository.dart';
-
+import 'package:eventorize_app/data/repositories/organizer_repository.dart';
 class EventDetailViewModel extends ChangeNotifier {
   final EventRepository _eventRepository;
   final TicketRepository _ticketRepository;
+  final OrganizerRepository _organizerRepository;
   final ErrorState _errorState = ErrorState();
 
   bool _isLoading = true;
@@ -26,6 +28,9 @@ class EventDetailViewModel extends ChangeNotifier {
   Event? _event;
   Event? get event => _event;
 
+  Organizer? _organizer;
+  Organizer? get organizer => _organizer;
+
   List<Event> _relatedEvents = [];
   List<Event> get relatedEvents => _relatedEvents;
 
@@ -35,8 +40,10 @@ class EventDetailViewModel extends ChangeNotifier {
   EventDetailViewModel({
     required EventRepository eventRepository,
     required TicketRepository ticketRepository,
+    required OrganizerRepository organizerRepository,
   })  : _eventRepository = eventRepository,
-        _ticketRepository = ticketRepository;
+        _ticketRepository = ticketRepository,
+        _organizerRepository = organizerRepository;
 
   Future<void> fetchEventDetail(String id) async {
     _isLoading = true;
@@ -45,6 +52,9 @@ class EventDetailViewModel extends ChangeNotifier {
 
     try {
       _event = await _eventRepository.getEventDetail(id);
+      if (_event != null) {
+        _organizer = await _organizerRepository.getDetailPublic(_event!.organizerId);
+      }
       await fetchRelatedEvents(id);
     } catch (e) {
       ErrorHandler.handleError(e, 'Lỗi khi lấy chi tiết sự kiện', _errorState);

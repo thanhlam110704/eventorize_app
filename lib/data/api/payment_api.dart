@@ -16,8 +16,8 @@ class PaymentApi {
       );
       return Payment.fromJson(response.data);
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to generate PayOS QR code: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Tạo mã QR PayOS thất bại: $errorMessage');
     }
   }
 
@@ -29,8 +29,8 @@ class PaymentApi {
       );
       return Payment.fromJson(response.data);
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to get PayOS payment status: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Lấy trạng thái thanh toán PayOS thất bại: $errorMessage');
     }
   }
 }

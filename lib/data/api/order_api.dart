@@ -67,8 +67,8 @@ class OrderApi {
         'records_per_page': response.data['records_per_page'] as int,
       };
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to fetch orders: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Lấy danh sách đơn hàng thất bại: $errorMessage');
     }
   }
 
@@ -88,8 +88,8 @@ class OrderApi {
           .map((json) => Order.fromJson(json))
           .toList();
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to export orders: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Xuất danh sách đơn hàng thất bại: $errorMessage');
     }
   }
 
@@ -101,8 +101,8 @@ class OrderApi {
       );
       return Order.fromJson(response.data);
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to fetch order detail: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Lấy chi tiết đơn hàng thất bại: $errorMessage');
     }
   }
 
@@ -113,8 +113,8 @@ class OrderApi {
       );
       return Order.fromJson(response.data);
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to accept order: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Chấp nhận đơn hàng thất bại: $errorMessage');
     }
   }
 
@@ -122,8 +122,8 @@ class OrderApi {
     try {
       await _dioClient.delete(ApiUrl.deleteOrder(id));
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to delete order: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Xóa đơn hàng thất bại: $errorMessage');
     }
   }
 }

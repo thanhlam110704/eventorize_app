@@ -71,12 +71,12 @@ class EventApi {
         'records_per_page': response.data['records_per_page'] as int,
       };
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
       final errorType = e.response?.data?['type'] ?? '';
       if (errorType == 'events/info/invalid-filter') {
-        throw Exception('Invalid date filter. Use "today", "tomorrow", or "this_week".');
+        throw Exception('Bộ lọc ngày không hợp lệ. Sử dụng "today", "tomorrow" hoặc "this_week".');
       }
-      throw Exception('Failed to fetch events: $errorMessage');
+      throw Exception('Lấy danh sách sự kiện thất bại: $errorMessage');
     }
   }
 
@@ -88,8 +88,8 @@ class EventApi {
       );
       return Event.fromJson(response.data);
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to fetch event detail: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Lấy chi tiết sự kiện thất bại: $errorMessage');
     }
   }
 
@@ -136,8 +136,8 @@ class EventApi {
       );
       return Event.fromJson(response.data);
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to create event: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Tạo sự kiện thất bại: $errorMessage');
     }
   }
 
@@ -174,8 +174,8 @@ class EventApi {
       );
       return Event.fromJson(response.data);
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to update event: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Cập nhật sự kiện thất bại: $errorMessage');
     }
   }
 
@@ -199,8 +199,8 @@ class EventApi {
       );
       return Event.fromJson(response.data);
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to update event thumbnail: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Cập nhật ảnh đại diện sự kiện thất bại: $errorMessage');
     }
   }
 
@@ -208,8 +208,8 @@ class EventApi {
     try {
       await _dioClient.delete(ApiUrl.deleteEvent(id));
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to delete event: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Xóa sự kiện thất bại: $errorMessage');
     }
   }
 
@@ -223,8 +223,8 @@ class EventApi {
           .map((json) => Event.fromJson(json))
           .toList();
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to fetch events by organizer: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Lấy danh sách sự kiện theo tổ chức thất bại: $errorMessage');
     }
   }
 }

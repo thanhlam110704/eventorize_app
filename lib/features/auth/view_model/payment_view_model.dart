@@ -78,7 +78,7 @@ class PaymentViewModel extends ChangeNotifier {
       return sdkInt >= 33 ? Permission.photos : Permission.storage;
     }
     if (Platform.isIOS) return Permission.photos;
-    throw Exception('Unsupported platform');
+    throw Exception('Không hỗ trợ');
   }
 
   Future<Uint8List> _capturePng(GlobalKey boundaryKey) async {

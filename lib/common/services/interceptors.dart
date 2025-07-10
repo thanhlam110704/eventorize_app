@@ -14,13 +14,13 @@ class LoggerInterceptor extends Interceptor {
 
     if (err.error is CustomException) {
       final customError = err.error as CustomException;
-      logger.e('Error type: ${customError.type} \n'
-          'Status: ${customError.status} \n'
-          'Title: ${customError.title} \n'
-          'Detail: ${customError.detail}');
+      logger.e('Loại lỗi: ${customError.type} \n'
+          'Trạng thái: ${customError.status} \n'
+          'Tiêu đề: ${customError.title} \n'
+          'Chi tiết: ${customError.detail}');
     } else {
-      logger.e('Error type: ${err.type} \n'
-          'Error message: ${err.message}');
+      logger.e('Loại lỗi: ${err.type} \n'
+          'Thông báo lỗi: ${err.message}');
     }
     handler.next(err);
   }
@@ -34,10 +34,10 @@ class LoggerInterceptor extends Interceptor {
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-    logger.d('Status: ${response.statusCode} \n'
-        'Messenge: ${response.statusMessage} \n'
-        'Header: ${response.headers} \n'
-        'Data: ${response.data}');
+    logger.d('Trạng thái: ${response.statusCode} \n'
+        'Thông báo: ${response.statusMessage} \n'
+        'Tiêu đề: ${response.headers} \n'
+        'Dữ liệu: ${response.data}');
     handler.next(response);
   }
 }

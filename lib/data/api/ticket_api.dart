@@ -60,9 +60,9 @@ class TicketApi {
         'records_per_page': response.data['records_per_page'] as int,
       };
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
       final errorType = e.response?.data?['type'] ?? '';
-      throw Exception('Failed to fetch event tickets: $errorMessage ($errorType)');
+      throw Exception('Lấy danh sách vé sự kiện thất bại: $errorMessage ($errorType)');
     }
   }
 
@@ -78,8 +78,8 @@ class TicketApi {
       );
       return Ticket.fromJson(response.data);
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to fetch ticket detail: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Lấy chi tiết vé thất bại: $errorMessage');
     }
   }
 
@@ -114,8 +114,8 @@ class TicketApi {
       );
       return Ticket.fromJson(response.data);
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to create ticket: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Tạo vé thất bại: $errorMessage');
     }
   }
 
@@ -142,8 +142,8 @@ class TicketApi {
       );
       return response.data;
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to buy ticket: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Mua vé thất bại: $errorMessage');
     }
   }
 
@@ -179,8 +179,8 @@ class TicketApi {
       );
       return Ticket.fromJson(response.data);
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to update ticket: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Cập nhật vé thất bại: $errorMessage');
     }
   }
 
@@ -188,8 +188,8 @@ class TicketApi {
     try {
       await _dioClient.delete(ApiUrl.deleteTicket(ticketId));
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to delete ticket: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Xóa vé thất bại: $errorMessage');
     }
   }
 }
