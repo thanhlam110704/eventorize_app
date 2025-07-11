@@ -1,13 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:toastification/toastification.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/common/components/labeled_input.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/common/components/top_nav_org_bar.dart';
@@ -38,17 +36,6 @@ class OrgInfoPageState extends State<OrgInfoPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final sessionManager = context.read<SessionManager>();
-      if (sessionManager.selectedOrganizerId == null) {
-        ToastCustom.show(
-          context: context,
-          title: 'Lỗi',
-          description: 'Vui lòng chọn một nhà tổ chức trước',
-          type: ToastificationType.error,
-        );
-        context.go('/select-org');
-        return;
-      }
       await context.read<OrgInfoViewModel>().loadOrganizer();
     });
   }

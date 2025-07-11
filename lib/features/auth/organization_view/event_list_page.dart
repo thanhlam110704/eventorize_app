@@ -1,6 +1,5 @@
 import 'package:eventorize_app/common/components/side_bar.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
-import 'package:eventorize_app/common/services/dio_client.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/components/top_nav_org_bar.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
@@ -13,7 +12,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/common/components/custom_event_menu.dart';
-import 'package:eventorize_app/features/auth/organization_view/edit_event_page.dart';
 import 'package:eventorize_app/common/services/session_manager.dart';
 
 class EventListPage extends StatefulWidget {
@@ -65,34 +63,17 @@ class EventListPageState extends State<EventListPage> {
       backgroundColor: AppColors.whiteBackground,
       floatingActionButton: Consumer<SessionManager>(
         builder: (context, sessionManager, _) {
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(0, 0, 20, 50),
-            child: SizedBox(
-              width: 70,
-              height: 70,
-              child: FloatingActionButton(
-                onPressed: () {
-                  if (sessionManager.selectedOrganizerId == null) {
-                    ToastCustom.show(
-                      context: context,
-                      title: 'Lỗi',
-                      description: 'Vui lòng chọn một nhà tổ chức trước',
-                      type: ToastificationType.error,
-                    );
-                    context.go('/select-org');
-                    return;
-                  }
-                  context.go('/create-event/${sessionManager.selectedOrganizerId}');
-                },
-                backgroundColor: const Color(0xFF194185),
-                elevation: 6,
-                shape: const CircleBorder(),
-                child: const Icon(
-                  Icons.add,
-                  color: Colors.white,
-                  size: 32,
-                ),
-              ),
+          return FloatingActionButton(
+            onPressed: () {
+              context.go('/create-event/${sessionManager.selectedOrganizerId}');
+            },
+            backgroundColor: const Color(0xFF194185),
+            elevation: 6,
+            shape: const CircleBorder(),
+            child: const Icon(
+              Icons.add,
+              color: Colors.white,
+              size: 32,
             ),
           );
         },
@@ -100,7 +81,7 @@ class EventListPageState extends State<EventListPage> {
       body: SafeArea(
         child: ChangeNotifierProvider(
           create: (context) => EventListViewModel(
-            eventRepository: EventRepository(EventApi(DioClient())),
+            eventRepository: EventRepository(EventApi(context.read())),
             sessionManager: context.read<SessionManager>(),
           ),
           child: Consumer<EventListViewModel>(
@@ -279,14 +260,7 @@ class EventListPageState extends State<EventListPage> {
               onPressed: () {
                 final RenderBox box = context.findRenderObject() as RenderBox;
                 final position = box.localToGlobal(Offset.zero);
-                showEventMenu(context, position, () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => EditEventPage()),
-                  );
-                }, () {
-                  // Delete action placeholder
-                });
+                showEventMenu(context, position, event.id);
               },
             ),
           ),
@@ -295,7 +269,7 @@ class EventListPageState extends State<EventListPage> {
     );
   }
 
-  void showEventMenu(BuildContext context, Offset position, VoidCallback onEdit, VoidCallback onDelete) {
+  void showEventMenu(BuildContext context, Offset position, String eventId) {
     final overlay = Overlay.of(context);
     final entry = OverlayEntry(
       builder: (context) => Positioned(
@@ -303,7 +277,14 @@ class EventListPageState extends State<EventListPage> {
         left: position.dx - 80,
         child: Material(
           color: Colors.transparent,
-          child: CustomEventMenu(onEdit: onEdit, onDelete: onDelete),
+          child: CustomEventMenu(
+            onEdit: () {
+              context.go('/edit-event/$eventId');
+            },
+            onDelete: () {
+              // Delete action placeholder
+            },
+          ),
         ),
       ),
     );

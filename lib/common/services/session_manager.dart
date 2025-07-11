@@ -11,6 +11,9 @@ class SessionManager extends ChangeNotifier {
   bool _isCheckingSession = false;
   bool _isLoading = false;
   String? _selectedOrganizerId;
+  String? _selectedOrganizerName;
+  String? _selectedOrganizerLogo;
+  String? _selectedOrganizerEmail;
 
   SessionManager(this._userRepository);
 
@@ -20,6 +23,9 @@ class SessionManager extends ChangeNotifier {
   String? get errorMessage => _errorState.errorMessage;
   String? get errorTitle => _errorState.errorTitle;
   String? get selectedOrganizerId => _selectedOrganizerId;
+  String? get selectedOrganizerName => _selectedOrganizerName;
+  String? get selectedOrganizerLogo => _selectedOrganizerLogo;
+  String? get selectedOrganizerEmail => _selectedOrganizerEmail;
 
   Future<void> checkSession() async {
     _isCheckingSession = true;
@@ -58,6 +64,10 @@ class SessionManager extends ChangeNotifier {
       await SecureStorage.clearToken();
       _user = null;
       _selectedOrganizerId = null;
+      _selectedOrganizerName = null;
+      _selectedOrganizerLogo = null;
+      _selectedOrganizerEmail = null;
+      notifyListeners();
     } catch (e) {
       ErrorHandler.handleError(e, 'Đăng xuất thất bại', _errorState);
       rethrow;
@@ -95,8 +105,24 @@ class SessionManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setSelectedOrganizerDetails({
+    String? organizerId,
+    String? name,
+    String? logo,
+    String? email,
+  }) {
+    _selectedOrganizerId = organizerId;
+    _selectedOrganizerName = name;
+    _selectedOrganizerLogo = logo;
+    _selectedOrganizerEmail = email;
+    notifyListeners();
+  }
+
   void clearSelectedOrganizerId() {
     _selectedOrganizerId = null;
+    _selectedOrganizerName = null;
+    _selectedOrganizerLogo = null;
+    _selectedOrganizerEmail = null;
     notifyListeners();
   }
 

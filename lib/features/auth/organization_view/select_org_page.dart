@@ -25,21 +25,25 @@ class _SelectOrgPageState extends State<SelectOrgPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: AppColors.whiteBackground,
-      appBar: TopNavOrgBar(
-        leadingIcon: Icons.menu,
-        onLeadingPressed: null,
-        title: 'Danh sách sự kiện',
-        actionIcon: Icons.search,
-        onActionPressed: null, 
-      ),
-      drawer: const CustomDrawer(currentPage: AppPage.eventList),
-      body: SafeArea(
-        child: Consumer<SessionManager>(
-          builder: (context, sessionManager, _) {
-            return Consumer<SelectOrgViewModel>(
+    return Consumer<SessionManager>(
+      builder: (context, sessionManager, _) {
+        return Scaffold(
+          key: _scaffoldKey,
+          backgroundColor: AppColors.whiteBackground,
+          appBar: TopNavOrgBar(
+            leadingIcon: Icons.menu,
+            onLeadingPressed: () {
+              _scaffoldKey.currentState?.openDrawer();
+            },
+            title: 'Danh sách sự kiện',
+            actionIcon: Icons.search,
+            onActionPressed: null,
+          ),
+          drawer: CustomDrawer(
+            currentPage: AppPage.eventList,
+          ),
+          body: SafeArea(
+            child: Consumer<SelectOrgViewModel>(
               builder: (context, viewModel, _) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (mounted) _handleErrors(context, sessionManager, viewModel);
@@ -62,11 +66,11 @@ class _SelectOrgPageState extends State<SelectOrgPage> {
                   ],
                 );
               },
-            );
-          },
-        ),
-      ),
-      floatingActionButton: _buildFAB(),
+            ),
+          ),
+          floatingActionButton: _buildFAB(),
+        );
+      },
     );
   }
 
@@ -104,7 +108,7 @@ class _SelectOrgPageState extends State<SelectOrgPage> {
       children: [
         Positioned.fill(
           child: GestureDetector(
-            onTap: () {}, // Ngăn mọi tương tác bên ngoài popup
+            onTap: () {}, 
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 3.0, sigmaY: 3.0),
               child: Container(
@@ -140,7 +144,7 @@ class _SelectOrgPageState extends State<SelectOrgPage> {
                           style: AppTextStyles.bold.copyWith(fontSize: 20),
                         ),
                         GestureDetector(
-                          onTap: () => setState(() => showPopup = false),
+                          onTap: () => context.pop(),
                           child: const Icon(Icons.close),
                         ),
                       ],
@@ -168,7 +172,7 @@ class _SelectOrgPageState extends State<SelectOrgPage> {
                         try {
                           final selectedOrg = viewModel.organizers
                               .firstWhere((org) => org.name == value);
-                          viewModel.selectOrganizer(selectedOrg.id);
+                          await viewModel.selectOrganizer(selectedOrg.id);
                           await Future.delayed(const Duration(milliseconds: 100));
                           if (mounted) context.push('/event-list');
                         } catch (_) {

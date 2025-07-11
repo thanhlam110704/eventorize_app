@@ -265,6 +265,12 @@ class OrgInfoViewModel extends ChangeNotifier {
       errorPrefix: 'Lỗi khi cập nhật thông tin nhà tổ chức',
       onSuccess: (updatedOrganizer) {
         organizer = updatedOrganizer as Organizer;
+        sessionManager.setSelectedOrganizerDetails(
+          organizerId: organizerId,
+          name: organizer!.name,
+          logo: organizer!.logo,
+          email: organizer!.email,
+        );
         isUpdateSuccessful = true;
         ErrorHandler.clearError(errorState);
       },
@@ -297,6 +303,12 @@ class OrgInfoViewModel extends ChangeNotifier {
       errorPrefix: 'Lỗi khi tải ảnh logo',
       onSuccess: (updatedOrganizer) {
         organizer = updatedOrganizer as Organizer;
+        sessionManager.setSelectedOrganizerDetails(
+          organizerId: organizerId,
+          name: organizer!.name,
+          logo: organizer!.logo,
+          email: organizer!.email,
+        );
         isUpdateSuccessful = true;
         ErrorHandler.clearError(errorState);
       },

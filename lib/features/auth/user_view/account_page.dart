@@ -424,7 +424,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
           title: 'Nhà tổ chức',
           onTap: () {
             if (mounted) {
-              context.go('/select-org');
+              context.pushNamed('selectOrg');
             }
           },
           iconColor: AppColors.black,
