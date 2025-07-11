@@ -13,6 +13,7 @@ import 'package:eventorize_app/features/auth/user_view_model/ticket_view_model.d
 import 'package:eventorize_app/features/auth/user_view_model/ticket_detail_view_model.dart';
 import 'package:eventorize_app/features/auth/organization_view_model/select_org_view_model.dart';
 import 'package:eventorize_app/features/auth/organization_view_model/org_info_view_model.dart';
+import 'package:eventorize_app/features/auth/organization_view_model/event_list_view_model.dart';
 import 'package:eventorize_app/core/utils/datetime_convert.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -61,6 +62,12 @@ void setupDependencies() {
   getIt.registerSingleton<OrganizerRepository>(OrganizerRepository(getIt<OrganizerApi>()));
   getIt.registerSingleton<SessionManager>(SessionManager(getIt<UserRepository>()));
   getIt.registerSingleton<LocationCache>(LocationCache());
+  getIt.registerFactory<EventListViewModel>(
+    () => EventListViewModel(
+      eventRepository: getIt<EventRepository>(),
+      sessionManager: getIt<SessionManager>(),
+    ),
+  );
   getIt.registerFactory<EventDetailViewModel>(
     () => EventDetailViewModel(
       eventRepository: getIt<EventRepository>(),
@@ -184,6 +191,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<OrgInfoViewModel>(
           create: (_) => getIt<OrgInfoViewModel>(),
+        ),
+        ChangeNotifierProvider<EventListViewModel>(
+          create: (_) => getIt<EventListViewModel>(),
         ),
       ],
       child: MaterialApp.router(

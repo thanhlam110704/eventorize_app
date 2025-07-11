@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:eventorize_app/common/components/custom_fields.dart';
-import 'package:eventorize_app/common/components/side_bar.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
@@ -35,13 +34,11 @@ class _SelectOrgPageState extends State<SelectOrgPage> {
             onLeadingPressed: () {
               _scaffoldKey.currentState?.openDrawer();
             },
-            title: 'Danh sách sự kiện',
+            title: 'Chọn nhà tổ chức',
             actionIcon: Icons.search,
             onActionPressed: null,
           ),
-          drawer: CustomDrawer(
-            currentPage: AppPage.eventList,
-          ),
+          
           body: SafeArea(
             child: Consumer<SelectOrgViewModel>(
               builder: (context, viewModel, _) {
@@ -104,6 +101,17 @@ class _SelectOrgPageState extends State<SelectOrgPage> {
   }
 
   Widget _buildOrganizerPopup(SelectOrgViewModel viewModel) {
+    String? selectedOrganizerName;
+    if (viewModel.selectedOrganizerId != null) {
+      try {
+        selectedOrganizerName = viewModel.organizers
+            .firstWhere((org) => org.id == viewModel.selectedOrganizerId)
+            .name;
+      } catch (e) {
+        selectedOrganizerName = null;
+      }
+    }
+
     return Stack(
       children: [
         Positioned.fill(
@@ -161,11 +169,7 @@ class _SelectOrgPageState extends State<SelectOrgPage> {
                       label: '',
                       hintText: 'Chọn nhà tổ chức',
                       items: viewModel.organizers.map((org) => org.name).toList(),
-                      selectedValue: viewModel.selectedOrganizerId != null
-                          ? viewModel.organizers
-                              .firstWhere((org) => org.id == viewModel.selectedOrganizerId)
-                              .name
-                          : null,
+                      selectedValue: selectedOrganizerName,
                       dropdownWidth: 310,
                       onChanged: (value) async {
                         if (!mounted || value == null) return;

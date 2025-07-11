@@ -23,6 +23,7 @@ class SelectOrgViewModel extends ChangeNotifier {
     required SessionManager sessionManager,
   })  : _organizerRepository = organizerRepository,
         _sessionManager = sessionManager {
+    _selectedOrganizerId = sessionManager.selectedOrganizerId;
     fetchOrganizers();
   }
 

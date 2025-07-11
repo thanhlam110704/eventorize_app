@@ -48,15 +48,12 @@ class EventListViewModel extends ChangeNotifier {
 
     try {
       final response = await _eventRepository.getAll(
-        search: _sessionManager.selectedOrganizerId!,
+        search: organizerId,
         page: page,
         limit: limit,
       );
 
-      final eventList = (response['data'] as List<dynamic>)
-          .map((json) => Event.fromJson(json))
-          .toList();
-
+      final eventList = response['data'] as List<Event>;
       _events = eventList;
       _errorMessage = null;
       _errorTitle = null;

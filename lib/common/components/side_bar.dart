@@ -162,6 +162,7 @@ class CustomDrawer extends StatelessWidget {
                     text: "Chế độ người dùng",
                     selected: false,
                     onTap: () {
+                      context.read<SessionManager>().clearSelectedOrganizerId();
                       context.push('/home');
                     },
                   ),

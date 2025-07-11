@@ -3,8 +3,6 @@ import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/components/top_nav_org_bar.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
-import 'package:eventorize_app/data/api/event_api.dart';
-import 'package:eventorize_app/data/repositories/event_repository.dart';
 import 'package:eventorize_app/features/auth/organization_view_model/event_list_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:eventorize_app/data/models/event.dart';
@@ -13,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/common/components/custom_event_menu.dart';
 import 'package:eventorize_app/common/services/session_manager.dart';
+import 'package:get_it/get_it.dart';
 
 class EventListPage extends StatefulWidget {
   const EventListPage({super.key});
@@ -26,25 +25,6 @@ class EventListPageState extends State<EventListPage> {
   static const maxContentWidth = 600.0;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        final sessionManager = context.read<SessionManager>();
-        if (sessionManager.selectedOrganizerId == null) {
-          ToastCustom.show(
-            context: context,
-            title: 'Lỗi',
-            description: 'Vui lòng chọn một nhà tổ chức trước',
-            type: ToastificationType.error,
-          );
-          context.go('/select-org');
-        }
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,11 +59,8 @@ class EventListPageState extends State<EventListPage> {
         },
       ),
       body: SafeArea(
-        child: ChangeNotifierProvider(
-          create: (context) => EventListViewModel(
-            eventRepository: EventRepository(EventApi(context.read())),
-            sessionManager: context.read<SessionManager>(),
-          ),
+        child: ChangeNotifierProvider<EventListViewModel>(
+          create: (_) => GetIt.instance<EventListViewModel>(),
           child: Consumer<EventListViewModel>(
             builder: (context, viewModel, _) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -228,6 +205,8 @@ class EventListPageState extends State<EventListPage> {
                         Text(
                           event.title,
                           style: AppTextStyles.semibold,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 3),
                         Text(
@@ -248,20 +227,23 @@ class EventListPageState extends State<EventListPage> {
                 ],
               ),
             ),
-            const SizedBox(width: 30),
+            const SizedBox(width: 45),
           ],
         ),
         Positioned(
           right: 0,
           top: 0,
-          child: Builder(
-            builder: (context) => IconButton(
-              icon: const Icon(Icons.more_vert, color: Colors.black54),
-              onPressed: () {
-                final RenderBox box = context.findRenderObject() as RenderBox;
-                final position = box.localToGlobal(Offset.zero);
-                showEventMenu(context, position, event.id);
-              },
+          child: Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.more_vert, color: Colors.black54),
+                onPressed: () {
+                  final RenderBox box = context.findRenderObject() as RenderBox;
+                  final position = box.localToGlobal(Offset.zero);
+                  showEventMenu(context, position, event.id);
+                },
+              ),
             ),
           ),
         ),
