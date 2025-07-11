@@ -14,11 +14,10 @@ import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/common/components/custom_event_menu.dart';
 import 'package:eventorize_app/features/auth/organization_view/edit_event_page.dart';
+import 'package:eventorize_app/common/services/session_manager.dart';
 
 class EventListPage extends StatefulWidget {
-  final String organizerId;
-
-  const EventListPage({super.key, required this.organizerId});
+  const EventListPage({super.key});
 
   @override
   EventListPageState createState() => EventListPageState();
@@ -29,6 +28,25 @@ class EventListPageState extends State<EventListPage> {
   static const maxContentWidth = 600.0;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final sessionManager = context.read<SessionManager>();
+        if (sessionManager.selectedOrganizerId == null) {
+          ToastCustom.show(
+            context: context,
+            title: 'Lỗi',
+            description: 'Vui lòng chọn một nhà tổ chức trước',
+            type: ToastificationType.error,
+          );
+          context.go('/select-org');
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,31 +63,45 @@ class EventListPageState extends State<EventListPage> {
       ),
       drawer: const CustomDrawer(currentPage: AppPage.eventList),
       backgroundColor: AppColors.whiteBackground,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.fromLTRB(0, 0, 20, 50),
-        child: SizedBox(
-          width: 70,
-          height: 70,
-          child: FloatingActionButton(
-            onPressed: () {
-              context.go('/createevent/${widget.organizerId}');
-            },
-            backgroundColor: const Color(0xFF194185),
-            elevation: 6,
-            shape: const CircleBorder(),
-            child: const Icon(
-              Icons.add,
-              color: Colors.white,
-              size: 32,
+      floatingActionButton: Consumer<SessionManager>(
+        builder: (context, sessionManager, _) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(0, 0, 20, 50),
+            child: SizedBox(
+              width: 70,
+              height: 70,
+              child: FloatingActionButton(
+                onPressed: () {
+                  if (sessionManager.selectedOrganizerId == null) {
+                    ToastCustom.show(
+                      context: context,
+                      title: 'Lỗi',
+                      description: 'Vui lòng chọn một nhà tổ chức trước',
+                      type: ToastificationType.error,
+                    );
+                    context.go('/select-org');
+                    return;
+                  }
+                  context.go('/create-event/${sessionManager.selectedOrganizerId}');
+                },
+                backgroundColor: const Color(0xFF194185),
+                elevation: 6,
+                shape: const CircleBorder(),
+                child: const Icon(
+                  Icons.add,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
       body: SafeArea(
         child: ChangeNotifierProvider(
-          create: (_) => EventListViewModel(
+          create: (context) => EventListViewModel(
             eventRepository: EventRepository(EventApi(DioClient())),
-            organizerId: widget.organizerId,
+            sessionManager: context.read<SessionManager>(),
           ),
           child: Consumer<EventListViewModel>(
             builder: (context, viewModel, _) {

@@ -15,7 +15,7 @@ class CustomFieldInput extends StatefulWidget {
   final int? maxLength;
   final TextAlign? textAlign;
   final ValueChanged<String>? onChanged;
-  final TextEditingController? passwordController; // Thêm để so sánh confirmPassword
+  final TextEditingController? passwordController; 
 
   const CustomFieldInput({
     super.key,

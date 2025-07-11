@@ -375,7 +375,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
                   child: OutlinedButton(
                     onPressed: () async {
                       if (!mounted) return;
-                      await context.pushNamed("detail-profile");
+                      await context.pushNamed("profileDetail");
                       if (mounted) {
                         context.read<AccountViewModel>().refreshUser();
                       }

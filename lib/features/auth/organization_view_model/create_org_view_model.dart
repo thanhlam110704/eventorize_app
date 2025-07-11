@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:eventorize_app/core/utils/exceptions.dart';
 import 'package:eventorize_app/data/models/organizer.dart';
 import 'package:eventorize_app/data/repositories/organizer_repository.dart';
-import 'dart:developer' as developer;
 import 'package:eventorize_app/common/services/session_manager.dart';
 import 'dart:io';
 
@@ -155,7 +154,6 @@ class CreateOrgViewModel extends ChangeNotifier {
       );
     } catch (e) {
     if (e is DioException && e.response != null) {
-      developer.log('Server response: ${e.response!.data}');
       ErrorHandler.handleError(
         e,
         'Lỗi khi tạo nhà tổ chức: ${e.response!.data.toString()}',

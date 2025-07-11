@@ -10,6 +10,7 @@ class SessionManager extends ChangeNotifier {
   User? _user;
   bool _isCheckingSession = false;
   bool _isLoading = false;
+  String? _selectedOrganizerId;
 
   SessionManager(this._userRepository);
 
@@ -18,6 +19,7 @@ class SessionManager extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorState.errorMessage;
   String? get errorTitle => _errorState.errorTitle;
+  String? get selectedOrganizerId => _selectedOrganizerId;
 
   Future<void> checkSession() async {
     _isCheckingSession = true;
@@ -55,11 +57,13 @@ class SessionManager extends ChangeNotifier {
     try {
       await SecureStorage.clearToken();
       _user = null;
+      _selectedOrganizerId = null;
     } catch (e) {
       ErrorHandler.handleError(e, 'Đăng xuất thất bại', _errorState);
       rethrow;
     } finally {
       _isLoading = false;
+      notifyListeners();
     }
   }
 
@@ -83,6 +87,16 @@ class SessionManager extends ChangeNotifier {
 
   void setUser(User user) {
     _user = user;
+    notifyListeners();
+  }
+
+  void setSelectedOrganizerId(String? organizerId) {
+    _selectedOrganizerId = organizerId;
+    notifyListeners();
+  }
+
+  void clearSelectedOrganizerId() {
+    _selectedOrganizerId = null;
     notifyListeners();
   }
 

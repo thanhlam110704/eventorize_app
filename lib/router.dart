@@ -19,6 +19,9 @@ import 'package:eventorize_app/features/auth/user_view/ticket_detail_page.dart';
 import 'package:eventorize_app/features/auth/user_view/privacy_policy_page.dart';
 import 'package:eventorize_app/features/auth/user_view/terms_of_service_page.dart';
 import 'package:eventorize_app/features/auth/organization_view/select_org_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/org_info_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/ticket_list_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/event_list_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -26,7 +29,7 @@ class AppRouter {
     routes: [
       GoRoute(
         path: '/splashscreen',
-        name: 'splashscreen',
+        name: 'splashScreen',
         builder: (context, state) => const SplashScreenPage(),
       ),
       GoRoute(
@@ -41,7 +44,7 @@ class AppRouter {
       ),
       GoRoute(
         path: '/verify-code',
-        name: 'verify-code',
+        name: 'verifyCode',
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           final email = extra?['email'] as String? ?? '';
@@ -64,7 +67,7 @@ class AppRouter {
       ),
       GoRoute(
         path: '/event/:id',
-        name: 'event_detail',
+        name: 'eventDetail',
         builder: (context, state) {
           final eventId = state.pathParameters['id']!;
           return EventDetailPage(eventId: eventId);
@@ -78,14 +81,14 @@ class AppRouter {
         redirect: (context, state) => _authGuard(context),
       ),
       GoRoute(
-        path: '/detail-profile',
-        name: 'detail-profile',
+        path: '/profile-detail',
+        name: 'profileDetail',
         builder: (context, state) => const ProfileDetailPage(),
         redirect: (context, state) => _authGuard(context),
       ),
       GoRoute(
-        name: 'payment',
         path: '/payment/:orderId',
+        name: 'payment',
         builder: (context, state) {
           final orderId = state.pathParameters['orderId']!;
           final extra = state.extra as Map<String, dynamic>;
@@ -100,13 +103,13 @@ class AppRouter {
       ),
       GoRoute(
         path: '/payment-success',
-        name: 'payment-success',
+        name: 'paymentSuccess',
         builder: (context, state) => const PaymentSuccessfulPage(),
         redirect: (context, state) => _authGuard(context),
       ),
       GoRoute(
         path: '/payment-failed',
-        name: 'payment-failed',
+        name: 'paymentFailed',
         builder: (context, state) => const PaymentFailedPage(),
         redirect: (context, state) => _authGuard(context),
       ),
@@ -143,10 +146,28 @@ class AppRouter {
         builder: (context, state) => const PrivacyPolicyPage(),
         redirect: (context, state) => _authGuard(context),
       ),
-       GoRoute(
+      GoRoute(
         path: '/select-org',
         name: 'selectOrg',
         builder: (context, state) => const SelectOrgPage(),
+        redirect: (context, state) => _authGuard(context),
+      ),
+      GoRoute(
+        path: '/org-info',
+        name: 'orgInfo',
+        builder: (context, state) => const OrgInfoPage(),
+        redirect: (context, state) => _authGuard(context),
+      ),
+      GoRoute(
+        path: '/event-list',
+        name: 'eventList',
+        builder: (context, state) => const EventListPage(),
+        redirect: (context, state) => _authGuard(context),
+      ),
+      GoRoute(
+        path: '/ticket-list',
+        name: 'ticketList',
+        builder: (context, state) => const TicketListPage(),
         redirect: (context, state) => _authGuard(context),
       ),
     ],

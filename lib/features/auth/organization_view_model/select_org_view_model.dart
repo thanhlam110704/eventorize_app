@@ -53,6 +53,7 @@ class SelectOrgViewModel extends ChangeNotifier {
 
   void selectOrganizer(String? organizerId) {
     _selectedOrganizerId = organizerId;
+    _sessionManager.setSelectedOrganizerId(organizerId); 
     notifyListeners();
   }
 

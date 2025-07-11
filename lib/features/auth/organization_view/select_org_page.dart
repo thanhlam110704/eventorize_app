@@ -170,7 +170,7 @@ class _SelectOrgPageState extends State<SelectOrgPage> {
                               .firstWhere((org) => org.name == value);
                           viewModel.selectOrganizer(selectedOrg.id);
                           await Future.delayed(const Duration(milliseconds: 100));
-                          if (mounted) context.push('/event-list/${selectedOrg.id}');
+                          if (mounted) context.push('/event-list');
                         } catch (_) {
                           if (mounted) {
                             ToastCustom.show(

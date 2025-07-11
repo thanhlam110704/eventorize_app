@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:eventorize_app/common/services/session_manager.dart';
+import 'package:toastification/toastification.dart';
+import 'package:eventorize_app/common/components/toast_custom.dart';
 
 enum AppPage { orgInfo, eventList, orderList, ticketList }
 
@@ -11,8 +15,8 @@ class CustomDrawer extends StatelessWidget {
 
   const CustomDrawer({super.key, required this.currentPage});
 
-    @override
-    Widget build(BuildContext context) {
+  @override
+  Widget build(BuildContext context) {
     return Drawer(
       child: Column(
         children: [
@@ -22,7 +26,7 @@ class CustomDrawer extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 64, 16, 36),
             child: Row(
               children: [
-                CircleAvatar( 
+                CircleAvatar(
                   radius: 36,
                   backgroundColor: Color(0xFF065290),
                   child: Text(
@@ -35,13 +39,13 @@ class CustomDrawer extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "FPT Sofware",
+                      "FPT Software",
                       style: AppTextStyles.bold.copyWith(fontSize: 20),
                     ),
                     SizedBox(height: 4),
                     Text(
                       "fptsoftware@gmail.com",
-                      style: AppTextStyles.text
+                      style: AppTextStyles.text,
                     ),
                   ],
                 ),
@@ -53,12 +57,25 @@ class CustomDrawer extends StatelessWidget {
               color: Colors.white,
               child: Column(
                 children: [
-                  _buildDrawerItem(
-                    icon: MdiIcons.domain,
-                    text: "Nhà tổ chức",
-                    selected: currentPage == AppPage.orgInfo,
-                    onTap: () {
-                      context.go('/orginfo');
+                  Consumer<SessionManager>(
+                    builder: (context, sessionManager, _) {
+                      return _buildDrawerItem(
+                        icon: MdiIcons.domain,
+                        text: "Nhà tổ chức",
+                        selected: currentPage == AppPage.orgInfo,
+                        onTap: () {
+                          if (sessionManager.selectedOrganizerId == null) {
+                            ToastCustom.show(
+                              context: context,
+                              title: 'Lỗi',
+                              description: 'Vui lòng chọn một nhà tổ chức trước',
+                              type: ToastificationType.error,
+                            );
+                            return;
+                          }
+                          context.go('/org-info');
+                        },
+                      );
                     },
                   ),
                   _buildDrawerItem(
@@ -66,7 +83,16 @@ class CustomDrawer extends StatelessWidget {
                     text: "Danh sách sự kiện",
                     selected: currentPage == AppPage.eventList,
                     onTap: () {
-                      context.go('/eventlist');
+                      if (context.read<SessionManager>().selectedOrganizerId == null) {
+                        ToastCustom.show(
+                          context: context,
+                          title: 'Lỗi',
+                          description: 'Vui lòng chọn một nhà tổ chức trước',
+                          type: ToastificationType.error,
+                        );
+                        return;
+                      }
+                      context.go('/event-list');
                     },
                   ),
                   _buildDrawerItem(
@@ -74,7 +100,7 @@ class CustomDrawer extends StatelessWidget {
                     text: "Danh sách vé",
                     selected: currentPage == AppPage.ticketList,
                     onTap: () {
-                      context.go('/ticketlist');
+                      context.go('/ticket-list');
                     },
                   ),
                   _buildDrawerItem(
@@ -82,15 +108,15 @@ class CustomDrawer extends StatelessWidget {
                     text: "Danh sách đơn hàng",
                     selected: currentPage == AppPage.orderList,
                     onTap: () {
-                      context.go('/orderlist');
+                      context.go('/order-list');
                     },
                   ),
                   _buildDrawerItem(
                     icon: Icons.swap_horiz,
-                    text: "Switch to attending",
+                    text: "Chế độ người dùng",
                     selected: false,
                     onTap: () {
-                      context.push('/home'); 
+                      context.push('/home');
                     },
                   ),
                   _buildLogoutItem(),
@@ -111,7 +137,7 @@ class CustomDrawer extends StatelessWidget {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: selected ? const Color(0xFFC4E3FD) : Colors.white, 
+        color: selected ? const Color(0xFFC4E3FD) : Colors.white,
         border: const Border(
           bottom: BorderSide(color: AppColors.grey),
         ),
