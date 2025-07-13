@@ -77,7 +77,7 @@ class FavoriteViewModel extends ChangeNotifier {
       _updateDataLoadedStatus();
       _isInitialLoad = false;
     } catch (e) {
-      ErrorHandler.handleError(e, 'Lỗi khi tải danh sách yêu thích ban đầu', _errorState);
+      ErrorHandler.handleError(e, 'Lỗi', _errorState);
       _isDataLoaded = false;
     } finally {
       _isLoading = false;
@@ -106,7 +106,7 @@ class FavoriteViewModel extends ChangeNotifier {
       _totalEvents = _events.length;
       _updateDataLoadedStatus();
     } catch (e) {
-      ErrorHandler.handleError(e, 'Lỗi khi tải danh sách sự kiện yêu thích', _errorState);
+      ErrorHandler.handleError(e, 'Lỗi', _errorState);
       _isDataLoaded = false;
     } finally {
       _isLoading = false;
@@ -131,7 +131,7 @@ class FavoriteViewModel extends ChangeNotifier {
       _totalEvents = _events.length;
       _updateDataLoadedStatus();
     } catch (e) {
-      ErrorHandler.handleError(e, 'Lỗi khi cập nhật danh sách yêu thích', _errorState);
+      ErrorHandler.handleError(e, 'Lỗi', _errorState);
     } finally {
       _isTogglingFavorite = false;
       notifyListeners();

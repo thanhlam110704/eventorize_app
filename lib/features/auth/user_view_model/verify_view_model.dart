@@ -35,7 +35,7 @@ class VerifyViewModel extends ChangeNotifier {
   }) async {
     await _executeVerify(
       () => _userRepository.resendVerificationEmail(email: email),
-      'Lỗi khi gửi lại mã xác nhận',
+      'Lỗi',
       (_) => _errorState.isSuccess = true,
     );
   }

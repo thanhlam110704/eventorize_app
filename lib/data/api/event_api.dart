@@ -98,8 +98,8 @@ class EventApi {
     required String title,
     String? description,
     String? link,
-    required DateTime startDate,
-    required DateTime endDate,
+    required String? startDate,
+    required String? endDate,
     required bool isOnline,
     String? address,
     String? district,
@@ -115,8 +115,8 @@ class EventApi {
         'title': title,
         'description': description,
         'link': link,
-        'start_date': startDate.toIso8601String(),
-        'end_date': endDate.toIso8601String(),
+        'start_date': startDate,
+        'end_date': endDate,
         'is_online': isOnline,
         'address': address,
         'district': district,
@@ -146,8 +146,8 @@ class EventApi {
     String? title,
     String? description,
     String? link,
-    DateTime? startDate,
-    DateTime? endDate,
+    String? startDate,
+    String? endDate,
     bool? isOnline,
     String? address,
     String? district,
@@ -162,8 +162,8 @@ class EventApi {
           if (title != null) 'title': title,
           if (description != null) 'description': description,
           if (link != null) 'link': link,
-          if (startDate != null) 'start_date': startDate.toIso8601String(),
-          if (endDate != null) 'end_date': endDate.toIso8601String(),
+          if (startDate != null) 'start_date': startDate,
+          if (endDate != null) 'end_date': endDate,
           if (isOnline != null) 'is_online': isOnline,
           if (address != null) 'address': address,
           if (district != null) 'district': district,
@@ -224,7 +224,7 @@ class EventApi {
           .toList();
     } on DioException catch (e) {
       final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
-      throw Exception('Lấy danh sách sự kiện theo tổ chức thất bại: $errorMessage');
+      throw Exception('$errorMessage');
     }
   }
 }

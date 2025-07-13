@@ -1,3 +1,4 @@
+import 'package:eventorize_app/features/auth/organization_view/create_event_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -22,6 +23,7 @@ import 'package:eventorize_app/features/auth/organization_view/select_org_page.d
 import 'package:eventorize_app/features/auth/organization_view/org_info_page.dart';
 import 'package:eventorize_app/features/auth/organization_view/ticket_list_page.dart';
 import 'package:eventorize_app/features/auth/organization_view/event_list_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/edit_event_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -162,6 +164,24 @@ class AppRouter {
         path: '/event-list',
         name: 'eventList',
         builder: (context, state) => const EventListPage(),
+        redirect: (context, state) => _authGuard(context),
+      ),
+      GoRoute(
+        path: '/create-event/:organizerId',
+        name: 'createEvent',
+        builder: (context, state) {
+          final organizerId = state.pathParameters['organizerId']!;
+          return CreateEventPage(organizerId: organizerId);
+        },
+        redirect: (context, state) => _authGuard(context),
+      ),
+      GoRoute(
+        path: '/edit-event/:id',
+        name: 'editEvent',
+        builder: (context, state) {
+          final eventId = state.pathParameters['id']!;
+          return EditEventPage(eventId: eventId);
+        },
         redirect: (context, state) => _authGuard(context),
       ),
       GoRoute(

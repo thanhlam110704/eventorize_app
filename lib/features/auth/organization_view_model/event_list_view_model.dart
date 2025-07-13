@@ -10,6 +10,9 @@ class EventListViewModel extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   String? _errorTitle;
+  int _currentPage = 1;
+  int _currentLimit = 20;
+  String _currentSearch = "";
 
   List<Event> get events => _events;
   bool get isLoading => _isLoading;
@@ -20,10 +23,10 @@ class EventListViewModel extends ChangeNotifier {
     required EventRepository eventRepository,
     required SessionManager sessionManager,
   }) : _eventRepository = eventRepository, _sessionManager = sessionManager {
-    if (_sessionManager.selectedOrganizerId != null) {
+    if (_sessionManager.user != null) {
       fetchEvents(organizerId: _sessionManager.selectedOrganizerId!);
     } else {
-      _errorMessage = 'Vui lòng chọn một nhà tổ chức trước';
+      _errorMessage = 'Vui lòng đăng nhập trước';
       _errorTitle = 'Lỗi';
       notifyListeners();
     }
@@ -35,8 +38,8 @@ class EventListViewModel extends ChangeNotifier {
     int limit = 20,
     String search = "",
   }) async {
-    if (_sessionManager.selectedOrganizerId == null) {
-      _errorMessage = 'Vui lòng chọn một nhà tổ chức trước';
+    if (_sessionManager.user == null) {
+      _errorMessage = 'Vui lòng đăng nhập trước';
       _errorTitle = 'Lỗi';
       notifyListeners();
       return;
@@ -55,14 +58,62 @@ class EventListViewModel extends ChangeNotifier {
 
       final eventList = response['data'] as List<Event>;
       _events = eventList;
+      _currentPage = page;
+      _currentLimit = limit;
+      _currentSearch = search;
       _errorMessage = null;
       _errorTitle = null;
     } catch (e) {
       _errorMessage = 'Lỗi khi tải danh sách sự kiện: $e';
       _errorTitle = 'Lỗi';
+      if (kDebugMode) {
+        print('Fetch events error: $e');
+      }
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> deleteEvent(String eventId) async {
+    if (_sessionManager.user == null) {
+      _errorMessage = 'Vui lòng đăng nhập trước';
+      _errorTitle = 'Lỗi';
+      notifyListeners();
+      return;
+    }
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final originalEvents = List<Event>.from(_events); 
+    _events = _events.where((event) => event.id != eventId).toList();
+    notifyListeners(); 
+
+    try {
+      await _eventRepository.deleteEvent(eventId);
+      await fetchEvents(
+        organizerId: _sessionManager.selectedOrganizerId!,
+        page: _currentPage,
+        limit: _currentLimit,
+        search: _currentSearch,
+      );
+      _errorMessage = null;
+      _errorTitle = null;
+    } catch (e) {
+      _events = originalEvents;
+      _errorMessage = 'Xóa sự kiện thất bại: $e';
+      _errorTitle = 'Lỗi';
+      await fetchEvents(
+        organizerId: _sessionManager.selectedOrganizerId!,
+        page: _currentPage,
+        limit: _currentLimit,
+        search: _currentSearch,
+      );
+    } finally {
+      _isLoading = false;
+      notifyListeners(); 
     }
   }
 

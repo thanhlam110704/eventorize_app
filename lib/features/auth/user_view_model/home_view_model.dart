@@ -219,7 +219,7 @@ class HomeViewModel extends ChangeNotifier {
       _totalEvents = result['total'] as int;
       _updateDataLoadedStatus();
     } catch (e) {
-      ErrorHandler.handleError(e, 'Lỗi khi tải danh sách sự kiện', _errorState);
+      ErrorHandler.handleError(e, 'Lỗi', _errorState);
       _isDataLoaded = false;
     } finally {
       if (!isToggleFavorite && !isFromNavigation) {
@@ -247,7 +247,7 @@ class HomeViewModel extends ChangeNotifier {
       await fetchEvents(city: _selectedCity);
       _updateDataLoadedStatus();
     } catch (e) {
-      ErrorHandler.handleError(e, 'Lỗi khi tải khu vực', _errorState);
+      ErrorHandler.handleError(e, 'Lỗi', _errorState);
       _isDataLoaded = false;
     } finally {
       _isLoading = false;
@@ -285,7 +285,7 @@ class HomeViewModel extends ChangeNotifier {
       final events = result['data'] as List<Event>;
       return events.map((event) => {'title': event.title, 'id': event.id}).toList();
     } catch (e) {
-      ErrorHandler.handleError(e, 'Lỗi khi tải dữ liệu tìm kiếm', _errorState);
+      ErrorHandler.handleError(e, 'Lỗi', _errorState);
       return [];
     }
   }

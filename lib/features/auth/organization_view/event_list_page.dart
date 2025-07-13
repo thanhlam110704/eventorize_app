@@ -4,6 +4,7 @@ import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/components/top_nav_org_bar.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/features/auth/organization_view_model/event_list_view_model.dart';
+import 'package:eventorize_app/features/auth/organization_view_model/edit_event_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:eventorize_app/data/models/event.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +13,8 @@ import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/common/components/custom_event_menu.dart';
 import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:get_it/get_it.dart';
+
+final getIt = GetIt.instance;
 
 class EventListPage extends StatefulWidget {
   const EventListPage({super.key});
@@ -25,6 +28,24 @@ class EventListPageState extends State<EventListPage> {
   static const maxContentWidth = 600.0;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _hasShownUpdateToast = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final viewModel = getIt<EventListViewModel>();
+      final sessionManager = getIt<SessionManager>();
+      if (sessionManager.user != null) {
+        viewModel.fetchEvents(
+          organizerId: sessionManager.selectedOrganizerId!,
+          page: 1,
+          limit: 20,
+          search: "",
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,41 +64,52 @@ class EventListPageState extends State<EventListPage> {
       backgroundColor: AppColors.whiteBackground,
       floatingActionButton: Consumer<SessionManager>(
         builder: (context, sessionManager, _) {
-          return FloatingActionButton(
-            onPressed: () {
-              context.go('/create-event/${sessionManager.selectedOrganizerId}');
-            },
-            backgroundColor: const Color(0xFF194185),
-            elevation: 6,
-            shape: const CircleBorder(),
-            child: const Icon(
-              Icons.add,
-              color: Colors.white,
-              size: 32,
+          return SizedBox(
+            width: 70,
+            height: 70,
+            child: FloatingActionButton(
+              onPressed: () {
+                context.push('/create-event/${sessionManager.selectedOrganizerId}');
+              },
+              backgroundColor: const Color(0xFF194185),
+              elevation: 6,
+              shape: const CircleBorder(),
+              child: const Icon(
+                Icons.add,
+                color: Colors.white,
+                size: 30,
+              ),
             ),
           );
         },
       ),
+      floatingActionButtonLocation: const CustomFloatingActionButtonLocation(30, 40),
       body: SafeArea(
-        child: ChangeNotifierProvider<EventListViewModel>(
-          create: (_) => GetIt.instance<EventListViewModel>(),
+        child: ChangeNotifierProvider<EventListViewModel>.value(
+          value: getIt<EventListViewModel>(),
           child: Consumer<EventListViewModel>(
             builder: (context, viewModel, _) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted && viewModel.errorMessage != null) {
                   ToastCustom.show(
                     context: context,
-                    title: viewModel.errorTitle ?? 'Error',
+                    title: viewModel.errorTitle ?? 'Lỗi',
                     description: viewModel.errorMessage!,
                     type: ToastificationType.error,
                   );
                   viewModel.clearError();
                 }
+                if (mounted && Provider.of<EditEventViewModel>(context, listen: false).isUpdateSuccessful && !_hasShownUpdateToast) {
+                  _hasShownUpdateToast = true;
+                  Provider.of<EditEventViewModel>(context, listen: false).clearUpdateStatus();
+                  viewModel.fetchEvents(
+                    organizerId: getIt<SessionManager>().selectedOrganizerId!,
+                    page: 1,
+                    limit: 20,
+                    search: "",
+                  );
+                }
               });
-
-              if (viewModel.isLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
 
               return SingleChildScrollView(
                 child: buildMainContainer(
@@ -91,6 +123,12 @@ class EventListPageState extends State<EventListPage> {
         ),
       ),
     );
+  }
+
+  @override
+  void didUpdateWidget(covariant EventListPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _hasShownUpdateToast = false;
   }
 
   Widget buildMainContainer(bool isSmallScreen, Size screenSize, EventListViewModel viewModel) {
@@ -141,6 +179,17 @@ class EventListPageState extends State<EventListPage> {
   }
 
   Widget buildEventList(EventListViewModel viewModel) {
+    if (viewModel.isLoading) {
+      return Column(
+        children: List.generate(
+          7,
+          (index) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: buildSkeletonCard(),
+          ),
+        ),
+      );
+    }
     if (viewModel.events.isEmpty) {
       return const Center(
         child: Text(
@@ -151,6 +200,7 @@ class EventListPageState extends State<EventListPage> {
     }
 
     return ListView.builder(
+      key: UniqueKey(),
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: viewModel.events.length,
@@ -161,6 +211,48 @@ class EventListPageState extends State<EventListPage> {
           child: buildEventCard(event),
         );
       },
+    );
+  }
+
+  Widget buildSkeletonCard() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: AppColors.grey.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: double.infinity,
+                height: 16,
+                color: AppColors.grey.withValues(alpha: 0.3),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                width: 100,
+                height: 12,
+                color: AppColors.grey.withValues(alpha: 0.3),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                width: 60,
+                height: 12,
+                color: AppColors.grey.withValues(alpha: 0.3),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 45),
+      ],
     );
   }
 
@@ -252,37 +344,81 @@ class EventListPageState extends State<EventListPage> {
   }
 
   void showEventMenu(BuildContext context, Offset position, String eventId) {
-    final overlay = Overlay.of(context);
-    final entry = OverlayEntry(
-      builder: (context) => Positioned(
+    OverlayEntry? entry;
+
+    void closeMenu(BuildContext dialogContext) {
+      if (entry != null) {
+        entry!.remove();
+        entry = null;
+      }
+      Navigator.of(dialogContext).pop();
+    }
+
+    entry = OverlayEntry(
+      builder: (dialogContext) => Positioned(
         top: position.dy + 40,
         left: position.dx - 80,
         child: Material(
           color: Colors.transparent,
           child: CustomEventMenu(
             onEdit: () {
-              context.go('/edit-event/$eventId');
+              closeMenu(dialogContext);
+              _hasShownUpdateToast = false;
+              context.push('/edit-event/$eventId');
             },
-            onDelete: () {
-              // Delete action placeholder
+            onDelete: () async {
+              closeMenu(dialogContext);
+              final viewModel = getIt<EventListViewModel>();
+              await viewModel.deleteEvent(eventId);
+              if (!context.mounted) return;
+              if (viewModel.errorMessage == null) {
+                ToastCustom.show(
+                  context: context,
+                  title: 'Thành công',
+                  description: 'Xóa sự kiện thành công',
+                  type: ToastificationType.success,
+                );
+              } else {
+                ToastCustom.show(
+                  context: context,
+                  title: viewModel.errorTitle ?? 'Lỗi',
+                  description: viewModel.errorMessage!,
+                  type: ToastificationType.error,
+                );
+              }
             },
           ),
         ),
       ),
     );
 
-    overlay.insert(entry);
+    final overlay = Overlay.of(context);
+    overlay.insert(entry!);
 
-    Future.delayed(Duration.zero, () {
-      if (!context.mounted) return;
-      showDialog(
-        context: context,
-        barrierColor: Colors.transparent,
-        builder: (_) => GestureDetector(
-          onTap: () => Navigator.of(context).pop(),
-          child: const SizedBox.expand(),
-        ),
-      ).then((_) => entry.remove());
-    });
+    showDialog(
+      context: context,
+      barrierColor: Colors.transparent,
+      builder: (dialogContext) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          closeMenu(dialogContext);
+        },
+        child: const SizedBox.expand(),
+      ),
+    );
+  }
+}
+
+class CustomFloatingActionButtonLocation extends FloatingActionButtonLocation {
+  final double rightPadding;
+  final double bottomPadding;
+
+  const CustomFloatingActionButtonLocation(this.rightPadding, this.bottomPadding);
+
+  @override
+  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
+    final double x = scaffoldGeometry.scaffoldSize.width - rightPadding - scaffoldGeometry.floatingActionButtonSize.width;
+    final double y = scaffoldGeometry.scaffoldSize.height - bottomPadding - scaffoldGeometry.floatingActionButtonSize.height;
+    return Offset(x, y);
   }
 }

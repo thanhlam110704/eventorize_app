@@ -16,7 +16,7 @@ class CustomEventMenu extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(8,10,8,0),
+        padding: const EdgeInsets.fromLTRB(8, 10, 8, 0),
         width: 100,
         height: 100,
         decoration: BoxDecoration(
@@ -28,10 +28,7 @@ class CustomEventMenu extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             GestureDetector(
-              onTap: () {
-                Navigator.of(context).pop();
-                onEdit();
-              },
+              onTap: onEdit, 
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
@@ -40,7 +37,7 @@ class CustomEventMenu extends StatelessWidget {
                   borderRadius: BorderRadius.circular(5),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.only(right: 14), 
+                  padding: const EdgeInsets.only(right: 14),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
@@ -50,15 +47,12 @@ class CustomEventMenu extends StatelessWidget {
                       Text('Edit', style: TextStyle(color: Colors.white)),
                     ],
                   ),
-                )
+                ),
               ),
             ),
             const SizedBox(height: 12),
             GestureDetector(
-              onTap: () {
-                Navigator.of(context).pop();
-                onDelete();
-              },
+              onTap: onDelete, // Loại bỏ Navigator.of(context).pop()
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),

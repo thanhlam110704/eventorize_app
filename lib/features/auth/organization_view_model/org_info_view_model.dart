@@ -100,7 +100,7 @@ class OrgInfoViewModel extends ChangeNotifier {
 
       await loadLocationData();
     } catch (e) {
-      ErrorHandler.handleError(e, 'Lỗi khi tải dữ liệu nhà tổ chức', errorState);
+      ErrorHandler.handleError(e, 'Lỗi', errorState);
       isDataLoaded = false;
     } finally {
       isLoading = false;
@@ -116,7 +116,7 @@ class OrgInfoViewModel extends ChangeNotifier {
     if (locationCache.provinces.isEmpty) {
       await executeApiCall(
         apiCall: () => locationRepository.getProvinces(),
-        errorPrefix: 'Lỗi khi tải danh sách tỉnh thành',
+        errorPrefix: 'Lỗi',
         onSuccess: (data) {
           locationCache.setProvinces(data as List<Province>);
           selectedCity ??= provinces.isNotEmpty ? provinces[0].name : null;
@@ -141,7 +141,7 @@ class OrgInfoViewModel extends ChangeNotifier {
     if (locationCache.getDistricts(provinceCode).isEmpty) {
       await executeApiCall(
         apiCall: () => locationRepository.getDistricts(provinceCode: provinceCode),
-        errorPrefix: 'Lỗi khi tải danh sách quận huyện',
+        errorPrefix: 'Lỗi',
         onSuccess: (data) {
           locationCache.setDistricts(provinceCode, data as List<District>);
           selectedDistrict ??= districts.isNotEmpty ? districts[0].name : null;
@@ -166,7 +166,7 @@ class OrgInfoViewModel extends ChangeNotifier {
     if (locationCache.getWards(districtCode).isEmpty) {
       await executeApiCall(
         apiCall: () => locationRepository.getWards(districtCode: districtCode),
-        errorPrefix: 'Lỗi khi tải danh sách phường xã',
+        errorPrefix: 'Lỗi',
         onSuccess: (data) {
           locationCache.setWards(districtCode, data as List<Ward>);
           selectedWard ??= wards.isNotEmpty ? wards[0].name : null;
@@ -262,7 +262,7 @@ class OrgInfoViewModel extends ChangeNotifier {
         linkedin: linkedinController.text.isEmpty ? null : linkedinController.text,
         instagram: instagramController.text.isEmpty ? null : instagramController.text,
       ),
-      errorPrefix: 'Lỗi khi cập nhật thông tin nhà tổ chức',
+      errorPrefix: 'Lỗi',
       onSuccess: (updatedOrganizer) {
         organizer = updatedOrganizer as Organizer;
         sessionManager.setSelectedOrganizerDetails(
@@ -300,7 +300,7 @@ class OrgInfoViewModel extends ChangeNotifier {
         final multipartFile = await MultipartFile.fromFile(imageFile.path, filename: imageFile.path.split('/').last);
         return organizerRepository.editThumbnail(id: organizerId, file: multipartFile);
       },
-      errorPrefix: 'Lỗi khi tải ảnh logo',
+      errorPrefix: 'Lỗi',
       onSuccess: (updatedOrganizer) {
         organizer = updatedOrganizer as Organizer;
         sessionManager.setSelectedOrganizerDetails(

@@ -64,7 +64,7 @@ class ErrorHandler {
         state.errorMessage = error.response?.data?['detail'] ?? '$errorPrefix. Hãy thử lại sau.';
       }
     } else {
-      state.errorMessage = '$errorPrefix: ${error.toString()}';
+      state.errorMessage = ' ${error.toString()}';
     }
   }
 

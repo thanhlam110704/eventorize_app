@@ -57,7 +57,7 @@ class EventDetailViewModel extends ChangeNotifier {
       }
       await fetchRelatedEvents(id);
     } catch (e) {
-      ErrorHandler.handleError(e, 'Lỗi khi lấy chi tiết sự kiện', _errorState);
+      ErrorHandler.handleError(e, 'Lỗi', _errorState);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -75,7 +75,7 @@ class EventDetailViewModel extends ChangeNotifier {
       _relatedEvents = result['data'] as List<Event>;
       _relatedEvents = _relatedEvents.where((e) => e.id != eventId).toList();
     } catch (e) {
-      ErrorHandler.handleError(e, 'Lỗi khi lấy sự kiện liên quan', _errorState);
+      ErrorHandler.handleError(e, 'Lỗi', _errorState);
     } finally {
       _isLoadingRelated = false;
       notifyListeners();
@@ -91,7 +91,7 @@ class EventDetailViewModel extends ChangeNotifier {
       final result = await _ticketRepository.getEventTickets(eventId: eventId);
       _tickets = result['data'] as List<Ticket>;
     } catch (e) {
-      ErrorHandler.handleError(e, 'Lỗi khi lấy danh sách vé', _errorState);
+      ErrorHandler.handleError(e, 'Lỗi', _errorState);
     } finally {
       _isLoadingTickets = false;
       notifyListeners();
@@ -113,7 +113,7 @@ class EventDetailViewModel extends ChangeNotifier {
       );
       return Order.fromJson(result);
     } catch (e) {
-      ErrorHandler.handleError(e, 'Lỗi khi mua vé', _errorState);
+      ErrorHandler.handleError(e, 'Lỗi', _errorState);
       rethrow;
     }
   }

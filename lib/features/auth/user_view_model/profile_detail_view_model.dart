@@ -86,7 +86,7 @@ class ProfileDetailViewModel extends ChangeNotifier {
     if (_locationCache.provinces.isEmpty) {
       await _executeApiCall(
         apiCall: () => locationRepository.getProvinces(),
-        errorPrefix: 'Lỗi khi tải danh sách tỉnh thành',
+        errorPrefix: 'Lỗi',
         onSuccess: (data) {
           _locationCache.setProvinces(data as List<Province>);
           selectedCity ??= provinces.isNotEmpty ? provinces[0].name : null;
@@ -111,7 +111,7 @@ class ProfileDetailViewModel extends ChangeNotifier {
     if (_locationCache.getDistricts(provinceCode).isEmpty) {
       await _executeApiCall(
         apiCall: () => locationRepository.getDistricts(provinceCode: provinceCode),
-        errorPrefix: 'Lỗi khi tải danh sách quận huyện',
+        errorPrefix: 'Lỗi',
         onSuccess: (data) {
           _locationCache.setDistricts(provinceCode, data as List<District>);
           selectedDistrict ??= districts.isNotEmpty ? districts[0].name : null;
@@ -136,7 +136,7 @@ class ProfileDetailViewModel extends ChangeNotifier {
     if (_locationCache.getWards(districtCode).isEmpty) {
       await _executeApiCall(
         apiCall: () => locationRepository.getWards(districtCode: districtCode),
-        errorPrefix: 'Lỗi khi tải danh sách phường xã',
+        errorPrefix: 'Lỗi',
         onSuccess: (data) {
           _locationCache.setWards(districtCode, data as List<Ward>);
           selectedWard ??= wards.isNotEmpty ? wards[0].name : null;
@@ -225,7 +225,7 @@ class ProfileDetailViewModel extends ChangeNotifier {
         district: selectedDistrict,
         ward: selectedWard,
       ),
-      errorPrefix: 'Lỗi khi cập nhật thông tin',
+      errorPrefix: 'Lỗi',
       onSuccess: (updatedUser) {
         try {
           context.read<SessionManager>().setUser(updatedUser as User);
@@ -235,7 +235,7 @@ class ProfileDetailViewModel extends ChangeNotifier {
           ErrorHandler.clearError(_errorState);
         } catch (e) {
           _errorState.errorTitle = 'Lỗi';
-          _errorState.errorMessage = 'Lỗi khi lấy dữ liệu người dùng: $e';
+          _errorState.errorMessage = '$e';
           _isUpdateSuccessful = false;
         }
       },
@@ -256,7 +256,7 @@ class ProfileDetailViewModel extends ChangeNotifier {
         final multipartFile = await MultipartFile.fromFile(imageFile.path, filename: imageFile.path.split('/').last);
         return userRepository.editAvatar(file: multipartFile);
       },
-      errorPrefix: 'Lỗi khi tải ảnh đại diện',
+      errorPrefix: 'Lỗi',
       onSuccess: (updatedUser) {
         try {
           context.read<SessionManager>().setUser(updatedUser as User);

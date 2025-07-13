@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 class CustomDropdownField extends StatelessWidget {
   final String label;
-  final String? hintText; 
+  final String? hintText;
   final List<String> items;
   final String? selectedValue;
   final void Function(String?) onChanged;
@@ -13,7 +13,7 @@ class CustomDropdownField extends StatelessWidget {
   const CustomDropdownField({
     super.key,
     required this.label,
-    this.hintText, 
+    this.hintText,
     required this.items,
     required this.onChanged,
     this.selectedValue,
@@ -37,7 +37,7 @@ class CustomDropdownField extends StatelessWidget {
                 .toList(),
             width: dropdownWidth ?? double.infinity,
             hintText: hintText,
-            textStyle: AppTextStyles.text, 
+            textStyle: AppTextStyles.text,
             menuStyle: MenuStyle(
               backgroundColor: WidgetStateProperty.all(Colors.white),
               shape: WidgetStateProperty.all(
@@ -72,6 +72,7 @@ class CustomTextField extends StatelessWidget {
   final bool readOnly;
   final TextEditingController? controller;
   final String? Function(String?)? validator;
+  final VoidCallback? onTap;
 
   const CustomTextField({
     super.key,
@@ -85,6 +86,7 @@ class CustomTextField extends StatelessWidget {
     this.readOnly = false,
     this.controller,
     this.validator,
+    this.onTap,
   });
 
   @override
@@ -120,6 +122,7 @@ class CustomTextField extends StatelessWidget {
               readOnly: readOnly,
               style: AppTextStyles.text,
               validator: validator,
+              onTap: onTap,
               decoration: InputDecoration(
                 hintText: hintText,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(5)),

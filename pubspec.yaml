@@ -10,7 +10,6 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  flutter_bloc: ^9.1.0 
   equatable: ^2.0.5
   get_it: ^7.7.0 
   intl: ^0.20.2
@@ -46,6 +45,7 @@ dependencies:
   image: ^4.5.4
   dotted_line: ^3.2.2
   dotted_border: ^2.0.0
+  flutter_datetime_picker_plus: ^2.2.0
 
   
 
@@ -108,16 +108,10 @@ flutter:
         - asset: assets/fonts/Jua-Regular.ttf
 
   assets:
-  - assets/icons/logo_google.png
   - assets/images/verify.png
-  - assets/icons/logo_e.png
   - assets/images/event.png
   - assets/images/event1.png
   - assets/images/fpt.png
-  - assets/icons/logo_eventorize_2.png
-  - assets/icons/no_data.svg
-  - assets/icons/credit_logo.png
-  - assets/icons/paypal_logo.png
   - assets/images/warning.png
   - assets/images/fail.png
   - assets/images/success.svg
@@ -125,6 +119,13 @@ flutter:
   - assets/images/buy_ticket.png
   - assets/images/event2.png
   - assets/images/discover.png
+  - assets/icons/logo_eventorize_2.png
+  - assets/icons/no_data.svg
+  - assets/icons/credit_logo.png
+  - assets/icons/paypal_logo.png
+  - assets/icons/upload.png
+  - assets/icons/logo_e.png
+  - assets/icons/logo_google.png
   - .env/dev.env
  
 

@@ -31,7 +31,7 @@ class CheckOutViewModel extends ChangeNotifier {
       _order = await _orderRepository.getOrderDetail(orderId);
       ErrorHandler.clearError(_errorState);
     } catch (e) {
-      ErrorHandler.handleError(e, 'Lỗi khi tải chi tiết đơn hàng', _errorState);
+      ErrorHandler.handleError(e, 'Lỗi', _errorState);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -45,7 +45,7 @@ class CheckOutViewModel extends ChangeNotifier {
       _order = await _orderRepository.acceptOrder(orderId);
       ErrorHandler.clearError(_errorState);
     } catch (e) {
-      ErrorHandler.handleError(e, 'Lỗi khi xác nhận đơn hàng', _errorState);
+      ErrorHandler.handleError(e, 'Lỗi', _errorState);
     } finally {
       _isLoading = false;
       notifyListeners();

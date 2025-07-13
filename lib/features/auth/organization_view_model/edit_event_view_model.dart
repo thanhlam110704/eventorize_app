@@ -6,32 +6,36 @@ import 'package:eventorize_app/data/repositories/location_repository.dart';
 import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/common/services/location_cache.dart';
 import 'package:dio/dio.dart';
+import 'package:go_router/go_router.dart';
 import 'package:get_it/get_it.dart';
-import 'package:eventorize_app/core/utils/exceptions.dart';
 import 'package:intl/intl.dart';
-import 'package:eventorize_app/features/auth/organization_view_model/event_list_view_model.dart';
+import 'package:eventorize_app/core/utils/exceptions.dart';
 import 'dart:io';
 
-class CreateEventViewModel extends ChangeNotifier {
+class EditEventViewModel extends ChangeNotifier {
   final EventRepository _eventRepository;
   final SessionManager _sessionManager;
   final LocationRepository _locationRepository;
   final LocationCache _locationCache = GetIt.instance<LocationCache>();
-
+  
+  Event? _event;
   DateTime? _startDate;
   DateTime? _endDate;
   bool _isLoading = false;
-  bool _isCreateSuccessful = false;
+  bool _isUploadingThumbnail = false;
+  bool _isUpdateSuccessful = false;
   bool _isDataLoaded = false;
   bool _isLoadingCity = false;
   bool _isLoadingDistrict = false;
   bool _isLoadingWard = false;
   final ErrorState errorState = ErrorState();
 
+  Event? get event => _event;
   DateTime? get startDate => _startDate;
   DateTime? get endDate => _endDate;
   bool get isLoading => _isLoading;
-  bool get isCreateSuccessful => _isCreateSuccessful;
+  bool get isUploadingThumbnail => _isUploadingThumbnail;
+  bool get isUpdateSuccessful => _isUpdateSuccessful;
   bool get isDataLoaded => _isDataLoaded;
   bool get isLoadingCity => _isLoadingCity;
   bool get isLoadingDistrict => _isLoadingDistrict;
@@ -49,15 +53,13 @@ class CreateEventViewModel extends ChangeNotifier {
   String? selectedDistrict;
   String? selectedWard;
 
-  CreateEventViewModel({
+  EditEventViewModel({
     required EventRepository eventRepository,
     required SessionManager sessionManager,
     required LocationRepository locationRepository,
-  })  : _eventRepository = eventRepository,
-        _sessionManager = sessionManager,
-        _locationRepository = locationRepository {
-    loadLocationData();
-  }
+  }) : _eventRepository = eventRepository,
+       _sessionManager = sessionManager,
+       _locationRepository = locationRepository;
 
   void setDateRange(DateTime? start, DateTime? end) {
     _startDate = start;
@@ -65,86 +67,133 @@ class CreateEventViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Event?> createEvent(
-    BuildContext context,
-    GlobalKey<FormState> formKey, {
-    required String organizerId,
-    required String title,
+  Future<void> fetchEvent(String eventId) async {
+    if (_sessionManager.user == null) {
+      errorState.errorTitle = null;
+      errorState.errorMessage = 'Vui lòng đăng nhập trước';
+      notifyListeners();
+      return;
+    }
+
+    _isLoading = true;
+    ErrorHandler.clearError(errorState);
+    notifyListeners();
+
+    await executeApiCall(
+      apiCall: () => _eventRepository.getEventDetail(eventId),
+      onSuccess: (event) {
+        _event = event as Event;
+        _startDate = event.startDate;
+        _endDate = event.endDate;
+        selectedCountry = event.country ?? 'Vietnam';
+        selectedCity = event.city;
+        selectedDistrict = event.district;
+        selectedWard = event.ward;
+        loadLocationData();
+      },
+    );
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> updateEvent(BuildContext context, GlobalKey<FormState> formKey, {
+    required String eventId,
+    String? title,
     String? description,
     String? link,
-    bool isOnline = false,
+    bool? isOnline,
     String? address,
     String? district,
     String? ward,
     String? city,
     String? country,
-    File? imageFile,
   }) async {
-    if (!formKey.currentState!.validate()) return null;
+    if (!formKey.currentState!.validate()) return;
 
     if (_sessionManager.user == null) {
       errorState.errorTitle = null;
       errorState.errorMessage = 'Vui lòng đăng nhập trước';
       notifyListeners();
-      return null;
-    }
-
-    if (_startDate == null || _endDate == null) {
-      errorState.errorTitle = null;
-      errorState.errorMessage = 'Vui lòng chọn cả ngày bắt đầu và ngày kết thúc';
-      notifyListeners();
-      return null;
+      return;
     }
 
     _isLoading = true;
-    _isCreateSuccessful = false;
+    _isUpdateSuccessful = false;
     ErrorHandler.clearError(errorState);
     notifyListeners();
 
-    try {
-      MultipartFile? thumbnailFile;
-      if (imageFile != null) {
-        thumbnailFile = await MultipartFile.fromFile(imageFile.path, filename: imageFile.path.split('/').last);
-      }
-      final dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
-      final event = await _eventRepository.createEvent(
-        organizerId: organizerId,
+    final dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
+    await executeApiCall(
+      apiCall: () => _eventRepository.editEvent(
+        eventId,
         title: title,
         description: description,
         link: link,
-        startDate: dateFormat.format(_startDate!),
-        endDate: dateFormat.format(_endDate!),
+        startDate: _startDate != null ? dateFormat.format(_startDate!) : null,
+        endDate: _endDate != null ? dateFormat.format(_endDate!) : null,
         isOnline: isOnline,
         address: address,
         district: district,
         ward: ward,
         city: city,
         country: country,
-        thumbnailFile: thumbnailFile,
-      );
+      ),
+      onSuccess: (updatedEvent) {
+        _event = updatedEvent as Event;
+        _isUpdateSuccessful = true;
+        ErrorHandler.clearError(errorState);
+        if (context.mounted) {
+          context.go('/event-list'); 
+        }
+      },
+    );
 
-      // Refresh event list
-      final eventListViewModel = GetIt.instance<EventListViewModel>();
-      await eventListViewModel.fetchEvents(
-        organizerId: _sessionManager.selectedOrganizerId!,
-        page: 1,
-        limit: 20,
-        search: "",
-      );
+    _isLoading = false;
+    notifyListeners();
+  }
 
-      _isCreateSuccessful = true;
-      ErrorHandler.clearError(errorState);
+  Future<void> uploadThumbnail(BuildContext context, File imageFile) async {
+    if (_sessionManager.user == null) {
+      errorState.errorTitle = null;
+      errorState.errorMessage = 'Vui lòng đăng nhập trước';
       notifyListeners();
-      return event;
-    } catch (e) {
-      ErrorHandler.handleError(e, '', errorState);
-      _isCreateSuccessful = false;
-      notifyListeners();
-      return null;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      return;
     }
+
+    final eventId = _event?.id;
+    if (eventId == null || eventId.isEmpty) {
+      errorState.errorTitle = null;
+      errorState.errorMessage = 'Dữ liệu không hợp lệ. Hãy thử lại.';
+      _isUpdateSuccessful = false;
+      notifyListeners();
+      return;
+    }
+
+    _isUploadingThumbnail = true;
+    _isUpdateSuccessful = false;
+    ErrorHandler.clearError(errorState);
+    notifyListeners();
+
+    await executeApiCall(
+      apiCall: () async {
+        final multipartFile = await MultipartFile.fromFile(imageFile.path, filename: imageFile.path.split('/').last);
+        await _eventRepository.editThumbnail(id: eventId, thumbnailFile: multipartFile);
+        return _eventRepository.getEventDetail(eventId);
+      },
+      onSuccess: (updatedEvent) {
+        _event = updatedEvent as Event;
+        _isUpdateSuccessful = true;
+        ErrorHandler.clearError(errorState);
+        // Điều hướng về EventListPage
+        if (context.mounted) {
+          context.go('/event-list'); 
+        }
+      },
+    );
+
+    _isUploadingThumbnail = false;
+    notifyListeners();
   }
 
   Future<void> loadLocationData() async {
@@ -269,7 +318,7 @@ class CreateEventViewModel extends ChangeNotifier {
   void setError(String title, String message) {
     errorState.errorTitle = title.isEmpty ? null : title;
     errorState.errorMessage = message;
-    _isCreateSuccessful = false;
+    _isUpdateSuccessful = false;
     notifyListeners();
   }
 
@@ -282,7 +331,7 @@ class CreateEventViewModel extends ChangeNotifier {
       onSuccess(result);
     } catch (e) {
       ErrorHandler.handleError(e, '', errorState);
-      _isCreateSuccessful = false;
+      _isUpdateSuccessful = false;
       notifyListeners();
       rethrow;
     }
@@ -293,8 +342,8 @@ class CreateEventViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void clearCreateStatus() {
-    _isCreateSuccessful = false;
+  void clearUpdateStatus() {
+    _isUpdateSuccessful = false;
     notifyListeners();
   }
 }
