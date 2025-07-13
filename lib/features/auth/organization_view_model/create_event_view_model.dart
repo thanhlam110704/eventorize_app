@@ -44,7 +44,7 @@ class CreateEventViewModel extends ChangeNotifier {
   List<District> get districts => _locationCache.getDistricts(getProvinceCode(selectedCity));
   List<Ward> get wards => _locationCache.getWards(getDistrictCode(selectedDistrict));
 
-  String? selectedCountry = 'Vietnam';
+  String? selectedCountry = 'Việt Nam';
   String? selectedCity;
   String? selectedDistrict;
   String? selectedWard;
@@ -80,18 +80,9 @@ class CreateEventViewModel extends ChangeNotifier {
     String? country,
     File? imageFile,
   }) async {
-    if (!formKey.currentState!.validate()) return null;
-
     if (_sessionManager.user == null) {
       errorState.errorTitle = null;
       errorState.errorMessage = 'Vui lòng đăng nhập trước';
-      notifyListeners();
-      return null;
-    }
-
-    if (_startDate == null || _endDate == null) {
-      errorState.errorTitle = null;
-      errorState.errorMessage = 'Vui lòng chọn cả ngày bắt đầu và ngày kết thúc';
       notifyListeners();
       return null;
     }
@@ -123,7 +114,6 @@ class CreateEventViewModel extends ChangeNotifier {
         thumbnailFile: thumbnailFile,
       );
 
-      // Refresh event list
       final eventListViewModel = GetIt.instance<EventListViewModel>();
       await eventListViewModel.fetchEvents(
         organizerId: _sessionManager.selectedOrganizerId!,
@@ -157,11 +147,8 @@ class CreateEventViewModel extends ChangeNotifier {
         apiCall: () => _locationRepository.getProvinces(),
         onSuccess: (data) {
           _locationCache.setProvinces(data as List<Province>);
-          selectedCity ??= provinces.isNotEmpty ? provinces[0].name : null;
         },
       );
-    } else {
-      selectedCity ??= provinces.isNotEmpty ? provinces[0].name : null;
     }
 
     await loadDistricts();
@@ -170,7 +157,11 @@ class CreateEventViewModel extends ChangeNotifier {
   }
 
   Future<void> loadDistricts() async {
-    if (selectedCity == null) return;
+    if (selectedCity == null) {
+      _isLoadingDistrict = false;
+      notifyListeners();
+      return;
+    }
     _isLoadingDistrict = true;
     ErrorHandler.clearError(errorState);
     notifyListeners();
@@ -181,11 +172,8 @@ class CreateEventViewModel extends ChangeNotifier {
         apiCall: () => _locationRepository.getDistricts(provinceCode: provinceCode),
         onSuccess: (data) {
           _locationCache.setDistricts(provinceCode, data as List<District>);
-          selectedDistrict ??= districts.isNotEmpty ? districts[0].name : null;
         },
       );
-    } else {
-      selectedDistrict ??= districts.isNotEmpty ? districts[0].name : null;
     }
 
     await loadWards();
@@ -194,7 +182,11 @@ class CreateEventViewModel extends ChangeNotifier {
   }
 
   Future<void> loadWards() async {
-    if (selectedDistrict == null) return;
+    if (selectedDistrict == null) {
+      _isLoadingWard = false;
+      notifyListeners();
+      return;
+    }
     _isLoadingWard = true;
     ErrorHandler.clearError(errorState);
     notifyListeners();
@@ -205,12 +197,10 @@ class CreateEventViewModel extends ChangeNotifier {
         apiCall: () => _locationRepository.getWards(districtCode: districtCode),
         onSuccess: (data) {
           _locationCache.setWards(districtCode, data as List<Ward>);
-          selectedWard ??= wards.isNotEmpty ? wards[0].name : null;
           updateDataLoadedStatus();
         },
       );
     } else {
-      selectedWard ??= wards.isNotEmpty ? wards[0].name : null;
       updateDataLoadedStatus();
     }
 
@@ -219,7 +209,7 @@ class CreateEventViewModel extends ChangeNotifier {
   }
 
   void updateDataLoadedStatus() {
-    _isDataLoaded = provinces.isNotEmpty && districts.isNotEmpty && wards.isNotEmpty && errorState.errorMessage == null;
+    _isDataLoaded = provinces.isNotEmpty && errorState.errorMessage == null;
     notifyListeners();
   }
 
@@ -227,7 +217,7 @@ class CreateEventViewModel extends ChangeNotifier {
     if (provinceName == null) return '';
     return provinces.firstWhere(
       (p) => p.name == provinceName,
-      orElse: () => provinces.isNotEmpty ? provinces[0] : Province(),
+      orElse: () => Province(),
     ).code?.toString() ?? '';
   }
 
@@ -235,7 +225,7 @@ class CreateEventViewModel extends ChangeNotifier {
     if (districtName == null) return '';
     return districts.firstWhere(
       (d) => d.name == districtName,
-      orElse: () => districts.isNotEmpty ? districts[0] : District(),
+      orElse: () => District(),
     ).code?.toString() ?? '';
   }
 

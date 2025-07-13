@@ -28,6 +28,15 @@ class CreateEventPageState extends State<CreateEventPage> {
   static const maxContentWidth = 600.0;
 
   final _formKey = GlobalKey<FormState>();
+  final _titleInputKey = GlobalKey<CustomTextFieldState>();
+  final _descriptionInputKey = GlobalKey<CustomTextFieldState>();
+  final _startDateInputKey = GlobalKey<CustomTextFieldState>();
+  final _endDateInputKey = GlobalKey<CustomTextFieldState>();
+  final _addressInputKey = GlobalKey<CustomTextFieldState>();
+  final _onlineLinkInputKey = GlobalKey<CustomTextFieldState>();
+  final _cityInputKey = GlobalKey<CustomDropdownFieldState>();
+  final _districtInputKey = GlobalKey<CustomDropdownFieldState>();
+  final _wardInputKey = GlobalKey<CustomDropdownFieldState>();
   LocationType _selectedLocation = LocationType.location;
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -35,8 +44,6 @@ class CreateEventPageState extends State<CreateEventPage> {
   final _endDateController = TextEditingController();
   final _addressController = TextEditingController();
   final _onlineLinkController = TextEditingController();
-  bool _hasShownSuccessToast = false;
-  bool _hasShownErrorToast = false;
   bool _isFieldsUpdated = false;
   File? _selectedImageFile;
   String? _thumbnailUrl;
@@ -90,6 +97,8 @@ class CreateEventPageState extends State<CreateEventPage> {
               viewModel.setDateRange(viewModel.startDate, date);
               _endDateController.text = dateFormat.format(date);
             }
+            _startDateInputKey.currentState?.validate();
+            _endDateInputKey.currentState?.validate();
           });
         }
       },
@@ -105,23 +114,65 @@ class CreateEventPageState extends State<CreateEventPage> {
   }
 
   void _submitEvent(BuildContext context, CreateEventViewModel viewModel) async {
-    if (!_formKey.currentState!.validate()) {
-      if (mounted) {
-        ToastCustom.show(
-          context: context,
-          title: 'Lỗi',
-          description: 'Hãy điền đầy đủ thông tin bắt buộc trước khi tạo.',
-          type: ToastificationType.error,
-        );
-      }
-      return;
+    final currentContext = context;
+    bool isValid = true;
+    isValid &= _titleInputKey.currentState!.validate();
+    isValid &= _descriptionInputKey.currentState!.validate();
+    isValid &= _startDateInputKey.currentState!.validate();
+    isValid &= _endDateInputKey.currentState!.validate();
+    if (_selectedLocation == LocationType.location) {
+      isValid &= _addressInputKey.currentState!.validate();
+      isValid &= _cityInputKey.currentState!.validate();
+    } else {
+      isValid &= _onlineLinkInputKey.currentState!.validate();
     }
     if (viewModel.startDate == null || viewModel.endDate == null) {
-      viewModel.setError('', 'Vui lòng chọn cả ngày bắt đầu và ngày kết thúc');
+      isValid = false;
+      ToastCustom.show(
+        context: currentContext,
+        title: 'Lỗi',
+        description: 'Vui lòng chọn cả ngày bắt đầu và ngày kết thúc',
+        type: ToastificationType.error,
+      );
       return;
     }
+    if (_endDateController.text.isNotEmpty && _startDateController.text.isNotEmpty) {
+      try {
+        final startDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(_startDateController.text);
+        final endDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(_endDateController.text);
+        if (endDate.isBefore(startDate) || endDate.isAtSameMomentAs(startDate)) {
+          isValid = false;
+          ToastCustom.show(
+            context: currentContext,
+            title: 'Lỗi',
+            description: 'Ngày kết thúc phải sau ngày bắt đầu',
+            type: ToastificationType.error,
+          );
+          return;
+        }
+      } catch (e) {
+        isValid = false;
+        ToastCustom.show(
+          context: currentContext,
+          title: 'Lỗi',
+          description: 'Định dạng ngày không hợp lệ',
+          type: ToastificationType.error,
+        );
+        return;
+      }
+    }
+    if (!isValid) {
+      ToastCustom.show(
+        context: currentContext,
+        title: 'Lỗi',
+        description: 'Hãy điền đầy đủ thông tin bắt buộc trước khi tạo.',
+        type: ToastificationType.error,
+      );
+      return;
+    }
+
     final event = await viewModel.createEvent(
-      context,
+      currentContext,
       _formKey,
       organizerId: widget.organizerId,
       title: _titleController.text,
@@ -135,6 +186,7 @@ class CreateEventPageState extends State<CreateEventPage> {
       country: _selectedLocation == LocationType.location ? viewModel.selectedCountry : null,
       imageFile: _selectedImageFile,
     );
+
     if (viewModel.isCreateSuccessful && event != null && mounted) {
       setState(() {
         _thumbnailUrl = event.thumbnail;
@@ -158,8 +210,6 @@ class CreateEventPageState extends State<CreateEventPage> {
         onActionPressed: () {
           final viewModel = Provider.of<CreateEventViewModel>(context, listen: false);
           _submitEvent(context, viewModel);
-          _hasShownSuccessToast = false;
-          _hasShownErrorToast = false;
         },
       ),
       backgroundColor: AppColors.whiteBackground,
@@ -169,32 +219,30 @@ class CreateEventPageState extends State<CreateEventPage> {
             if (!_isFieldsUpdated) {
               _updateFields(viewModel);
             }
-            if (viewModel.errorMessage != null && !_hasShownErrorToast) {
+            if (viewModel.errorMessage != null) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (!mounted) return;
+                if (!context.mounted) return;
                 ToastCustom.show(
                   context: context,
                   title: viewModel.errorTitle ?? 'Lỗi',
                   description: viewModel.errorMessage!,
                   type: ToastificationType.error,
                 );
-                _hasShownErrorToast = true;
                 viewModel.clearError();
               });
             }
 
-            if (viewModel.isCreateSuccessful && !_hasShownSuccessToast) {
+            if (viewModel.isCreateSuccessful) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (!mounted) return;
+                if (!context.mounted) return;
                 ToastCustom.show(
                   context: context,
                   title: 'Thành công',
                   description: 'Tạo sự kiện thành công',
                   type: ToastificationType.success,
                 );
-                _hasShownSuccessToast = true;
                 viewModel.clearCreateStatus();
-                if (mounted && context.mounted) {
+                if (context.mounted) {
                   Navigator.of(context).pop();
                 }
               });
@@ -238,23 +286,53 @@ class CreateEventPageState extends State<CreateEventPage> {
                   buildImagePicker(viewModel),
                   const SizedBox(height: 16),
                   CustomTextField(
+                    key: _titleInputKey,
                     label: "Tên sự kiện",
-                    hintText: "Tên sự kiện",
+                    hintText: "Nhập tên sự kiện",
                     isRequired: true,
                     isBold: true,
                     controller: _titleController,
-                    validator: (value) => value!.isEmpty ? "Hãy nhập tên sự kiện" : null,
+                    keyboardType: TextInputType.text,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Vui lòng nhập tên sự kiện';
+                      }
+                      if (value.length < 3) {
+                        return 'Tên sự kiện phải có ít nhất 3 ký tự';
+                      }
+                      if (!RegExp(r"^[a-zA-Z0-9À-ỹ\s'-]{3,}$").hasMatch(value)) {
+                        return 'Tên sự kiện chỉ chứa chữ cái, số, khoảng trắng, dấu gạch ngang hoặc dấu nháy đơn';
+                      }
+                      return null;
+                    },
+                    onChanged: (value) {
+                      _titleInputKey.currentState?.validate();
+                    },
                   ),
                   CustomTextField(
+                    key: _descriptionInputKey,
                     label: "Tổng quan",
-                    hintText: "Tổng quan",
+                    hintText: "Nhập tổng quan",
                     isRequired: true,
                     maxLines: 4,
                     isBold: true,
                     controller: _descriptionController,
-                    validator: (value) => value!.isEmpty ? "Hãy nhập tổng quan" : null,
+                    keyboardType: TextInputType.multiline,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Vui lòng nhập tổng quan';
+                      }
+                      if (value.length < 10) {
+                        return 'Tổng quan phải có ít nhất 10 ký tự';
+                      }
+                      return null;
+                    },
+                    onChanged: (value) {
+                      _descriptionInputKey.currentState?.validate();
+                    },
                   ),
                   CustomTextField(
+                    key: _startDateInputKey,
                     label: "Ngày bắt đầu",
                     hintText: "YYYY-MM-DD HH:mm:ss",
                     isRequired: true,
@@ -262,10 +340,19 @@ class CreateEventPageState extends State<CreateEventPage> {
                     controller: _startDateController,
                     readOnly: true,
                     onTap: () => _pickDateTime(context, viewModel, true),
-                    validator: (value) => value!.isEmpty ? "Hãy chọn ngày bắt đầu" : null,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Vui lòng chọn ngày bắt đầu';
+                      }
+                      return null;
+                    },
+                    onChanged: (value) {
+                      _startDateInputKey.currentState?.validate();
+                    },
                   ),
                   const SizedBox(height: 16),
                   CustomTextField(
+                    key: _endDateInputKey,
                     label: "Ngày kết thúc",
                     hintText: "YYYY-MM-DD HH:mm:ss",
                     isRequired: true,
@@ -273,7 +360,27 @@ class CreateEventPageState extends State<CreateEventPage> {
                     controller: _endDateController,
                     readOnly: true,
                     onTap: () => _pickDateTime(context, viewModel, false),
-                    validator: (value) => value!.isEmpty ? "Hãy chọn ngày kết thúc" : null,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Vui lòng chọn ngày kết thúc';
+                      }
+                      final startDateText = _startDateController.text;
+                      if (startDateText.isNotEmpty) {
+                        try {
+                          final startDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(startDateText);
+                          final endDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(value);
+                          if (endDate.isBefore(startDate) || endDate.isAtSameMomentAs(startDate)) {
+                            return 'Ngày kết thúc phải sau ngày bắt đầu';
+                          }
+                        } catch (e) {
+                          return 'Định dạng ngày không hợp lệ';
+                        }
+                      }
+                      return null;
+                    },
+                    onChanged: (value) {
+                      _endDateInputKey.currentState?.validate();
+                    },
                   ),
                   Text("Vị trí", style: AppTextStyles.bold),
                   const SizedBox(height: 12),
@@ -282,6 +389,9 @@ class CreateEventPageState extends State<CreateEventPage> {
                     onChanged: (value) {
                       setState(() {
                         _selectedLocation = value;
+                        _addressInputKey.currentState?.validate();
+                        _onlineLinkInputKey.currentState?.validate();
+                        _cityInputKey.currentState?.validate();
                       });
                     },
                   ),
@@ -293,12 +403,27 @@ class CreateEventPageState extends State<CreateEventPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           CustomTextField(
+                            key: _addressInputKey,
                             label: "Địa chỉ",
-                            hintText: "Địa chỉ",
+                            hintText: "Nhập địa chỉ",
+                            isRequired: true,
                             controller: _addressController,
-                            validator: (value) => value!.isEmpty ? "Hãy nhập địa chỉ" : null,
+                            keyboardType: TextInputType.streetAddress,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Vui lòng nhập địa chỉ';
+                              }
+                              if (value.length < 5) {
+                                return 'Địa chỉ phải có ít nhất 5 ký tự';
+                              }
+                              return null;
+                            },
+                            onChanged: (value) {
+                              _addressInputKey.currentState?.validate();
+                            },
                           ),
                           CustomDropdownField(
+                            key: _cityInputKey,
                             label: "Thành phố",
                             hintText: "Chọn thành phố",
                             items: viewModel.provinces
@@ -307,12 +432,22 @@ class CreateEventPageState extends State<CreateEventPage> {
                                 .cast<String>()
                                 .toList(),
                             selectedValue: viewModel.selectedCity,
+                            isRequired: true,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Vui lòng chọn thành phố';
+                              }
+                              return null;
+                            },
                             onChanged: (value) {
                               viewModel.setCity(value);
+                              _cityInputKey.currentState?.validate();
                             },
                             dropdownWidth: 345,
+                            menuHeight: 200,
                           ),
                           CustomDropdownField(
+                            key: _districtInputKey,
                             label: "Quận",
                             hintText: "Chọn quận",
                             items: viewModel.districts
@@ -323,12 +458,15 @@ class CreateEventPageState extends State<CreateEventPage> {
                             selectedValue: viewModel.selectedDistrict,
                             onChanged: (value) {
                               viewModel.setDistrict(value);
+                              _districtInputKey.currentState?.validate();
                             },
                             dropdownWidth: 345,
+                            menuHeight: 200,
                           ),
                           CustomDropdownField(
-                            label: "Phường/huyện",
-                            hintText: "Chọn phường/huyện",
+                            key: _wardInputKey,
+                            label: "Phường/xã",
+                            hintText: "Chọn phường/xã",
                             items: viewModel.wards
                                 .map((w) => w.name)
                                 .where((name) => name != null)
@@ -337,8 +475,10 @@ class CreateEventPageState extends State<CreateEventPage> {
                             selectedValue: viewModel.selectedWard,
                             onChanged: (value) {
                               viewModel.setWard(value);
+                              _wardInputKey.currentState?.validate();
                             },
                             dropdownWidth: 345,
+                            menuHeight: 200,
                           ),
                         ],
                       ),
@@ -347,10 +487,24 @@ class CreateEventPageState extends State<CreateEventPage> {
                     Padding(
                       padding: const EdgeInsets.only(left: 5),
                       child: CustomTextField(
+                        key: _onlineLinkInputKey,
                         label: "Link sự kiện online",
-                        hintText: "Link",
+                        hintText: "Nhập link sự kiện",
+                        isRequired: true,
                         controller: _onlineLinkController,
-                        validator: (value) => value!.isEmpty ? "Hãy nhập link sự kiện" : null,
+                        keyboardType: TextInputType.url,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Vui lòng nhập link sự kiện';
+                          }
+                          if (!RegExp(r'^https?://[^\s/$.?#].[^\s]*$').hasMatch(value)) {
+                            return 'Vui lòng nhập URL hợp lệ (bắt đầu bằng http:// hoặc https://)';
+                          }
+                          return null;
+                        },
+                        onChanged: (value) {
+                          _onlineLinkInputKey.currentState?.validate();
+                        },
                       ),
                     ),
                 ],

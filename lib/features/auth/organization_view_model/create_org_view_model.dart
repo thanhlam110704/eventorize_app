@@ -142,7 +142,7 @@ class CreateOrgViewModel extends ChangeNotifier {
         email: _email!,
         phone: _phone!,
         description: _description!,
-        country: 'Vietnam',
+        country: 'Việt Nam',
         city: _selectedCity,
         district: _selectedDistrict,
         ward: _selectedWard,

@@ -48,7 +48,7 @@ class EditEventViewModel extends ChangeNotifier {
   List<District> get districts => _locationCache.getDistricts(getProvinceCode(selectedCity));
   List<Ward> get wards => _locationCache.getWards(getDistrictCode(selectedDistrict));
 
-  String? selectedCountry = 'Vietnam';
+  String? selectedCountry = 'Việt Nam';
   String? selectedCity;
   String? selectedDistrict;
   String? selectedWard;
@@ -85,7 +85,7 @@ class EditEventViewModel extends ChangeNotifier {
         _event = event as Event;
         _startDate = event.startDate;
         _endDate = event.endDate;
-        selectedCountry = event.country ?? 'Vietnam';
+        selectedCountry = event.country ?? 'Việt Nam';
         selectedCity = event.city;
         selectedDistrict = event.district;
         selectedWard = event.ward;
@@ -185,7 +185,6 @@ class EditEventViewModel extends ChangeNotifier {
         _event = updatedEvent as Event;
         _isUpdateSuccessful = true;
         ErrorHandler.clearError(errorState);
-        // Điều hướng về EventListPage
         if (context.mounted) {
           context.go('/event-list'); 
         }

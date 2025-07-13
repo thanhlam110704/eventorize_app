@@ -149,8 +149,7 @@ class EventListPageState extends State<EventListPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                buildFilterBar(),
-                const SizedBox(height: 16),
+                const SizedBox(height: 10),
                 buildEventList(viewModel),
                 const SizedBox(height: 80),
               ],
@@ -161,22 +160,6 @@ class EventListPageState extends State<EventListPage> {
     );
   }
 
-  Widget buildFilterBar() {
-    return GestureDetector(
-      onTap: () {},
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Tất cả',
-            style: AppTextStyles.text.copyWith(color: AppColors.linkBlue),
-          ),
-          const SizedBox(width: 20),
-          const Icon(Icons.arrow_drop_down, color: AppColors.linkBlue, size: 20),
-        ],
-      ),
-    );
-  }
 
   Widget buildEventList(EventListViewModel viewModel) {
     if (viewModel.isLoading) {
@@ -307,7 +290,7 @@ class EventListPageState extends State<EventListPage> {
                         ),
                         const SizedBox(height: 1),
                         Text(
-                          event.isOnline ? 'Online' : 'Offline',
+                          event.isOnline ? 'Trực tuyến' : 'Trực tiếp',
                           style: AppTextStyles.text.copyWith(
                             fontSize: 12,
                             color: event.isOnline ? Colors.green : Colors.red,

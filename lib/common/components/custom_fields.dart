@@ -2,13 +2,16 @@ import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:flutter/material.dart';
 
-class CustomDropdownField extends StatelessWidget {
+class CustomDropdownField extends StatefulWidget {
   final String label;
   final String? hintText;
   final List<String> items;
   final String? selectedValue;
   final void Function(String?) onChanged;
   final double? dropdownWidth;
+  final double menuHeight;
+  final bool isRequired;
+  final String? Function(String?)? validator;
 
   const CustomDropdownField({
     super.key,
@@ -18,7 +21,37 @@ class CustomDropdownField extends StatelessWidget {
     required this.onChanged,
     this.selectedValue,
     this.dropdownWidth,
+    this.menuHeight = 200,
+    this.isRequired = false,
+    this.validator,
   });
+
+  @override
+  CustomDropdownFieldState createState() => CustomDropdownFieldState();
+}
+
+class CustomDropdownFieldState extends State<CustomDropdownField> {
+  String? _errorMessage;
+
+  String? _validateInput(String? value) {
+    if (widget.validator != null) {
+      final result = widget.validator!(value);
+      if (result != null) {
+        return result;
+      }
+    }
+    if (widget.isRequired && (value == null || value.isEmpty)) {
+      return 'Vui lòng chọn ${widget.label.toLowerCase()}';
+    }
+    return null;
+  }
+
+  bool validate() {
+    setState(() {
+      _errorMessage = _validateInput(widget.selectedValue);
+    });
+    return _errorMessage == null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,16 +60,34 @@ class CustomDropdownField extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: AppTextStyles.text),
+          RichText(
+            text: TextSpan(
+              text: widget.label,
+              style: AppTextStyles.text,
+              children: widget.isRequired
+                  ? [
+                      TextSpan(
+                        text: ' *',
+                        style: AppTextStyles.text.copyWith(color: Colors.red),
+                      ),
+                    ]
+                  : [],
+            ),
+          ),
           const SizedBox(height: 8),
           DropdownMenu<String>(
-            initialSelection: selectedValue,
-            onSelected: onChanged,
-            dropdownMenuEntries: items
+            initialSelection: widget.selectedValue,
+            onSelected: (value) {
+              widget.onChanged(value);
+              setState(() {
+                _errorMessage = _validateInput(value);
+              });
+            },
+            dropdownMenuEntries: widget.items
                 .map((item) => DropdownMenuEntry(value: item, label: item))
                 .toList(),
-            width: dropdownWidth ?? double.infinity,
-            hintText: hintText,
+            width: widget.dropdownWidth ?? double.infinity,
+            hintText: widget.hintText,
             textStyle: AppTextStyles.text,
             menuStyle: MenuStyle(
               backgroundColor: WidgetStateProperty.all(Colors.white),
@@ -47,21 +98,34 @@ class CustomDropdownField extends StatelessWidget {
                 ),
               ),
               elevation: WidgetStateProperty.all(2),
+              maximumSize: WidgetStateProperty.all(Size(double.infinity, widget.menuHeight)),
             ),
             inputDecorationTheme: InputDecorationTheme(
               filled: true,
               fillColor: AppColors.inputBackground,
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(5)),
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              hintStyle: AppTextStyles.text.copyWith(color: AppColors.grey),
             ),
           ),
+          if (_errorMessage != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4, left: 4),
+              child: Text(
+                _errorMessage!,
+                style: AppTextStyles.hint.copyWith(
+                  color: Colors.red,
+                  fontSize: 12,
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 }
 
-class CustomTextField extends StatelessWidget {
+class CustomTextField extends StatefulWidget {
   final String label;
   final String? hintText;
   final bool isRequired;
@@ -73,6 +137,7 @@ class CustomTextField extends StatelessWidget {
   final TextEditingController? controller;
   final String? Function(String?)? validator;
   final VoidCallback? onTap;
+  final ValueChanged<String>? onChanged;
 
   const CustomTextField({
     super.key,
@@ -87,11 +152,54 @@ class CustomTextField extends StatelessWidget {
     this.controller,
     this.validator,
     this.onTap,
+    this.onChanged,
   });
 
   @override
+  CustomTextFieldState createState() => CustomTextFieldState();
+}
+
+class CustomTextFieldState extends State<CustomTextField> {
+  String? _errorMessage;
+  late TextEditingController _internalController;
+
+  @override
+  void initState() {
+    super.initState();
+    _internalController = widget.controller ?? TextEditingController(text: widget.initialValue);
+  }
+
+  @override
+  void dispose() {
+    if (widget.controller == null) {
+      _internalController.dispose();
+    }
+    super.dispose();
+  }
+
+  String? _validateInput(String? value) {
+    if (widget.validator != null) {
+      final result = widget.validator!(value);
+      if (result != null) {
+        return result;
+      }
+    }
+    if (widget.isRequired && (value == null || value.isEmpty)) {
+      return 'Vui lòng nhập ${widget.label.toLowerCase()}';
+    }
+    return null;
+  }
+
+  bool validate() {
+    setState(() {
+      _errorMessage = _validateInput(_internalController.text);
+    });
+    return _errorMessage == null;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final labelStyle = isBold ? AppTextStyles.bold : AppTextStyles.text;
+    final labelStyle = widget.isBold ? AppTextStyles.bold : AppTextStyles.text;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -100,9 +208,9 @@ class CustomTextField extends StatelessWidget {
         children: [
           RichText(
             text: TextSpan(
-              text: label,
+              text: widget.label,
               style: labelStyle,
-              children: isRequired
+              children: widget.isRequired
                   ? [
                       TextSpan(
                         text: ' *',
@@ -114,17 +222,24 @@ class CustomTextField extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Opacity(
-            opacity: readOnly ? 0.6 : 1.0,
+            opacity: widget.readOnly ? 0.6 : 1.0,
             child: TextFormField(
-              controller: controller ?? TextEditingController(text: initialValue),
-              keyboardType: keyboardType,
-              maxLines: maxLines,
-              readOnly: readOnly,
+              controller: _internalController,
+              keyboardType: widget.keyboardType,
+              maxLines: widget.maxLines,
+              readOnly: widget.readOnly,
               style: AppTextStyles.text,
-              validator: validator,
-              onTap: onTap,
+              validator: (value) => _validateInput(value),
+              onTap: () {
+                widget.onTap?.call();
+                setState(() {
+                  _errorMessage = _validateInput(_internalController.text);
+                });
+              },
+              onChanged: widget.onChanged,
               decoration: InputDecoration(
-                hintText: hintText,
+                hintText: widget.hintText,
+                hintStyle: AppTextStyles.text.copyWith(color: AppColors.grey),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(5)),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                 filled: true,
@@ -132,6 +247,17 @@ class CustomTextField extends StatelessWidget {
               ),
             ),
           ),
+          if (_errorMessage != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4, left: 4),
+              child: Text(
+                _errorMessage!,
+                style: AppTextStyles.hint.copyWith(
+                  color: Colors.red,
+                  fontSize: 12,
+                ),
+              ),
+            ),
         ],
       ),
     );

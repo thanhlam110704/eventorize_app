@@ -56,7 +56,7 @@ class OrgInfoViewModel extends ChangeNotifier {
   List<District> get districts => locationCache.getDistricts(getProvinceCode(selectedCity));
   List<Ward> get wards => locationCache.getWards(getDistrictCode(selectedDistrict));
 
-  String? selectedCountry = 'Vietnam';
+  String? selectedCountry = 'Việt Nam';
   String? selectedCity;
   String? selectedDistrict;
   String? selectedWard;
@@ -93,7 +93,7 @@ class OrgInfoViewModel extends ChangeNotifier {
       twitterController.text = organizer!.twitter ?? '';
       linkedinController.text = organizer!.linkedin ?? '';
       instagramController.text = organizer!.instagram ?? '';
-      selectedCountry = organizer!.country ?? 'Vietnam';
+      selectedCountry = organizer!.country ?? 'Việt Nam';
       selectedCity = organizer!.city;
       selectedDistrict = organizer!.district;
       selectedWard = organizer!.ward;
