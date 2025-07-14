@@ -185,9 +185,12 @@ class AppRouter {
         redirect: (context, state) => _authGuard(context),
       ),
       GoRoute(
-        path: '/ticket-list',
+        path: '/ticket-list/:eventId',
         name: 'ticketList',
-        builder: (context, state) => const TicketListPage(),
+        builder: (context, state) {
+          final eventId = state.pathParameters['eventId']!;
+          return TicketListPage(eventId: eventId);
+        },
         redirect: (context, state) => _authGuard(context),
       ),
     ],

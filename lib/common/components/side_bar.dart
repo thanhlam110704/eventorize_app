@@ -142,14 +142,6 @@ class CustomDrawer extends StatelessWidget {
                     },
                   ),
                   _buildDrawerItem(
-                    icon: MdiIcons.ticketConfirmationOutline,
-                    text: "Danh sách vé",
-                    selected: currentPage == AppPage.ticketList,
-                    onTap: () {
-                      context.go('/ticket-list');
-                    },
-                  ),
-                  _buildDrawerItem(
                     icon: MdiIcons.viewGridOutline,
                     text: "Danh sách đơn hàng",
                     selected: currentPage == AppPage.orderList,

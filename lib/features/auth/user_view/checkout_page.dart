@@ -182,7 +182,6 @@ class CheckOutPageState extends State<CheckOutPage> {
               const SizedBox(height: 24),
               buildPriceSection(viewModel),
               const SizedBox(height: 24),
-              buildFooter(),
             ],
           ),
         ),
@@ -425,7 +424,7 @@ class CheckOutPageState extends State<CheckOutPage> {
             }
           },
           child: Text(
-            'Place order',
+            'Đặt hàng',
             style: AppTextStyles.bold.copyWith(fontSize: 16, color: Colors.white),
           ),
         ),
@@ -433,28 +432,6 @@ class CheckOutPageState extends State<CheckOutPage> {
     );
   }
 
-  Widget buildFooter() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Divider(height: 24, thickness: 1),
-        const SizedBox(height: 8),
-        RichText(
-          text: TextSpan(
-            text: 'Powered by ',
-            style: AppTextStyles.text.copyWith(fontSize: 13),
-            children: [
-              TextSpan(
-                text: 'eventorize',
-                style: AppTextStyles.bold.copyWith(fontSize: 13),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget buildSkeletonUI(bool isSmallScreen, Size screenSize) {
     Widget buildSkeletonBox(double width, double height) {

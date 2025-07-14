@@ -1,4 +1,4 @@
-import 'package:eventorize_app/common/components/side_bar.dart';
+/* import 'package:eventorize_app/common/components/side_bar.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/components/top_nav_org_bar.dart';
 import 'package:eventorize_app/common/components/custom_event_menu.dart';
@@ -150,4 +150,4 @@ class OrderListPageState extends State<OrderListPage> {
       ).then((_) => entry.remove());
     });
   }
-}
+} */

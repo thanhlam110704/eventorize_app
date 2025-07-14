@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:toastification/toastification.dart';
-import 'package:go_router/go_router.dart'; 
+import 'package:go_router/go_router.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/core/utils/datetime_convert.dart';
@@ -12,6 +12,7 @@ import 'package:eventorize_app/data/repositories/favorite_repository.dart';
 import 'package:eventorize_app/features/auth/user_view_model/home_view_model.dart';
 import 'package:eventorize_app/features/auth/user_view_model/favorite_view_model.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class EventList extends StatelessWidget {
   final List<Event> events;
@@ -253,7 +254,7 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        context.push('/event/${widget.event.id}'); 
+        context.push('/event/${widget.event.id}');
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -288,25 +289,6 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
                     ),
                   ),
                 ),
-                /* Positioned(
-                  top: 4,
-                  right: 4,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Text(
-                      'Free',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ), */
               ],
             ),
             const SizedBox(width: 12),
@@ -370,13 +352,17 @@ class EventCardState extends State<EventCard> with SingleTickerProviderStateMixi
                     ],
                   ),
                   const SizedBox(height: 4),
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.people, size: 14, color: Colors.black),
-                      SizedBox(width: 4),
+                      Icon(
+                        widget.event.isOnline ? MdiIcons.web : MdiIcons.officeBuildingMarker,
+                        size: 14,
+                        color: Colors.black,
+                      ),
+                      const SizedBox(width: 4),
                       Text(
-                        '2.9k tham gia',
-                        style: TextStyle(fontSize: 12, color: AppColors.mutedText),
+                        widget.event.isOnline ? 'Trực tuyến' : 'Trực tiếp',
+                        style: const TextStyle(fontSize: 12, color: AppColors.mutedText),
                       ),
                     ],
                   ),

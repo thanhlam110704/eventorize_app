@@ -160,7 +160,6 @@ class EventListPageState extends State<EventListPage> {
     );
   }
 
-
   Widget buildEventList(EventListViewModel viewModel) {
     if (viewModel.isLoading) {
       return Column(
@@ -370,6 +369,11 @@ class EventListPageState extends State<EventListPage> {
                 );
               }
             },
+            onTickets: () {
+              closeMenu(dialogContext);
+              context.push('/ticket-list/$eventId');
+            },
+            showTickets: true,
           ),
         ),
       ),
