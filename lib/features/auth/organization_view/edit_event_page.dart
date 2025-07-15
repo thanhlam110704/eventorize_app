@@ -2,18 +2,17 @@ import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/components/top_nav_org_bar.dart';
 import 'package:eventorize_app/common/components/location_type.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
-import 'package:eventorize_app/common/components/custom_fields.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
+import 'package:eventorize_app/common/components/custom_fields.dart';
 import 'package:eventorize_app/data/models/event.dart';
 import 'package:eventorize_app/features/auth/organization_view_model/edit_event_view_model.dart';
 import 'package:eventorize_app/features/auth/organization_view_model/event_list_view_model.dart';
 import 'package:eventorize_app/common/services/session_manager.dart';
-import 'package:flutter/material.dart' hide DatePickerTheme;
+import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:get_it/get_it.dart';
 import 'dart:io';
@@ -33,15 +32,13 @@ class EditEventPageState extends State<EditEventPage> {
   final _formKey = GlobalKey<FormState>();
   final _titleInputKey = GlobalKey<CustomTextFieldState>();
   final _descriptionInputKey = GlobalKey<CustomTextFieldState>();
-  final _startDateInputKey = GlobalKey<CustomTextFieldState>();
-  final _endDateInputKey = GlobalKey<CustomTextFieldState>();
+  final _timeRangeInputKey = GlobalKey<CustomTextFieldState>();
   final _addressInputKey = GlobalKey<CustomTextFieldState>();
   final _onlineLinkInputKey = GlobalKey<CustomTextFieldState>();
   LocationType _selectedLocation = LocationType.location;
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _startDateController = TextEditingController();
-  final _endDateController = TextEditingController();
+  final _timeRangeController = TextEditingController();
   final _addressController = TextEditingController();
   final _onlineLinkController = TextEditingController();
   bool _isFieldsUpdated = false;
@@ -50,6 +47,7 @@ class EditEventPageState extends State<EditEventPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final viewModel = Provider.of<EditEventViewModel>(context, listen: false);
       viewModel.fetchEvent(widget.eventId);
     });
@@ -59,44 +57,234 @@ class EditEventPageState extends State<EditEventPage> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
-    _startDateController.dispose();
-    _endDateController.dispose();
+    _timeRangeController.dispose();
     _addressController.dispose();
     _onlineLinkController.dispose();
     super.dispose();
   }
 
-  Future<void> _pickDateTime(BuildContext context, EditEventViewModel viewModel, bool isStart) async {
-    final initialDate = isStart ? viewModel.startDate : viewModel.endDate;
-    DatePicker.showDateTimePicker(
-      context,
-      showTitleActions: true,
-      minTime: DateTime.now(),
-      maxTime: DateTime.now().add(const Duration(days: 365 * 2)),
-      onConfirm: (date) {
-        if (mounted) {
-          setState(() {
-            if (isStart) {
-              viewModel.setDateRange(date, viewModel.endDate);
-              _startDateController.text = DateFormat('yyyy-MM-dd HH:mm:ss').format(date);
-            } else {
-              viewModel.setDateRange(viewModel.startDate, date);
-              _endDateController.text = DateFormat('yyyy-MM-dd HH:mm:ss').format(date);
-            }
-            _startDateInputKey.currentState?.validate();
-            _endDateInputKey.currentState?.validate();
-          });
-        }
-      },
-      currentTime: initialDate ?? DateTime.now(),
-      locale: LocaleType.vi,
-      theme: const DatePickerTheme(
-        backgroundColor: AppColors.whiteBackground,
-        itemStyle: TextStyle(color: AppColors.primary),
-        cancelStyle: TextStyle(color: AppColors.grey),
-        doneStyle: TextStyle(color: AppColors.primary),
+  Future<Map<String, DateTime>?> _pickDateTimeRange() async {
+    DateTime initialStartDate = DateTime.now();
+    TimeOfDay initialStartTime = TimeOfDay.now();
+    if (mounted) {
+      final viewModel = Provider.of<EditEventViewModel>(context, listen: false);
+      if (viewModel.timeRange != null && viewModel.timeRange!.contains(' to ')) {
+        initialStartDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(viewModel.timeRange!.split(' to ')[0]);
+        initialStartTime = TimeOfDay.fromDateTime(initialStartDate);
+      }
+    }
+
+    final theme = ThemeData.light().copyWith(
+      colorScheme: const ColorScheme.light(
+        primary: Colors.blue,
+        onPrimary: Colors.white,
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.blue,
+        ),
       ),
     );
+
+    final startDate = await showDatePicker(
+      context: context,
+      initialDate: initialStartDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(data: theme, child: child!);
+      },
+    );
+
+    if (startDate == null || !mounted) return null;
+
+    final startTime = await showTimePicker(
+      context: context,
+      initialTime: initialStartTime,
+      builder: (context, child) {
+        return Theme(data: theme, child: child!);
+      },
+    );
+
+    if (startTime == null || !mounted) return null;
+
+    final endDate = await showDatePicker(
+      context: context,
+      initialDate: startDate,
+      firstDate: startDate,
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(data: theme, child: child!);
+      },
+    );
+
+    if (endDate == null || !mounted) return null;
+
+    final endTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(data: theme, child: child!);
+      },
+    );
+
+    if (endTime == null || !mounted) return null;
+
+    final startDateTime = DateTime(
+      startDate.year,
+      startDate.month,
+      startDate.day,
+      startTime.hour,
+      startTime.minute,
+    );
+    final endDateTime = DateTime(
+      endDate.year,
+      endDate.month,
+      endDate.day,
+      endTime.hour,
+      endTime.minute,
+    );
+
+    return {'start': startDateTime, 'end': endDateTime};
+  }
+
+  void _submitEvent(BuildContext context) async {
+  bool isValid = true;
+  isValid &= _titleInputKey.currentState!.validate();
+  isValid &= _descriptionInputKey.currentState!.validate();
+  isValid &= _timeRangeInputKey.currentState!.validate();
+  if (_selectedLocation == LocationType.location) {
+    isValid &= _addressInputKey.currentState!.validate();
+  } else {
+    isValid &= _onlineLinkInputKey.currentState!.validate();
+  }
+  if (!mounted) return;
+  final viewModel = Provider.of<EditEventViewModel>(context, listen: false);
+  if (viewModel.timeRange == null) {
+    isValid = false;
+    ToastCustom.show(
+      context: context,
+      title: 'Lỗi',
+      description: 'Vui lòng chọn thời gian diễn ra',
+      type: ToastificationType.error,
+    );
+    return;
+  }
+  if (_timeRangeController.text.isNotEmpty) {
+    try {
+      final dates = _timeRangeController.text.split(' to ');
+      if (dates.length != 2) {
+        isValid = false;
+        if (mounted) {
+          ToastCustom.show(
+            context: context,
+            title: 'Lỗi',
+            description: 'Thời gian diễn ra không hợp lệ',
+            type: ToastificationType.error,
+          );
+        }
+        return;
+      }
+      final startDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(dates[0]);
+      final endDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(dates[1]);
+      if (endDate.isBefore(startDate) || endDate.isAtSameMomentAs(startDate)) {
+        isValid = false;
+        if (mounted) {
+          ToastCustom.show(
+            context: context,
+            title: 'Lỗi',
+            description: 'Ngày kết thúc phải sau ngày bắt đầu',
+            type: ToastificationType.error,
+          );
+        }
+        return;
+      }
+    } catch (e) {
+      isValid = false;
+      if (mounted) {
+        ToastCustom.show(
+          context: context,
+          title: 'Lỗi',
+          description: 'Định dạng thời gian không hợp lệ',
+          type: ToastificationType.error,
+        );
+      }
+      return;
+    }
+  }
+  if (!isValid) {
+    if (mounted) {
+      ToastCustom.show(
+        context: context,
+        title: 'Lỗi',
+        description: 'Hãy điền đầy đủ thông tin bắt buộc trước khi cập nhật.',
+        type: ToastificationType.error,
+      );
+    }
+    return;
+  }
+
+  final eventListViewModel = GetIt.instance<EventListViewModel>();
+  final sessionManager = GetIt.instance<SessionManager>();
+  await viewModel.updateEvent(
+    context,
+    _formKey,
+    eventId: widget.eventId,
+    title: _titleController.text,
+    description: _descriptionController.text,
+    link: _selectedLocation == LocationType.online ? _onlineLinkController.text : null,
+    isOnline: _selectedLocation == LocationType.online,
+    address: _selectedLocation == LocationType.location ? _addressController.text : null,
+    district: _selectedLocation == LocationType.location ? viewModel.selectedDistrict : null,
+    ward: _selectedLocation == LocationType.location ? viewModel.selectedWard : null,
+    city: _selectedLocation == LocationType.location ? viewModel.selectedCity : null,
+    country: _selectedLocation == LocationType.location ? viewModel.selectedCountry : null,
+  );
+
+  if (viewModel.isUpdateSuccessful && !viewModel.isUploadingThumbnail && context.mounted) {
+    ToastCustom.show(
+      context: context,
+      title: 'Thành công',
+      description: 'Cập nhật sự kiện thành công!',
+      type: ToastificationType.success,
+    );
+    viewModel.clearUpdateStatus();
+    viewModel.clearError();
+    await eventListViewModel.fetchEvents(
+      organizerId: sessionManager.selectedOrganizerId!,
+      page: 1,
+      limit: 20,
+      search: "",
+    );
+    if (context.mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+}
+  void _updateFields(Event event, EditEventViewModel viewModel) {
+    _titleController.text = event.title;
+    _descriptionController.text = event.description ?? '';
+    _timeRangeController.text = viewModel.timeRange ?? '';
+    _selectedLocation = event.isOnline ? LocationType.online : LocationType.location;
+    if (event.isOnline) {
+      _onlineLinkController.text = event.link ?? '';
+    } else {
+      _addressController.text = event.address ?? '';
+      viewModel.setCity(event.city);
+      viewModel.setDistrict(event.district);
+      viewModel.setWard(event.ward);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _titleInputKey.currentState?.validate();
+      _descriptionInputKey.currentState?.validate();
+      _timeRangeInputKey.currentState?.validate();
+      if (_selectedLocation == LocationType.location) {
+        _addressInputKey.currentState?.validate();
+      } else {
+        _onlineLinkInputKey.currentState?.validate();
+      }
+    });
   }
 
   @override
@@ -110,37 +298,14 @@ class EditEventPageState extends State<EditEventPage> {
         title: 'Chỉnh sửa sự kiện',
         actionIcon: Icons.check,
         onLeadingPressed: () {
-          Navigator.of(context).pop();
+          if (mounted) {
+            Navigator.of(context).pop();
+          }
         },
         onActionPressed: () {
-          final currentContext = context;
-          bool isValid = true;
-          isValid &= _titleInputKey.currentState!.validate();
-          isValid &= _descriptionInputKey.currentState!.validate();
-          isValid &= _startDateInputKey.currentState!.validate();
-          isValid &= _endDateInputKey.currentState!.validate();
-          if (_selectedLocation == LocationType.location) {
-            isValid &= _addressInputKey.currentState!.validate();
-          } else {
-            isValid &= _onlineLinkInputKey.currentState!.validate();
+          if (mounted) {
+            _submitEvent(context);
           }
-          if (!isValid) {
-            if (currentContext.mounted) {
-              ToastCustom.show(
-                context: currentContext,
-                title: 'Lỗi',
-                description: 'Hãy điền đầy đủ thông tin bắt buộc trước khi cập nhật.',
-                type: ToastificationType.error,
-              );
-            }
-            return;
-          }
-          if (Provider.of<EditEventViewModel>(context, listen: false).startDate == null ||
-              Provider.of<EditEventViewModel>(context, listen: false).endDate == null) {
-            Provider.of<EditEventViewModel>(context, listen: false).setError('', 'Vui lòng chọn cả ngày bắt đầu và ngày kết thúc');
-            return;
-          }
-          _submitEvent(currentContext);
         },
       ),
       backgroundColor: AppColors.whiteBackground,
@@ -153,7 +318,7 @@ class EditEventPageState extends State<EditEventPage> {
             }
             if (viewModel.errorMessage != null) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (!context.mounted) return;
+                if (!mounted) return;
                 ToastCustom.show(
                   context: context,
                   title: viewModel.errorTitle ?? 'Lỗi',
@@ -188,7 +353,9 @@ class EditEventPageState extends State<EditEventPage> {
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () {
-                        viewModel.fetchEvent(widget.eventId);
+                        if (mounted) {
+                          viewModel.fetchEvent(widget.eventId);
+                        }
                       },
                       child: const Text('Thử lại'),
                     ),
@@ -204,78 +371,6 @@ class EditEventPageState extends State<EditEventPage> {
         ),
       ),
     );
-  }
-
-  void _submitEvent(BuildContext context) async {
-    final viewModel = Provider.of<EditEventViewModel>(context, listen: false);
-    final eventListViewModel = GetIt.instance<EventListViewModel>();
-    final sessionManager = GetIt.instance<SessionManager>();
-    await viewModel.updateEvent(
-      context,
-      _formKey,
-      eventId: widget.eventId,
-      title: _titleController.text,
-      description: _descriptionController.text,
-      link: _selectedLocation == LocationType.online ? _onlineLinkController.text : null,
-      isOnline: _selectedLocation == LocationType.online,
-      address: _selectedLocation == LocationType.location ? _addressController.text : null,
-      district: _selectedLocation == LocationType.location ? viewModel.selectedDistrict : null,
-      ward: _selectedLocation == LocationType.location ? viewModel.selectedWard : null,
-      city: _selectedLocation == LocationType.location ? viewModel.selectedCity : null,
-      country: _selectedLocation == LocationType.location ? viewModel.selectedCountry : null,
-    );
-
-    if (viewModel.isUpdateSuccessful && !viewModel.isUploadingThumbnail && context.mounted) {
-      ToastCustom.show(
-        context: context,
-        title: 'Thành công',
-        description: 'Cập nhật sự kiện thành công!',
-        type: ToastificationType.success,
-      );
-      viewModel.clearUpdateStatus();
-      viewModel.clearError();
-      await eventListViewModel.fetchEvents(
-        organizerId: sessionManager.selectedOrganizerId!,
-        page: 1,
-        limit: 20,
-        search: "",
-      );
-      if (context.mounted) {
-        Navigator.of(context).pop();
-      }
-    }
-  }
-
-  void _updateFields(Event event, EditEventViewModel viewModel) {
-    _titleController.text = event.title;
-    _descriptionController.text = event.description ?? '';
-    viewModel.setDateRange(event.startDate, event.endDate);
-    _startDateController.text = viewModel.startDate != null
-        ? DateFormat('yyyy-MM-dd HH:mm:ss').format(viewModel.startDate!)
-        : '';
-    _endDateController.text = viewModel.endDate != null
-        ? DateFormat('yyyy-MM-dd HH:mm:ss').format(viewModel.endDate!)
-        : '';
-    _selectedLocation = event.isOnline ? LocationType.online : LocationType.location;
-    if (event.isOnline) {
-      _onlineLinkController.text = event.link ?? '';
-    } else {
-      _addressController.text = event.address ?? '';
-      viewModel.setCity(event.city);
-      viewModel.setDistrict(event.district);
-      viewModel.setWard(event.ward);
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _titleInputKey.currentState?.validate();
-      _descriptionInputKey.currentState?.validate();
-      _startDateInputKey.currentState?.validate();
-      _endDateInputKey.currentState?.validate();
-      if (_selectedLocation == LocationType.location) {
-        _addressInputKey.currentState?.validate();
-      } else {
-        _onlineLinkInputKey.currentState?.validate();
-      }
-    });
   }
 
   Widget buildMainContainer(bool isSmallScreen, Size screenSize, EditEventViewModel viewModel) {
@@ -303,6 +398,7 @@ class EditEventPageState extends State<EditEventPage> {
                   CustomTextField(
                     key: _titleInputKey,
                     label: "Tên sự kiện",
+                    hintText: "Nhập tên sự kiện",
                     isRequired: true,
                     isBold: true,
                     controller: _titleController,
@@ -317,6 +413,7 @@ class EditEventPageState extends State<EditEventPage> {
                   CustomTextField(
                     key: _descriptionInputKey,
                     label: "Tổng quan",
+                    hintText: "Nhập tổng quan",
                     isRequired: true,
                     maxLines: 4,
                     isBold: true,
@@ -333,49 +430,46 @@ class EditEventPageState extends State<EditEventPage> {
                     onChanged: (value) => _descriptionInputKey.currentState?.validate(),
                   ),
                   CustomTextField(
-                    key: _startDateInputKey,
-                    label: "Ngày bắt đầu",
+                    key: _timeRangeInputKey,
+                    label: "Thời gian diễn ra",
+                    hintText: "YYYY-MM-DD HH:mm:ss to YYYY-MM-DD HH:mm:ss",
                     isRequired: true,
                     isBold: true,
-                    controller: _startDateController,
+                    controller: _timeRangeController,
                     readOnly: true,
-                    onTap: () => _pickDateTime(context, viewModel, true),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Hãy chọn ngày bắt đầu";
+                    onTap: () async {
+                      final pickedRange = await _pickDateTimeRange();
+                      if (pickedRange != null && mounted) {
+                        final viewModel = Provider.of<EditEventViewModel>(context, listen: false);
+                        final timeRange =
+                            '${DateFormat('yyyy-MM-dd HH:mm:ss').format(pickedRange['start']!)} to ${DateFormat('yyyy-MM-dd HH:mm:ss').format(pickedRange['end']!)}';
+                        viewModel.setTimeRange(timeRange);
+                        setState(() {
+                          _timeRangeController.text = timeRange;
+                          _timeRangeInputKey.currentState?.validate();
+                        });
                       }
-                      return null;
                     },
-                    onChanged: (value) => _startDateInputKey.currentState?.validate(),
-                  ),
-                  const SizedBox(height: 16),
-                  CustomTextField(
-                    key: _endDateInputKey,
-                    label: "Ngày kết thúc",
-                    isRequired: true,
-                    isBold: true,
-                    controller: _endDateController,
-                    readOnly: true,
-                    onTap: () => _pickDateTime(context, viewModel, false),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return "Hãy chọn ngày kết thúc";
+                        return "Hãy chọn thời gian diễn ra";
                       }
-                      final startDateText = _startDateController.text;
-                      if (startDateText.isNotEmpty) {
-                        try {
-                          final startDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(startDateText);
-                          final endDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(value);
-                          if (endDate.isBefore(startDate) || endDate.isAtSameMomentAs(startDate)) {
-                            return "Ngày kết thúc phải sau ngày bắt đầu";
-                          }
-                        } catch (e) {
-                          return "Định dạng ngày không hợp lệ";
+                      final dates = value.split(' to ');
+                      if (dates.length != 2) {
+                        return "Thời gian diễn ra không hợp lệ";
+                      }
+                      try {
+                        final startDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(dates[0]);
+                        final endDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(dates[1]);
+                        if (endDate.isBefore(startDate) || endDate.isAtSameMomentAs(startDate)) {
+                          return "Ngày kết thúc phải sau ngày bắt đầu";
                         }
+                      } catch (e) {
+                        return "Định dạng thời gian không hợp lệ";
                       }
                       return null;
                     },
-                    onChanged: (value) => _endDateInputKey.currentState?.validate(),
+                    onChanged: (value) => _timeRangeInputKey.currentState?.validate(),
                   ),
                   Text("Vị trí", style: AppTextStyles.bold),
                   const SizedBox(height: 12),
@@ -399,6 +493,7 @@ class EditEventPageState extends State<EditEventPage> {
                           CustomTextField(
                             key: _addressInputKey,
                             label: "Địa chỉ",
+                            hintText: "Nhập địa chỉ",
                             isRequired: true,
                             controller: _addressController,
                             validator: (value) {
@@ -460,7 +555,7 @@ class EditEventPageState extends State<EditEventPage> {
                       child: CustomTextField(
                         key: _onlineLinkInputKey,
                         label: "Link sự kiện online",
-                        hintText: "Link",
+                        hintText: "Nhập link sự kiện",
                         isRequired: true,
                         controller: _onlineLinkController,
                         validator: (value) {
@@ -470,7 +565,7 @@ class EditEventPageState extends State<EditEventPage> {
                           if (!RegExp(r'^(https?://)?([\w-]+\.)+[\w-]+(/[\w-./?%&=]*)?$').hasMatch(value)) {
                             return "Hãy nhập link hợp lệ";
                           }
-                        return null;
+                          return null;
                         },
                         onChanged: (value) => _onlineLinkInputKey.currentState?.validate(),
                       ),
@@ -526,15 +621,6 @@ class EditEventPageState extends State<EditEventPage> {
                   Container(
                     width: double.infinity,
                     height: 120,
-                    decoration: BoxDecoration(
-                      color: AppColors.skeleton,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    width: double.infinity,
-                    height: 56,
                     decoration: BoxDecoration(
                       color: AppColors.skeleton,
                       borderRadius: BorderRadius.circular(8),
@@ -631,11 +717,10 @@ class EditEventPageState extends State<EditEventPage> {
         const SizedBox(height: 8),
         GestureDetector(
           onTap: () async {
-            final viewModel = Provider.of<EditEventViewModel>(context, listen: false);
-            final currentContext = context;
             final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-            if (pickedFile != null && currentContext.mounted) {
-              await viewModel.uploadThumbnail(currentContext, File(pickedFile.path));
+            if (pickedFile != null && mounted) {
+              final viewModel = Provider.of<EditEventViewModel>(context, listen: false);
+              await viewModel.uploadThumbnail(context, File(pickedFile.path));
             }
           },
           child: ClipRRect(

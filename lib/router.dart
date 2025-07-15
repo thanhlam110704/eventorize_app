@@ -1,4 +1,3 @@
-import 'package:eventorize_app/features/auth/organization_view/create_event_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -21,9 +20,12 @@ import 'package:eventorize_app/features/auth/user_view/privacy_policy_page.dart'
 import 'package:eventorize_app/features/auth/user_view/terms_of_service_page.dart';
 import 'package:eventorize_app/features/auth/organization_view/select_org_page.dart';
 import 'package:eventorize_app/features/auth/organization_view/org_info_page.dart';
-import 'package:eventorize_app/features/auth/organization_view/ticket_list_page.dart';
 import 'package:eventorize_app/features/auth/organization_view/event_list_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/create_event_page.dart';
 import 'package:eventorize_app/features/auth/organization_view/edit_event_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/ticket_list_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/create_ticket_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/edit_ticket_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -193,6 +195,25 @@ class AppRouter {
         },
         redirect: (context, state) => _authGuard(context),
       ),
+      GoRoute(
+        path: '/create-ticket/:eventId',
+        name: 'createTicket',
+        builder: (context, state) {
+          final eventId = state.pathParameters['eventId']!;
+          return CreateTicketPage(eventId: eventId);
+        },
+        redirect: (context, state) => _authGuard(context),
+      ),
+     GoRoute(
+      path: '/edit-ticket/:eventId/:ticketId',
+      name: 'editTicket',
+      builder: (context, state) {
+        final eventId = state.pathParameters['eventId']!;
+        final ticketId = state.pathParameters['ticketId']!;
+        return EditTicketPage(eventId: eventId, ticketId: ticketId);
+      },
+      redirect: (context, state) => _authGuard(context),
+    )
     ],
     errorBuilder: (context, state) => Scaffold(
       body: Center(

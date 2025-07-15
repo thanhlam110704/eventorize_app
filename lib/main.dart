@@ -17,6 +17,8 @@ import 'package:eventorize_app/features/auth/organization_view_model/event_list_
 import 'package:eventorize_app/features/auth/organization_view_model/edit_event_view_model.dart';
 import 'package:eventorize_app/features/auth/organization_view_model/create_event_view_model.dart';
 import 'package:eventorize_app/features/auth/organization_view_model/ticket_list_view_model.dart';
+import 'package:eventorize_app/features/auth/organization_view_model/create_ticket_view_model.dart';
+import 'package:eventorize_app/features/auth/organization_view_model/edit_ticket_view_model.dart';
 import 'package:eventorize_app/core/utils/datetime_convert.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -85,17 +87,29 @@ void setupDependencies() {
       locationRepository: getIt<LocationRepository>(),
     ),
   );
-  getIt.registerFactory<EventDetailViewModel>(
-    () => EventDetailViewModel(
-      eventRepository: getIt<EventRepository>(),
+  getIt.registerSingleton<CreateTicketViewModel>(
+    CreateTicketViewModel(
       ticketRepository: getIt<TicketRepository>(),
-      organizerRepository: getIt<OrganizerRepository>(),
+      sessionManager: getIt<SessionManager>(),
+    ),
+  );
+  getIt.registerSingleton<EditTicketViewModel>(
+    EditTicketViewModel(
+      ticketRepository: getIt<TicketRepository>(),
+      sessionManager: getIt<SessionManager>(),
     ),
   );
   getIt.registerSingleton<TicketListViewModel>(
     TicketListViewModel(
       ticketRepository: getIt<TicketRepository>(),
       sessionManager: getIt<SessionManager>(),
+    ),
+  );
+  getIt.registerFactory<EventDetailViewModel>(
+    () => EventDetailViewModel(
+      eventRepository: getIt<EventRepository>(),
+      ticketRepository: getIt<TicketRepository>(),
+      organizerRepository: getIt<OrganizerRepository>(),
     ),
   );
   getIt.registerFactory<PaymentViewModel>(
@@ -227,11 +241,34 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<TicketListViewModel>(
           create: (_) => getIt<TicketListViewModel>(),
         ),
+        ChangeNotifierProvider<CreateTicketViewModel>(
+          create: (_) => getIt<CreateTicketViewModel>(),
+        ),
+        ChangeNotifierProvider<EditTicketViewModel>(
+          create: (_) => getIt<EditTicketViewModel>(),
+        ),
       ],
       child: MaterialApp.router(
         title: 'Eventorize',
         theme: ThemeData(
           useMaterial3: true,
+          colorScheme: const ColorScheme.light(
+            primary: Colors.blue,
+            onPrimary: Colors.white,
+            secondary: Colors.blueAccent,
+            onSecondary: Colors.white,
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.blue,
+              textStyle: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+          ),
+          sliderTheme: const SliderThemeData(
+            activeTrackColor: Colors.blue,
+            inactiveTrackColor: Colors.blueGrey,
+            thumbColor: Colors.blue,
+          ),
         ),
         routerConfig: AppRouter.router,
         debugShowCheckedModeBanner: false,

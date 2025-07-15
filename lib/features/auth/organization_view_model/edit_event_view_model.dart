@@ -19,8 +19,7 @@ class EditEventViewModel extends ChangeNotifier {
   final LocationCache _locationCache = GetIt.instance<LocationCache>();
   
   Event? _event;
-  DateTime? _startDate;
-  DateTime? _endDate;
+  String? _timeRange;
   bool _isLoading = false;
   bool _isUploadingThumbnail = false;
   bool _isUpdateSuccessful = false;
@@ -31,8 +30,7 @@ class EditEventViewModel extends ChangeNotifier {
   final ErrorState errorState = ErrorState();
 
   Event? get event => _event;
-  DateTime? get startDate => _startDate;
-  DateTime? get endDate => _endDate;
+  String? get timeRange => _timeRange;
   bool get isLoading => _isLoading;
   bool get isUploadingThumbnail => _isUploadingThumbnail;
   bool get isUpdateSuccessful => _isUpdateSuccessful;
@@ -61,9 +59,8 @@ class EditEventViewModel extends ChangeNotifier {
        _sessionManager = sessionManager,
        _locationRepository = locationRepository;
 
-  void setDateRange(DateTime? start, DateTime? end) {
-    _startDate = start;
-    _endDate = end;
+  void setTimeRange(String? timeRange) {
+    _timeRange = timeRange;
     notifyListeners();
   }
 
@@ -83,8 +80,8 @@ class EditEventViewModel extends ChangeNotifier {
       apiCall: () => _eventRepository.getEventDetail(eventId),
       onSuccess: (event) {
         _event = event as Event;
-        _startDate = event.startDate;
-        _endDate = event.endDate;
+        final dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
+        _timeRange = '${dateFormat.format(event.startDate)} to ${dateFormat.format(event.endDate)}';
         selectedCountry = event.country ?? 'Việt Nam';
         selectedCity = event.city;
         selectedDistrict = event.district;
@@ -109,6 +106,7 @@ class EditEventViewModel extends ChangeNotifier {
     String? city,
     String? country,
   }) async {
+    final currentContext = context;
     if (!formKey.currentState!.validate()) return;
 
     if (_sessionManager.user == null) {
@@ -123,15 +121,37 @@ class EditEventViewModel extends ChangeNotifier {
     ErrorHandler.clearError(errorState);
     notifyListeners();
 
+    List<String> dates = _timeRange?.split(' to ') ?? [];
+    if (dates.length != 2) {
+      errorState.errorTitle = 'Lỗi';
+      errorState.errorMessage = 'Thời gian diễn ra không hợp lệ';
+      _isUpdateSuccessful = false;
+      notifyListeners();
+      return;
+    }
+
+    String? startDate = dates[0];
+    String? endDate = dates[1];
     final dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
+    try {
+      dateFormat.parseStrict(startDate);
+      dateFormat.parseStrict(endDate);
+    } catch (e) {
+      errorState.errorTitle = 'Lỗi';
+      errorState.errorMessage = 'Định dạng thời gian không hợp lệ';
+      _isUpdateSuccessful = false;
+      notifyListeners();
+      return;
+    }
+
     await executeApiCall(
       apiCall: () => _eventRepository.editEvent(
         eventId,
         title: title,
         description: description,
         link: link,
-        startDate: _startDate != null ? dateFormat.format(_startDate!) : null,
-        endDate: _endDate != null ? dateFormat.format(_endDate!) : null,
+        startDate: startDate,
+        endDate: endDate,
         isOnline: isOnline,
         address: address,
         district: district,
@@ -143,8 +163,8 @@ class EditEventViewModel extends ChangeNotifier {
         _event = updatedEvent as Event;
         _isUpdateSuccessful = true;
         ErrorHandler.clearError(errorState);
-        if (context.mounted) {
-          context.go('/event-list'); 
+        if (currentContext.mounted) {
+          currentContext.go('/event-list');
         }
       },
     );
@@ -154,6 +174,7 @@ class EditEventViewModel extends ChangeNotifier {
   }
 
   Future<void> uploadThumbnail(BuildContext context, File imageFile) async {
+    final currentContext = context;
     if (_sessionManager.user == null) {
       errorState.errorTitle = null;
       errorState.errorMessage = 'Vui lòng đăng nhập trước';
@@ -185,8 +206,8 @@ class EditEventViewModel extends ChangeNotifier {
         _event = updatedEvent as Event;
         _isUpdateSuccessful = true;
         ErrorHandler.clearError(errorState);
-        if (context.mounted) {
-          context.go('/event-list'); 
+        if (currentContext.mounted) {
+          currentContext.go('/event-list');
         }
       },
     );
@@ -275,7 +296,7 @@ class EditEventViewModel extends ChangeNotifier {
     if (provinceName == null) return '';
     return provinces.firstWhere(
       (p) => p.name == provinceName,
-      orElse: () => provinces.isNotEmpty ? provinces[0] : Province(),
+      orElse: () => Province(),
     ).code?.toString() ?? '';
   }
 
@@ -283,7 +304,7 @@ class EditEventViewModel extends ChangeNotifier {
     if (districtName == null) return '';
     return districts.firstWhere(
       (d) => d.name == districtName,
-      orElse: () => districts.isNotEmpty ? districts[0] : District(),
+      orElse: () => District(),
     ).code?.toString() ?? '';
   }
 

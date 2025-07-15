@@ -68,7 +68,7 @@ class TicketListPageState extends State<TicketListPage> {
         height: 70,
         child: FloatingActionButton(
           onPressed: () {
-            context.go('/createticket/${widget.eventId}');
+            context.push('/create-ticket/${widget.eventId}');
           },
           backgroundColor: const Color(0xFF194185),
           elevation: 6,

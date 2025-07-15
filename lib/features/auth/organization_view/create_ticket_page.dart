@@ -1,29 +1,27 @@
+import 'package:eventorize_app/common/components/ticket_range_slider.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/components/top_nav_org_bar.dart';
 import 'package:eventorize_app/common/components/custom_fields.dart';
-import 'package:eventorize_app/features/auth/organization_view_model/edit_ticket_view_model.dart';
-import 'package:eventorize_app/features/auth/organization_view_model/ticket_list_view_model.dart';
+import 'package:eventorize_app/features/auth/organization_view_model/create_ticket_view_model.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
-import 'package:eventorize_app/common/components/ticket_range_slider.dart';
-import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 
-class EditTicketPage extends StatefulWidget {
+class CreateTicketPage extends StatefulWidget {
   final String eventId;
-  final String ticketId;
 
-  const EditTicketPage({super.key, required this.eventId, required this.ticketId});
+  const CreateTicketPage({super.key, required this.eventId});
 
   @override
-  EditTicketPageState createState() => EditTicketPageState();
+  CreateTicketPageState createState() => CreateTicketPageState();
 }
 
-class EditTicketPageState extends State<EditTicketPage> {
+class CreateTicketPageState extends State<CreateTicketPage> {
   static const smallScreenThreshold = 640.0;
   static const maxContentWidth = 600.0;
 
@@ -42,7 +40,6 @@ class EditTicketPageState extends State<EditTicketPage> {
   String? _selectedStatus;
   double _minPer = 1;
   double _maxPer = 10;
-  bool _hasShownUpdateToast = false;
 
   static const Map<String, String> statusDisplayToValue = {
     'Hoạt động': 'active',
@@ -61,8 +58,10 @@ class EditTicketPageState extends State<EditTicketPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final viewModel = GetIt.instance<EditTicketViewModel>();
-      viewModel.fetchTicket(widget.eventId, widget.ticketId);
+      final viewModel = GetIt.instance<CreateTicketViewModel>();
+      if (viewModel.saleDateRange != null) {
+        _dateRangeController.text = viewModel.saleDateRange!;
+      }
     });
   }
 
@@ -81,48 +80,25 @@ class EditTicketPageState extends State<EditTicketPage> {
     final screenSize = MediaQuery.of(context).size;
     final isSmallScreen = screenSize.width <= smallScreenThreshold;
 
-    return ChangeNotifierProvider<EditTicketViewModel>.value(
-      value: GetIt.instance<EditTicketViewModel>(),
-      child: Consumer<EditTicketViewModel>(
+    return ChangeNotifierProvider<CreateTicketViewModel>.value(
+      value: GetIt.instance<CreateTicketViewModel>(),
+      child: Consumer<CreateTicketViewModel>(
         builder: (context, viewModel, _) {
-          if (viewModel.ticket != null) {
-            _titleController.text = viewModel.ticket!.title;
-            _descriptionController.text = viewModel.ticket!.description ?? '';
-            _quantityController.text = viewModel.ticket!.quantity.toString();
-            _priceController.text = viewModel.ticket!.price.toString();
-            _selectedStatus = statusValueToDisplay[viewModel.ticket!.status] ?? viewModel.ticket!.status;
-            _minPer = viewModel.ticket!.minPerUser.toDouble();
-            _maxPer = viewModel.ticket!.maxPerUser.toDouble();
-            _dateRangeController.text = viewModel.saleDateRange ?? '';
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                _titleInputKey.currentState?.validate();
-                _descriptionInputKey.currentState?.validate();
-                _quantityInputKey.currentState?.validate();
-                _dateRangeInputKey.currentState?.validate();
-                _priceInputKey.currentState?.validate();
-                _statusInputKey.currentState?.validate();
-              }
-            });
+          if (viewModel.saleDateRange != null) {
+            _dateRangeController.text = viewModel.saleDateRange!;
+          } else {
+            _dateRangeController.text = '';
           }
 
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted && viewModel.isUpdateSuccessful && !_hasShownUpdateToast) {
-              _hasShownUpdateToast = true;
+            if (mounted && viewModel.isCreateSuccessful) {
               ToastCustom.show(
                 context: context,
                 title: 'Thành công',
-                description: 'Chỉnh sửa vé thành công',
+                description: 'Tạo vé thành công',
                 type: ToastificationType.success,
               );
-              viewModel.clearUpdateStatus();
-              final ticketListViewModel = GetIt.instance<TicketListViewModel>();
-              ticketListViewModel.fetchTickets(
-                eventId: widget.eventId,
-                page: 1,
-                limit: 20,
-                search: "",
-              );
+              viewModel.clearCreateStatus();
               context.go('/ticket-list/${widget.eventId}');
             }
             if (mounted && viewModel.errorMessage != null) {
@@ -139,7 +115,7 @@ class EditTicketPageState extends State<EditTicketPage> {
           return Scaffold(
             appBar: TopNavOrgBar(
               leadingIcon: Icons.arrow_back_ios,
-              title: 'Chỉnh sửa vé',
+              title: 'Tạo vé',
               actionIcon: Icons.check,
               onLeadingPressed: () {
                 Navigator.of(context).pop();
@@ -162,7 +138,7 @@ class EditTicketPageState extends State<EditTicketPage> {
     );
   }
 
-  Widget buildMainContainer(bool isSmallScreen, Size screenSize, EditTicketViewModel viewModel) {
+  Widget buildMainContainer(bool isSmallScreen, Size screenSize, CreateTicketViewModel viewModel) {
     return Container(
       width: screenSize.width,
       color: AppColors.whiteBackground,
@@ -520,7 +496,7 @@ class EditTicketPageState extends State<EditTicketPage> {
     return {'start': startDateTime, 'end': endDateTime};
   }
 
-  void _submit(BuildContext context, EditTicketViewModel viewModel) async {
+  void _submit(BuildContext context, CreateTicketViewModel viewModel) async {
     bool isValid = true;
     if (_titleInputKey.currentState?.validate() != true) isValid = false;
     if (_descriptionInputKey.currentState?.validate() != true) isValid = false;
@@ -530,25 +506,18 @@ class EditTicketPageState extends State<EditTicketPage> {
     if (_statusInputKey.currentState?.validate() != true) isValid = false;
 
     if (isValid) {
-      await viewModel.updateTicket(
+      await viewModel.createTicket(
         context,
         _formKey,
         eventId: widget.eventId,
-        ticketId: widget.ticketId,
         title: _titleController.text,
         description: _descriptionController.text,
         quantity: int.parse(_quantityController.text),
         price: int.parse(_priceController.text.replaceAll('.', '')),
         minPerUser: _minPer.round(),
         maxPerUser: _maxPer.round(),
-        status: statusDisplayToValue[_selectedStatus] ?? viewModel.ticket?.status ?? 'active',
+        status: statusDisplayToValue[_selectedStatus] ?? 'active',
       );
     }
-  }
-
-  @override
-  void didUpdateWidget(covariant EditTicketPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _hasShownUpdateToast = false;
   }
 }

@@ -8,8 +8,8 @@ import 'package:eventorize_app/common/services/location_cache.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:eventorize_app/core/utils/exceptions.dart';
-import 'package:intl/intl.dart';
 import 'package:eventorize_app/features/auth/organization_view_model/event_list_view_model.dart';
+import 'package:intl/intl.dart';
 import 'dart:io';
 
 class CreateEventViewModel extends ChangeNotifier {
@@ -18,8 +18,7 @@ class CreateEventViewModel extends ChangeNotifier {
   final LocationRepository _locationRepository;
   final LocationCache _locationCache = GetIt.instance<LocationCache>();
 
-  DateTime? _startDate;
-  DateTime? _endDate;
+  String? _timeRange;
   bool _isLoading = false;
   bool _isCreateSuccessful = false;
   bool _isDataLoaded = false;
@@ -28,8 +27,7 @@ class CreateEventViewModel extends ChangeNotifier {
   bool _isLoadingWard = false;
   final ErrorState errorState = ErrorState();
 
-  DateTime? get startDate => _startDate;
-  DateTime? get endDate => _endDate;
+  String? get timeRange => _timeRange;
   bool get isLoading => _isLoading;
   bool get isCreateSuccessful => _isCreateSuccessful;
   bool get isDataLoaded => _isDataLoaded;
@@ -59,9 +57,8 @@ class CreateEventViewModel extends ChangeNotifier {
     loadLocationData();
   }
 
-  void setDateRange(DateTime? start, DateTime? end) {
-    _startDate = start;
-    _endDate = end;
+  void setTimeRange(String? timeRange) {
+    _timeRange = timeRange;
     notifyListeners();
   }
 
@@ -87,24 +84,49 @@ class CreateEventViewModel extends ChangeNotifier {
       return null;
     }
 
+    if (!formKey.currentState!.validate()) return null;
+
     _isLoading = true;
     _isCreateSuccessful = false;
     ErrorHandler.clearError(errorState);
     notifyListeners();
 
     try {
+      List<String> dates = _timeRange?.split(' to ') ?? [];
+      if (dates.length != 2) {
+        errorState.errorTitle = 'Lỗi';
+        errorState.errorMessage = 'Thời gian diễn ra không hợp lệ';
+        _isCreateSuccessful = false;
+        notifyListeners();
+        return null;
+      }
+
+      String? startDate = dates[0];
+      String? endDate = dates[1];
+      final dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
+      try {
+        dateFormat.parseStrict(startDate);
+        dateFormat.parseStrict(endDate);
+      } catch (e) {
+        errorState.errorTitle = 'Lỗi';
+        errorState.errorMessage = 'Định dạng thời gian không hợp lệ';
+        _isCreateSuccessful = false;
+        notifyListeners();
+        return null;
+      }
+
       MultipartFile? thumbnailFile;
       if (imageFile != null) {
         thumbnailFile = await MultipartFile.fromFile(imageFile.path, filename: imageFile.path.split('/').last);
       }
-      final dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
+
       final event = await _eventRepository.createEvent(
         organizerId: organizerId,
         title: title,
         description: description,
         link: link,
-        startDate: dateFormat.format(_startDate!),
-        endDate: dateFormat.format(_endDate!),
+        startDate: startDate,
+        endDate: endDate,
         isOnline: isOnline,
         address: address,
         district: district,

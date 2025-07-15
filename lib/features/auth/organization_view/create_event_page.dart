@@ -6,12 +6,11 @@ import 'package:eventorize_app/common/components/custom_fields.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
 import 'package:eventorize_app/features/auth/organization_view_model/create_event_view_model.dart';
-import 'package:flutter/material.dart' hide DatePickerTheme;
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart';
 import 'package:shimmer/shimmer.dart';
 import 'dart:io';
 
@@ -30,8 +29,7 @@ class CreateEventPageState extends State<CreateEventPage> {
   final _formKey = GlobalKey<FormState>();
   final _titleInputKey = GlobalKey<CustomTextFieldState>();
   final _descriptionInputKey = GlobalKey<CustomTextFieldState>();
-  final _startDateInputKey = GlobalKey<CustomTextFieldState>();
-  final _endDateInputKey = GlobalKey<CustomTextFieldState>();
+  final _timeRangeInputKey = GlobalKey<CustomTextFieldState>();
   final _addressInputKey = GlobalKey<CustomTextFieldState>();
   final _onlineLinkInputKey = GlobalKey<CustomTextFieldState>();
   final _cityInputKey = GlobalKey<CustomDropdownFieldState>();
@@ -40,8 +38,7 @@ class CreateEventPageState extends State<CreateEventPage> {
   LocationType _selectedLocation = LocationType.location;
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _startDateController = TextEditingController();
-  final _endDateController = TextEditingController();
+  final _timeRangeController = TextEditingController();
   final _addressController = TextEditingController();
   final _onlineLinkController = TextEditingController();
   bool _isFieldsUpdated = false;
@@ -52,6 +49,7 @@ class CreateEventPageState extends State<CreateEventPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final viewModel = Provider.of<CreateEventViewModel>(context, listen: false);
       _updateFields(viewModel);
     });
@@ -61,89 +59,137 @@ class CreateEventPageState extends State<CreateEventPage> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
-    _startDateController.dispose();
-    _endDateController.dispose();
+    _timeRangeController.dispose();
     _addressController.dispose();
     _onlineLinkController.dispose();
     super.dispose();
   }
 
   void _updateFields(CreateEventViewModel viewModel) {
-    final dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
-    if (viewModel.startDate != null) {
-      _startDateController.text = dateFormat.format(viewModel.startDate!);
-    }
-    if (viewModel.endDate != null) {
-      _endDateController.text = dateFormat.format(viewModel.endDate!);
+    if (viewModel.timeRange != null) {
+      _timeRangeController.text = viewModel.timeRange!;
     }
     _isFieldsUpdated = true;
   }
 
-  Future<void> _pickDateTime(BuildContext context, CreateEventViewModel viewModel, bool isStart) async {
-    final initialDate = isStart ? viewModel.startDate : viewModel.endDate;
-    DatePicker.showDateTimePicker(
-      context,
-      showTitleActions: true,
-      minTime: DateTime.now(),
-      maxTime: DateTime.now().add(const Duration(days: 365 * 2)),
-      onConfirm: (date) {
-        if (mounted) {
-          setState(() {
-            final dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
-            if (isStart) {
-              viewModel.setDateRange(date, viewModel.endDate);
-              _startDateController.text = dateFormat.format(date);
-            } else {
-              viewModel.setDateRange(viewModel.startDate, date);
-              _endDateController.text = dateFormat.format(date);
-            }
-            _startDateInputKey.currentState?.validate();
-            _endDateInputKey.currentState?.validate();
-          });
-        }
-      },
-      currentTime: initialDate ?? DateTime.now(),
-      locale: LocaleType.vi,
-      theme: const DatePickerTheme(
-        backgroundColor: AppColors.whiteBackground,
-        itemStyle: TextStyle(color: AppColors.primary),
-        cancelStyle: TextStyle(color: AppColors.grey),
-        doneStyle: TextStyle(color: AppColors.primary),
+  Future<Map<String, DateTime>?> _pickDateTimeRange() async {
+    final theme = ThemeData.light().copyWith(
+      colorScheme: const ColorScheme.light(
+        primary: Colors.blue,
+        onPrimary: Colors.white,
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.blue,
+        ),
       ),
     );
+
+    final startDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(data: theme, child: child!);
+      },
+    );
+
+    if (startDate == null || !mounted) return null;
+
+    final startTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(data: theme, child: child!);
+      },
+    );
+
+    if (startTime == null || !mounted) return null;
+
+    final endDate = await showDatePicker(
+      context: context,
+      initialDate: startDate,
+      firstDate: startDate,
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(data: theme, child: child!);
+      },
+    );
+
+    if (endDate == null || !mounted) return null;
+
+    final endTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(data: theme, child: child!);
+      },
+    );
+
+    if (endTime == null || !mounted) return null;
+
+    final startDateTime = DateTime(
+      startDate.year,
+      startDate.month,
+      startDate.day,
+      startTime.hour,
+      startTime.minute,
+    );
+    final endDateTime = DateTime(
+      endDate.year,
+      endDate.month,
+      endDate.day,
+      endTime.hour,
+      endTime.minute,
+    );
+
+    return {'start': startDateTime, 'end': endDateTime};
   }
 
   void _submitEvent(BuildContext context, CreateEventViewModel viewModel) async {
-    final currentContext = context;
     bool isValid = true;
     isValid &= _titleInputKey.currentState!.validate();
     isValid &= _descriptionInputKey.currentState!.validate();
-    isValid &= _startDateInputKey.currentState!.validate();
-    isValid &= _endDateInputKey.currentState!.validate();
+    isValid &= _timeRangeInputKey.currentState!.validate();
     if (_selectedLocation == LocationType.location) {
       isValid &= _addressInputKey.currentState!.validate();
       isValid &= _cityInputKey.currentState!.validate();
     } else {
       isValid &= _onlineLinkInputKey.currentState!.validate();
     }
-    if (viewModel.startDate == null || viewModel.endDate == null) {
+    if (viewModel.timeRange == null) {
       isValid = false;
+      if (!mounted) return;
       ToastCustom.show(
-        context: currentContext,
+        context: context,
         title: 'Lỗi',
-        description: 'Vui lòng chọn cả ngày bắt đầu và ngày kết thúc',
+        description: 'Vui lòng chọn thời gian diễn ra',
         type: ToastificationType.error,
       );
       return;
     }
-    if (_endDateController.text.isNotEmpty && _startDateController.text.isNotEmpty) {
+    if (_timeRangeController.text.isNotEmpty) {
       try {
-        final startDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(_startDateController.text);
-        final endDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(_endDateController.text);
+        final dates = _timeRangeController.text.split(' to ');
+        if (dates.length != 2) {
+          isValid = false;
+          if (!mounted) return;
+          ToastCustom.show(
+            context: context,
+            title: 'Lỗi',
+            description: 'Thời gian diễn ra không hợp lệ',
+            type: ToastificationType.error,
+          );
+          return;
+        }
+        final startDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(dates[0]);
+        final endDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(dates[1]);
         if (endDate.isBefore(startDate) || endDate.isAtSameMomentAs(startDate)) {
           isValid = false;
+          if (!mounted) return;
           ToastCustom.show(
-            context: currentContext,
+            context: context,
             title: 'Lỗi',
             description: 'Ngày kết thúc phải sau ngày bắt đầu',
             type: ToastificationType.error,
@@ -152,18 +198,20 @@ class CreateEventPageState extends State<CreateEventPage> {
         }
       } catch (e) {
         isValid = false;
+        if (!mounted) return;
         ToastCustom.show(
-          context: currentContext,
+          context: context,
           title: 'Lỗi',
-          description: 'Định dạng ngày không hợp lệ',
+          description: 'Định dạng thời gian không hợp lệ',
           type: ToastificationType.error,
         );
         return;
       }
     }
     if (!isValid) {
+      if (!mounted) return;
       ToastCustom.show(
-        context: currentContext,
+        context: context,
         title: 'Lỗi',
         description: 'Hãy điền đầy đủ thông tin bắt buộc trước khi tạo.',
         type: ToastificationType.error,
@@ -172,7 +220,7 @@ class CreateEventPageState extends State<CreateEventPage> {
     }
 
     final event = await viewModel.createEvent(
-      currentContext,
+      context,
       _formKey,
       organizerId: widget.organizerId,
       title: _titleController.text,
@@ -208,6 +256,7 @@ class CreateEventPageState extends State<CreateEventPage> {
           Navigator.of(context).pop();
         },
         onActionPressed: () {
+          if (!mounted) return;
           final viewModel = Provider.of<CreateEventViewModel>(context, listen: false);
           _submitEvent(context, viewModel);
         },
@@ -221,7 +270,7 @@ class CreateEventPageState extends State<CreateEventPage> {
             }
             if (viewModel.errorMessage != null) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (!context.mounted) return;
+                if (!mounted) return;
                 ToastCustom.show(
                   context: context,
                   title: viewModel.errorTitle ?? 'Lỗi',
@@ -234,7 +283,7 @@ class CreateEventPageState extends State<CreateEventPage> {
 
             if (viewModel.isCreateSuccessful) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (!context.mounted) return;
+                if (!mounted) return;
                 ToastCustom.show(
                   context: context,
                   title: 'Thành công',
@@ -242,7 +291,7 @@ class CreateEventPageState extends State<CreateEventPage> {
                   type: ToastificationType.success,
                 );
                 viewModel.clearCreateStatus();
-                if (context.mounted) {
+                if (mounted) {
                   Navigator.of(context).pop();
                 }
               });
@@ -322,8 +371,8 @@ class CreateEventPageState extends State<CreateEventPage> {
                       if (value == null || value.isEmpty) {
                         return 'Vui lòng nhập tổng quan';
                       }
-                      if (value.length < 10) {
-                        return 'Tổng quan phải có ít nhất 10 ký tự';
+                      if (value.length < 20) {
+                        return 'Tổng quan phải có ít nhất 20 ký tự';
                       }
                       return null;
                     },
@@ -332,54 +381,47 @@ class CreateEventPageState extends State<CreateEventPage> {
                     },
                   ),
                   CustomTextField(
-                    key: _startDateInputKey,
-                    label: "Ngày bắt đầu",
-                    hintText: "YYYY-MM-DD HH:mm:ss",
+                    key: _timeRangeInputKey,
+                    label: "Thời gian diễn ra",
+                    hintText: "YYYY-MM-DD HH:mm:ss to YYYY-MM-DD HH:mm:ss",
                     isRequired: true,
                     isBold: true,
-                    controller: _startDateController,
+                    controller: _timeRangeController,
                     readOnly: true,
-                    onTap: () => _pickDateTime(context, viewModel, true),
+                    onTap: () async {
+                      final pickedRange = await _pickDateTimeRange();
+                      if (pickedRange != null && mounted) {
+                        final viewModel = Provider.of<CreateEventViewModel>(context, listen: false);
+                        final timeRange =
+                            '${DateFormat('yyyy-MM-dd HH:mm:ss').format(pickedRange['start']!)} to ${DateFormat('yyyy-MM-dd HH:mm:ss').format(pickedRange['end']!)}';
+                        viewModel.setTimeRange(timeRange);
+                        setState(() {
+                          _timeRangeController.text = timeRange;
+                          _timeRangeInputKey.currentState?.validate();
+                        });
+                      }
+                    },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Vui lòng chọn ngày bắt đầu';
+                        return 'Vui lòng chọn thời gian diễn ra';
                       }
-                      return null;
-                    },
-                    onChanged: (value) {
-                      _startDateInputKey.currentState?.validate();
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  CustomTextField(
-                    key: _endDateInputKey,
-                    label: "Ngày kết thúc",
-                    hintText: "YYYY-MM-DD HH:mm:ss",
-                    isRequired: true,
-                    isBold: true,
-                    controller: _endDateController,
-                    readOnly: true,
-                    onTap: () => _pickDateTime(context, viewModel, false),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Vui lòng chọn ngày kết thúc';
+                      final dates = value.split(' to ');
+                      if (dates.length != 2) {
+                        return 'Thời gian diễn ra không hợp lệ';
                       }
-                      final startDateText = _startDateController.text;
-                      if (startDateText.isNotEmpty) {
-                        try {
-                          final startDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(startDateText);
-                          final endDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(value);
-                          if (endDate.isBefore(startDate) || endDate.isAtSameMomentAs(startDate)) {
-                            return 'Ngày kết thúc phải sau ngày bắt đầu';
-                          }
-                        } catch (e) {
-                          return 'Định dạng ngày không hợp lệ';
+                      try {
+                        final startDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(dates[0]);
+                        final endDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(dates[1]);
+                        if (endDate.isBefore(startDate) || endDate.isAtSameMomentAs(startDate)) {
+                          return 'Ngày kết thúc phải sau ngày bắt đầu';
                         }
+                      } catch (e) {
+                        return 'Định dạng thời gian không hợp lệ';
                       }
                       return null;
                     },
                     onChanged: (value) {
-                      _endDateInputKey.currentState?.validate();
+                      _timeRangeInputKey.currentState?.validate();
                     },
                   ),
                   Text("Vị trí", style: AppTextStyles.bold),
@@ -558,15 +600,6 @@ class CreateEventPageState extends State<CreateEventPage> {
                   Container(
                     width: double.infinity,
                     height: 120,
-                    decoration: BoxDecoration(
-                      color: AppColors.skeleton,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    width: double.infinity,
-                    height: 56,
                     decoration: BoxDecoration(
                       color: AppColors.skeleton,
                       borderRadius: BorderRadius.circular(8),
