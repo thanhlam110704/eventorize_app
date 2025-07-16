@@ -19,6 +19,7 @@ import 'package:eventorize_app/features/auth/user_view/ticket_detail_page.dart';
 import 'package:eventorize_app/features/auth/user_view/privacy_policy_page.dart';
 import 'package:eventorize_app/features/auth/user_view/terms_of_service_page.dart';
 import 'package:eventorize_app/features/auth/organization_view/select_org_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/create_org_page.dart';
 import 'package:eventorize_app/features/auth/organization_view/org_info_page.dart';
 import 'package:eventorize_app/features/auth/organization_view/event_list_page.dart';
 import 'package:eventorize_app/features/auth/organization_view/create_event_page.dart';
@@ -154,6 +155,12 @@ class AppRouter {
         path: '/select-org',
         name: 'selectOrg',
         builder: (context, state) => const SelectOrgPage(),
+        redirect: (context, state) => _authGuard(context),
+      ),
+      GoRoute(
+        path: '/create-org',
+        name: 'createOrg',
+        builder: (context, state) => const CreateOrgPage(),
         redirect: (context, state) => _authGuard(context),
       ),
       GoRoute(

@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:get_it/get_it.dart';
 import 'package:eventorize_app/data/models/ticket.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 final getIt = GetIt.instance;
 
@@ -113,10 +114,10 @@ class TicketListPageState extends State<TicketListPage> {
       width: screenSize.width,
       color: AppColors.whiteBackground,
       padding: EdgeInsets.fromLTRB(
-        0, // Left padding
-        5, // Top padding
-        0, // Right padding
-        5, // Bottom padding
+        0,
+        5,
+        0,
+        5,
       ),
       child: Center(
         child: ConstrainedBox(
@@ -146,10 +147,22 @@ class TicketListPageState extends State<TicketListPage> {
       );
     }
     if (viewModel.tickets.isEmpty) {
-      return const Center(
-        child: Text(
-          'Không có vé nào',
-          style: AppTextStyles.text,
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Không có vé',
+              style: AppTextStyles.text,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 50),
+            SvgPicture.asset(
+              'assets/icons/no_data.svg',
+              width: 100,
+              height: 100,
+            ),
+          ],
         ),
       );
     }

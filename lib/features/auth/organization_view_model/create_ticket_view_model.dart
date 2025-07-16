@@ -72,7 +72,7 @@ class CreateTicketViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final dates = _saleDateRange!.split(' to ');
+      final dates = _saleDateRange!.split(' - ');
       if (dates.length != 2) {
         errorState.errorTitle = 'Lỗi';
         errorState.errorMessage = 'Thời gian bán vé không hợp lệ';

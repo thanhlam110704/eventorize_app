@@ -11,13 +11,13 @@ class EditTicketViewModel extends ChangeNotifier {
   final SessionManager _sessionManager;
 
   Ticket? _ticket;
-  String? _saleDateRange; // Changed to String
+  String? _saleDateRange; 
   bool _isLoading = false;
   bool _isUpdateSuccessful = false;
   final ErrorState errorState = ErrorState();
 
   Ticket? get ticket => _ticket;
-  String? get saleDateRange => _saleDateRange; // Updated getter
+  String? get saleDateRange => _saleDateRange;
   bool get isLoading => _isLoading;
   bool get isUpdateSuccessful => _isUpdateSuccessful;
   String? get errorMessage => errorState.errorMessage;
@@ -99,7 +99,7 @@ class EditTicketViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final dates = _saleDateRange!.split(' to ');
+      final dates = _saleDateRange!.split(' - ');
       if (dates.length != 2) {
         errorState.errorTitle = 'Lỗi';
         errorState.errorMessage = 'Thời gian bán vé không hợp lệ';
@@ -141,8 +141,8 @@ class EditTicketViewModel extends ChangeNotifier {
           title: title,
           description: description,
           quantity: quantity,
-          startSaleDate: startSaleDate, // Pass as String
-          endSaleDate: endSaleDate, // Pass as String
+          startSaleDate: startSaleDate, 
+          endSaleDate: endSaleDate,
           price: price,
           minPerUser: minPerUser,
           maxPerUser: maxPerUser,

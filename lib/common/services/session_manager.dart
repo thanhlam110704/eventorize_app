@@ -3,6 +3,8 @@ import 'package:eventorize_app/core/utils/exceptions.dart';
 import 'package:eventorize_app/data/models/user.dart';
 import 'package:eventorize_app/data/repositories/user_repository.dart';
 import 'package:eventorize_app/common/services/secure_storage.dart';
+import 'package:eventorize_app/features/auth/organization_view_model/select_org_view_model.dart';
+import 'package:get_it/get_it.dart';
 
 class SessionManager extends ChangeNotifier {
   final UserRepository _userRepository;
@@ -39,6 +41,9 @@ class SessionManager extends ChangeNotifier {
         throw Exception('Không tìm thấy token');
       }
       _user = await _userRepository.getMe();
+     
+      final selectOrgViewModel = GetIt.instance<SelectOrgViewModel>();
+      await selectOrgViewModel.resetAndFetchOrganizers();
     } catch (e) {
       ErrorHandler.handleError(e, 'Kiểm tra phiên thất bại', _errorState);
     } finally {
@@ -67,6 +72,9 @@ class SessionManager extends ChangeNotifier {
       _selectedOrganizerName = null;
       _selectedOrganizerLogo = null;
       _selectedOrganizerEmail = null;
+      // Reset SelectOrgViewModel state on logout
+      final selectOrgViewModel = GetIt.instance<SelectOrgViewModel>();
+      selectOrgViewModel.resetState();
       notifyListeners();
     } catch (e) {
       ErrorHandler.handleError(e, 'Đăng xuất thất bại', _errorState);
@@ -85,6 +93,9 @@ class SessionManager extends ChangeNotifier {
     try {
       await SecureStorage.saveToken(token);
       _user = await _userRepository.getMe();
+      // Notify SelectOrgViewModel to fetch organizers for the new user
+      final selectOrgViewModel = GetIt.instance<SelectOrgViewModel>();
+      await selectOrgViewModel.resetAndFetchOrganizers();
     } catch (e) {
       ErrorHandler.handleError(e, 'Thiết lập người dùng từ token thất bại', _errorState);
       _user = null;

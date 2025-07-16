@@ -42,6 +42,7 @@ class SelectOrgViewModel extends ChangeNotifier {
     try {
       final response = await _organizerRepository.getAll();
       _organizers = response['data'] as List<Organizer>;
+      _selectedOrganizerId = _sessionManager.selectedOrganizerId;
       ErrorHandler.clearError(_errorState);
     } catch (e) {
       ErrorHandler.handleError(e, 'Lỗi khi tải danh sách nhà tổ chức', _errorState);
@@ -79,6 +80,18 @@ class SelectOrgViewModel extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  void resetState() {
+    _organizers = [];
+    _selectedOrganizerId = null;
+    ErrorHandler.clearError(_errorState);
+    notifyListeners();
+  }
+
+  Future<void> resetAndFetchOrganizers() async {
+    resetState();
+    await fetchOrganizers();
   }
 
   void clearError() {

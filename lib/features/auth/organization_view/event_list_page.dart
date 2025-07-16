@@ -13,6 +13,7 @@ import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/common/components/custom_event_menu.dart';
 import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:get_it/get_it.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 final getIt = GetIt.instance;
 
@@ -173,10 +174,22 @@ class EventListPageState extends State<EventListPage> {
       );
     }
     if (viewModel.events.isEmpty) {
-      return const Center(
-        child: Text(
-          'Không có sự kiện nào',
-          style: AppTextStyles.text,
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Không có sự kiện',
+              style: AppTextStyles.text,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 50),
+            SvgPicture.asset(
+              'assets/icons/no_data.svg',
+              width: 100,
+              height: 100,
+            ),
+          ],
         ),
       );
     }

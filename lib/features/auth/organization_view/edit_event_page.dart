@@ -172,7 +172,7 @@ class EditEventPageState extends State<EditEventPage> {
   }
   if (_timeRangeController.text.isNotEmpty) {
     try {
-      final dates = _timeRangeController.text.split(' to ');
+      final dates = _timeRangeController.text.split(' - ');
       if (dates.length != 2) {
         isValid = false;
         if (mounted) {

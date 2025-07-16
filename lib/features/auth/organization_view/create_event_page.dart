@@ -405,7 +405,7 @@ class CreateEventPageState extends State<CreateEventPage> {
                       if (value == null || value.isEmpty) {
                         return 'Vui lòng chọn thời gian diễn ra';
                       }
-                      final dates = value.split(' to ');
+                      final dates = value.split(' - ');
                       if (dates.length != 2) {
                         return 'Thời gian diễn ra không hợp lệ';
                       }

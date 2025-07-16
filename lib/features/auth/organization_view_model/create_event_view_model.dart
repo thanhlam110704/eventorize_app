@@ -92,7 +92,7 @@ class CreateEventViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      List<String> dates = _timeRange?.split(' to ') ?? [];
+      List<String> dates = _timeRange?.split(' - ') ?? [];
       if (dates.length != 2) {
         errorState.errorTitle = 'Lỗi';
         errorState.errorMessage = 'Thời gian diễn ra không hợp lệ';

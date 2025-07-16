@@ -7,9 +7,11 @@ import 'package:eventorize_app/common/components/top_nav_org_bar.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:eventorize_app/features/auth/organization_view_model/select_org_view_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
+import 'package:get_it/get_it.dart';
 
 class SelectOrgPage extends StatefulWidget {
   const SelectOrgPage({super.key});
@@ -21,6 +23,18 @@ class SelectOrgPage extends StatefulWidget {
 class _SelectOrgPageState extends State<SelectOrgPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool showPopup = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final sessionManager = GetIt.instance<SessionManager>();
+      final viewModel = Provider.of<SelectOrgViewModel>(context, listen: false);
+      if (sessionManager.user != null) {
+        viewModel.resetAndFetchOrganizers();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,21 +52,44 @@ class _SelectOrgPageState extends State<SelectOrgPage> {
             actionIcon: Icons.search,
             onActionPressed: null,
           ),
-          
           body: SafeArea(
             child: Consumer<SelectOrgViewModel>(
               builder: (context, viewModel, _) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (mounted) _handleErrors(context, sessionManager, viewModel);
+                  if (sessionManager.user != null &&
+                      !viewModel.isLoading &&
+                      viewModel.organizers.isEmpty) {
+                    context.go('/create-org');
+                  }
                 });
 
                 if (sessionManager.isCheckingSession ||
                     sessionManager.isLoading ||
                     viewModel.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Stack(
+                    children: [
+                      const SizedBox.expand(),
+                      Positioned.fill(
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 3.0, sigmaY: 3.0),
+                          child: Container(
+                            color: Colors.black.withAlpha(128),
+                            child: const Center(
+                              child: SpinKitFadingCircle(
+                                color: AppColors.white,
+                                size: 50.0,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
                 }
 
-                if (sessionManager.user == null) {
+
+                if (viewModel.organizers.isEmpty) {
                   return const SizedBox.shrink();
                 }
 
@@ -76,18 +113,6 @@ class _SelectOrgPageState extends State<SelectOrgPage> {
     SessionManager session,
     SelectOrgViewModel viewModel,
   ) {
-    if (session.errorMessage != null) {
-      ToastCustom.show(
-        context: context,
-        title: session.errorTitle ?? 'Lỗi',
-        description: session.errorMessage!,
-        type: ToastificationType.error,
-      );
-      session.clearError();
-      if (!session.isLoading && session.user == null) {
-        context.pushReplacementNamed('login');
-      }
-    }
 
     if (viewModel.errorMessage != null) {
       ToastCustom.show(
@@ -116,7 +141,7 @@ class _SelectOrgPageState extends State<SelectOrgPage> {
       children: [
         Positioned.fill(
           child: GestureDetector(
-            onTap: () {}, 
+            onTap: () {},
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 3.0, sigmaY: 3.0),
               child: Container(
@@ -178,7 +203,7 @@ class _SelectOrgPageState extends State<SelectOrgPage> {
                               .firstWhere((org) => org.name == value);
                           await viewModel.selectOrganizer(selectedOrg.id);
                           await Future.delayed(const Duration(milliseconds: 100));
-                          if (mounted) context.push('/event-list');
+                          if (mounted) context.go('/event-list');
                         } catch (_) {
                           if (mounted) {
                             ToastCustom.show(
