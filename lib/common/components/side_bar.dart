@@ -146,7 +146,7 @@ class CustomDrawer extends StatelessWidget {
                     text: "Danh sách đơn hàng",
                     selected: currentPage == AppPage.orderList,
                     onTap: () {
-                      context.go('/ticket-list');
+                      context.go('/order-list');
                     },
                   ),
                   _buildDrawerItem(

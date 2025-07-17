@@ -1,12 +1,13 @@
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:flutter/material.dart';
 
-class TopNavOrgBar extends StatelessWidget implements PreferredSizeWidget {
+class TopNavOrgBar extends StatefulWidget implements PreferredSizeWidget {
   final IconData leadingIcon;
   final VoidCallback? onLeadingPressed;
   final String title;
   final IconData? actionIcon;
   final VoidCallback? onActionPressed;
+  final ValueChanged<String>? onSearchChanged;
 
   const TopNavOrgBar({
     super.key,
@@ -15,7 +16,37 @@ class TopNavOrgBar extends StatelessWidget implements PreferredSizeWidget {
     this.onLeadingPressed,
     this.actionIcon,
     this.onActionPressed,
+    this.onSearchChanged,
   });
+
+  @override
+  TopNavOrgBarState createState() => TopNavOrgBarState();
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
+
+class TopNavOrgBarState extends State<TopNavOrgBar> {
+  bool _isSearchActive = false;
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _isSearchActive = !_isSearchActive;
+      if (!_isSearchActive) {
+        _searchController.clear();
+        if (widget.onSearchChanged != null) {
+          widget.onSearchChanged!('');
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,22 +60,43 @@ class TopNavOrgBar extends StatelessWidget implements PreferredSizeWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             IconButton(
-              icon: Icon(leadingIcon, color: Colors.white),
-              onPressed: onLeadingPressed, 
+              icon: Icon(widget.leadingIcon, color: Colors.white),
+              onPressed: widget.onLeadingPressed,
             ),
             Expanded(
-              child: Container(
-                alignment: Alignment.center,
-                child: Text(
-                  title,
-                  style: AppTextStyles.bold.copyWith(fontSize: 25, color: Colors.white),
-                ),
-              ),
+              child: _isSearchActive
+                  ? TextField(
+                      controller: _searchController,
+                      style: AppTextStyles.text.copyWith(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: 'Tìm kiếm...',
+                        hintStyle: AppTextStyles.text.copyWith(color: Colors.white70),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
+                      onChanged: widget.onSearchChanged,
+                      autofocus: true,
+                    )
+                  : Container(
+                      alignment: Alignment.center,
+                      child: Text(
+                        widget.title,
+                        style: AppTextStyles.bold.copyWith(fontSize: 25, color: Colors.white),
+                      ),
+                    ),
             ),
-            if (actionIcon != null)
+            if (widget.actionIcon != null)
               IconButton(
-                icon: Icon(actionIcon, color: Colors.white),
-                onPressed: onActionPressed,
+                icon: Icon(
+                  _isSearchActive ? Icons.close : widget.actionIcon,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  _toggleSearch();
+                  if (!_isSearchActive && widget.onActionPressed != null) {
+                    widget.onActionPressed!();
+                  }
+                },
               )
             else
               const SizedBox(width: 48),
@@ -53,7 +105,4 @@ class TopNavOrgBar extends StatelessWidget implements PreferredSizeWidget {
       ),
     );
   }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

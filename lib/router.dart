@@ -27,6 +27,7 @@ import 'package:eventorize_app/features/auth/organization_view/edit_event_page.d
 import 'package:eventorize_app/features/auth/organization_view/ticket_list_page.dart';
 import 'package:eventorize_app/features/auth/organization_view/create_ticket_page.dart';
 import 'package:eventorize_app/features/auth/organization_view/edit_ticket_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/order_list_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -211,16 +212,31 @@ class AppRouter {
         },
         redirect: (context, state) => _authGuard(context),
       ),
-     GoRoute(
-      path: '/edit-ticket/:eventId/:ticketId',
-      name: 'editTicket',
-      builder: (context, state) {
-        final eventId = state.pathParameters['eventId']!;
-        final ticketId = state.pathParameters['ticketId']!;
-        return EditTicketPage(eventId: eventId, ticketId: ticketId);
-      },
-      redirect: (context, state) => _authGuard(context),
-    )
+      GoRoute(
+        path: '/edit-ticket/:eventId/:ticketId',
+        name: 'editTicket',
+        builder: (context, state) {
+          final eventId = state.pathParameters['eventId']!;
+          final ticketId = state.pathParameters['ticketId']!;
+          return EditTicketPage(eventId: eventId, ticketId: ticketId);
+        },
+        redirect: (context, state) => _authGuard(context),
+      ),
+      GoRoute(
+        path: '/order-list',
+        name: 'orderList',
+        builder: (context, state) => const OrderListPage(),
+        redirect: (context, state) => _authGuard(context),
+      ),
+      /* GoRoute(
+        path: '/order/:orderId',
+        name: 'orderDetail',
+        builder: (context, state) {
+          final orderId = state.pathParameters['orderId']!;
+          return OrderDetailPage(orderId: orderId);
+        },
+        redirect: (context, state) => _authGuard(context),
+      ) */
     ],
     errorBuilder: (context, state) => Scaffold(
       body: Center(

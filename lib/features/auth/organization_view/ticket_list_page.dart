@@ -99,9 +99,7 @@ class TicketListPageState extends State<TicketListPage> {
                 }
               });
 
-              return SingleChildScrollView(
-                child: buildMainContainer(isSmallScreen, screenSize, viewModel),
-              );
+              return buildMainContainer(isSmallScreen, screenSize, viewModel);
             },
           ),
         ),
@@ -113,24 +111,22 @@ class TicketListPageState extends State<TicketListPage> {
     return Container(
       width: screenSize.width,
       color: AppColors.whiteBackground,
-      padding: EdgeInsets.fromLTRB(
-        0,
-        5,
-        0,
-        5,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: maxContentWidth),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              buildTicketList(viewModel),
-              const SizedBox(height: 80),
-            ],
-          ),
-        ),
-      ),
+      padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
+      child: viewModel.tickets.isEmpty && !viewModel.isLoading
+          ? buildTicketList(viewModel)
+          : SingleChildScrollView(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: maxContentWidth),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      buildTicketList(viewModel),
+                    ],
+                  ),
+                ),
+              ),
+            ),
     );
   }
 
@@ -140,27 +136,36 @@ class TicketListPageState extends State<TicketListPage> {
         children: List.generate(
           7,
           (index) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: buildSkeletonCard(),
           ),
         ),
       );
     }
     if (viewModel.tickets.isEmpty) {
-      return Center(
+      return Container(
+        height: MediaQuery.of(context).size.height,
+        alignment: Alignment.center,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'Không có vé',
-              style: AppTextStyles.text,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 50),
             SvgPicture.asset(
               'assets/icons/no_data.svg',
               width: 100,
               height: 100,
+              fit: BoxFit.contain,
+              placeholderBuilder: (context) => Container(
+                width: 100,
+                height: 100,
+                color: AppColors.grey.withValues(alpha: 0.5),
+                child: const Icon(Icons.error),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Không có vé',
+              style: AppTextStyles.text,
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -174,136 +179,117 @@ class TicketListPageState extends State<TicketListPage> {
       itemCount: viewModel.tickets.length,
       itemBuilder: (context, index) {
         final ticket = viewModel.tickets[index];
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: buildTicketItem(index, ticket),
+        return Column(
+          children: [
+            buildTicketItem(index, ticket),
+            const Divider(height: 1, thickness: 1, color: Colors.black12),
+          ],
         );
       },
     );
   }
 
   Widget buildSkeletonCard() {
-    return Column(
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          child: Stack(
+        Container(
+          width: 24,
+          height: 24,
+          color: AppColors.grey.withValues(alpha: 0.3),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Container(
+                width: 80,
+                height: 16,
+                color: AppColors.grey.withValues(alpha: 0.3),
+              ),
+              const SizedBox(height: 10),
               Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
-                    width: 24,
-                    height: 24,
+                    width: 120,
+                    height: 12,
                     color: AppColors.grey.withValues(alpha: 0.3),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 80,
-                          height: 16,
-                          color: AppColors.grey.withValues(alpha: 0.3),
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Container(
-                              width: 120,
-                              height: 12,
-                              color: AppColors.grey.withValues(alpha: 0.3),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
-              ),
-              Positioned(
-                right: 0,
-                top: 0,
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  color: AppColors.grey.withValues(alpha: 0.3),
-                ),
               ),
             ],
           ),
         ),
-        const Divider(height: 1, thickness: 1, color: Colors.black12),
+        Container(
+          width: 24,
+          height: 24,
+          color: AppColors.grey.withValues(alpha: 0.3),
+        ),
       ],
     );
   }
 
   Widget buildTicketItem(int index, Ticket ticket) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          child: Stack(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Stack(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 24,
-                    child: Text(
-                      '${index + 1}',
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.bold,
+              SizedBox(
+                width: 24,
+                child: Text(
+                  '${index + 1}',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.bold,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      ticket.title,
+                      style: AppTextStyles.semibold,
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    const SizedBox(height: 2),
+                    Row(
                       children: [
                         Text(
-                          ticket.title,
-                          style: AppTextStyles.semibold,
+                          ticket.price == 0 ? 'Miễn phí' : '${ticket.price} VND',
+                          style: AppTextStyles.text.copyWith(color: Colors.red, fontSize: 13),
                         ),
-                        const SizedBox(height: 2),
-                        Row(
-                          children: [
-                            Text(
-                              ticket.price == 0 ? 'Miễn phí' : '${ticket.price} VND',
-                              style: AppTextStyles.text.copyWith(color: Colors.red, fontSize: 13),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Số lượng: ${ticket.quantity}',
-                              style: AppTextStyles.text.copyWith(fontSize: 13),
-                            ),
-                          ],
+                        const SizedBox(width: 8),
+                        Text(
+                          'Số lượng: ${ticket.quantity}',
+                          style: AppTextStyles.text.copyWith(fontSize: 13),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-              Positioned(
-                right: 0,
-                top: 0,
-                child: Builder(
-                  builder: (context) => IconButton(
-                    icon: const Icon(Icons.more_vert, color: Colors.black54),
-                    onPressed: () {
-                      final RenderBox box = context.findRenderObject() as RenderBox;
-                      final position = box.localToGlobal(Offset.zero);
-                      showEventMenu(context, position, ticket);
-                    },
-                  ),
+                  ],
                 ),
               ),
             ],
           ),
-        ),
-        const Divider(height: 1, thickness: 1, color: Colors.black12),
-      ],
+          Positioned(
+            right: 0,
+            top: 0,
+            child: Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.more_vert, color: Colors.black54),
+                onPressed: () {
+                  final RenderBox box = context.findRenderObject() as RenderBox;
+                  final position = box.localToGlobal(Offset.zero);
+                  showEventMenu(context, position, ticket);
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

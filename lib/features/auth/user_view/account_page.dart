@@ -410,16 +410,6 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
         ),
         const SizedBox(height: 15),
         buildSettingItem(
-          icon: Icons.account_circle,
-          title: 'Liên kết tài khoản',
-          onTap: () {},
-          iconColor: AppColors.black,
-          textColor: AppColors.black,
-          showTrailing: true,
-        ),
-        buildDivider(),
-        const SizedBox(height: 15),
-        buildSettingItem(
           icon: Icons.apartment_outlined,
           title: 'Nhà tổ chức',
           onTap: () {
@@ -460,7 +450,7 @@ class AccountPageState extends State<AccountPage> with SingleTickerProviderState
           showTrailing: true,
         ),
         buildDivider(),
-        const SizedBox(height: 80),
+        const SizedBox(height: 150),
         SizedBox(
           width: double.infinity,
           child: OutlinedButton(

@@ -112,12 +112,10 @@ class EventListPageState extends State<EventListPage> {
                 }
               });
 
-              return SingleChildScrollView(
-                child: buildMainContainer(
-                  MediaQuery.of(context).size.width <= smallScreenThreshold,
-                  MediaQuery.of(context).size,
-                  viewModel,
-                ),
+              return buildMainContainer(
+                MediaQuery.of(context).size.width <= smallScreenThreshold,
+                MediaQuery.of(context).size,
+                viewModel,
               );
             },
           ),
@@ -142,22 +140,25 @@ class EventListPageState extends State<EventListPage> {
         isSmallScreen ? 16 : 24,
         isSmallScreen ? 24 : 32,
       ),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.only(left: 10),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: maxContentWidth),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 10),
-                buildEventList(viewModel),
-                const SizedBox(height: 80),
-              ],
+      child: viewModel.events.isEmpty && !viewModel.isLoading
+          ? buildEventList(viewModel)
+          : SingleChildScrollView(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 10),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: maxContentWidth),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 10),
+                        buildEventList(viewModel),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -174,20 +175,29 @@ class EventListPageState extends State<EventListPage> {
       );
     }
     if (viewModel.events.isEmpty) {
-      return Center(
+      return Container(
+        height: MediaQuery.of(context).size.height,
+        alignment: Alignment.center,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'Không có sự kiện',
-              style: AppTextStyles.text,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 50),
             SvgPicture.asset(
               'assets/icons/no_data.svg',
               width: 100,
               height: 100,
+              fit: BoxFit.contain,
+              placeholderBuilder: (context) => Container(
+                width: 100,
+                height: 100,
+                color: AppColors.grey.withValues(alpha: 0.5),
+                child: const Icon(Icons.error),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Không có sự kiện',
+              style: AppTextStyles.text,
+              textAlign: TextAlign.center,
             ),
           ],
         ),

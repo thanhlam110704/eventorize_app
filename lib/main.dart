@@ -20,6 +20,7 @@ import 'package:eventorize_app/features/auth/organization_view_model/ticket_list
 import 'package:eventorize_app/features/auth/organization_view_model/create_ticket_view_model.dart';
 import 'package:eventorize_app/features/auth/organization_view_model/edit_ticket_view_model.dart';
 import 'package:eventorize_app/features/auth/organization_view_model/create_org_view_model.dart';
+import 'package:eventorize_app/features/auth/organization_view_model/order_list_view_model.dart';
 import 'package:eventorize_app/core/utils/datetime_convert.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -103,6 +104,12 @@ void setupDependencies() {
   getIt.registerSingleton<TicketListViewModel>(
     TicketListViewModel(
       ticketRepository: getIt<TicketRepository>(),
+      sessionManager: getIt<SessionManager>(),
+    ),
+  );
+  getIt.registerSingleton<OrderListViewModel>(
+    OrderListViewModel(
+      orderRepository: getIt<OrderRepository>(),
       sessionManager: getIt<SessionManager>(),
     ),
   );
@@ -257,6 +264,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<CreateOrgViewModel>(
           create: (_) => getIt<CreateOrgViewModel>(),
+        ),
+        ChangeNotifierProvider<OrderListViewModel>(
+          create: (_) => getIt<OrderListViewModel>(),
         ),
       ],
       child: MaterialApp.router(
