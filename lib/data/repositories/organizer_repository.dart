@@ -27,14 +27,22 @@ class OrganizerRepository {
     );
   }
 
+  Future<List<Organizer>> exportOrganizers() async {
+    return await _organizerApi.exportOrganizers();
+  }
+
   Future<Organizer> getDetail(String id, {String? fields}) async {
     return await _organizerApi.getDetail(id, fields: fields);
   }
 
+  Future<Organizer> getDetailPublic(String id, {String? fields}) async {
+    return await _organizerApi.getDetailPublic(id, fields: fields);
+  }
+
   Future<Organizer> create({
     required String name,
-    String? logo,
     required String email,
+    String? logo,
     String? phone,
     String? description,
     String? country,
@@ -49,8 +57,8 @@ class OrganizerRepository {
   }) async {
     return await _organizerApi.create(
       name: name,
-      logo: logo,
       email: email,
+      logo: logo,
       phone: phone,
       description: description,
       country: country,
@@ -68,8 +76,8 @@ class OrganizerRepository {
   Future<Organizer> edit(
     String id, {
     String? name,
-    String? logo,
     String? email,
+    String? logo,
     String? phone,
     String? description,
     String? country,
@@ -84,8 +92,8 @@ class OrganizerRepository {
     return await _organizerApi.edit(
       id,
       name: name,
-      logo: logo,
       email: email,
+      logo: logo,
       phone: phone,
       description: description,
       country: country,
@@ -99,12 +107,12 @@ class OrganizerRepository {
     );
   }
 
-  Future<Organizer> editLogo({
+  Future<Organizer> editThumbnail({
     required String id,
     MultipartFile? file,
     String? imageUrl,
   }) async {
-    return await _organizerApi.editLogo(
+    return await _organizerApi.editThumbnail(
       id: id,
       file: file,
       imageUrl: imageUrl,
@@ -113,9 +121,5 @@ class OrganizerRepository {
 
   Future<void> delete(String id) async {
     await _organizerApi.delete(id);
-  }
-
-  Future<Map<String, dynamic>> exportOrganizers() async {
-    return await _organizerApi.exportOrganizers();
   }
 }

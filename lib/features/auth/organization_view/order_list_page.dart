@@ -1,7 +1,6 @@
 import 'package:eventorize_app/common/components/side_bar.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/components/top_nav_org_bar.dart';
-import 'package:eventorize_app/common/components/custom_event_menu.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
 import 'package:flutter/material.dart';
 
@@ -98,12 +97,6 @@ class OrderListPageState extends State<OrderListPage> {
                   ],
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.more_vert, color: Colors.black),
-                onPressed: () {
-                  // 
-                },
-              ),
             ],
           ),
         ),
@@ -111,9 +104,7 @@ class OrderListPageState extends State<OrderListPage> {
       ],
     );
   }
-
-
-
+  
   Widget buildOrderList() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,33 +113,6 @@ class OrderListPageState extends State<OrderListPage> {
         (index) => buildOrderItem(index, tickets[index]),
       ),
     ); 
-  }
-
-  void showEventMenu(BuildContext context, Offset position, VoidCallback onEdit, VoidCallback onDelete) {
-    final overlay = Overlay.of(context);
-    final entry = OverlayEntry(
-      builder: (context) => Positioned(
-        top: position.dy + 40,
-        left: position.dx - 80,
-        child: Material(
-          color: Colors.transparent,
-          child: CustomEventMenu(onEdit: onEdit, onDelete: onDelete),
-        ),
-      ),
-    );
-    overlay.insert(entry);
-
-    Future.delayed(Duration.zero, () {
-      if (!context.mounted) return;
-      showDialog(
-        context: context,
-        barrierColor: Colors.transparent,
-        builder: (_) => GestureDetector(
-          onTap: () => Navigator.of(context).pop(),
-          child: const SizedBox.expand(),
-        ),
-      ).then((_) => entry.remove());
-    });
   }
 }
 

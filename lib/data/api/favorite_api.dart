@@ -10,25 +10,25 @@ class FavoriteApi {
 
   Future<Favorite> getMyFavoriteEvents() async {
     try {
-      final response = await _dioClient.get(ApiUrl.getFavorites);
+      final response = await _dioClient.get(ApiUrl.getMyFavoriteEvents);
       return Favorite.fromJson(response.data);
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to fetch favorite events: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Lấy danh sách sự kiện yêu thích thất bại: $errorMessage');
     } catch (e) {
-      throw Exception('Failed to fetch favorite events: $e');
+      throw Exception('Lấy danh sách sự kiện yêu thích thất bại: $e');
     }
   }
 
   Future<Favorite> addEventFavorite({required String eventId}) async {
     try {
-      final response = await _dioClient.post(ApiUrl.addEventFavorite(eventId),);
+      final response = await _dioClient.post(ApiUrl.addEventFavorite(eventId));
       return Favorite.fromJson(response.data);
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to create favorite: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Thêm sự kiện yêu thích thất bại: $errorMessage');
     } catch (e) {
-      throw Exception('Failed to create favorite: $e');
+      throw Exception('Thêm sự kiện yêu thích thất bại: $e');
     }
   }
 
@@ -37,10 +37,10 @@ class FavoriteApi {
       final response = await _dioClient.delete(ApiUrl.removeEventFavorite(eventId));
       return Favorite.fromJson(response.data);
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to delete favorite: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Xóa sự kiện yêu thích thất bại: $errorMessage');
     } catch (e) {
-      throw Exception('Failed to delete favorite: $e');
+      throw Exception('Xóa sự kiện yêu thích thất bại: $e');
     }
   }
 }

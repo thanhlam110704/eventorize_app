@@ -5,7 +5,6 @@ import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/components/custom_fields.dart';
 import 'package:eventorize_app/common/components/top_nav_org_bar.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
-import 'package:eventorize_app/data/api/organizer_api.dart';
 import 'package:eventorize_app/features/auth/organization_view_model/create_org_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,8 +12,6 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
 import 'package:provider/provider.dart';
-import 'package:eventorize_app/data/repositories/organizer_repository.dart';
-import 'package:eventorize_app/common/services/dio_client.dart';
 import 'dart:developer' as developer;
 import 'package:toastification/toastification.dart';
 import 'dart:io';
@@ -35,7 +32,6 @@ class CreateOrgPageState extends State<CreateOrgPage> {
   final emailController = TextEditingController();
   final phoneController = TextEditingController();
   final overviewController = TextEditingController();
-  final addressController = TextEditingController();
   final facebookController = TextEditingController();
   final twitterController = TextEditingController();
   final instagramController = TextEditingController();
@@ -92,7 +88,7 @@ class CreateOrgPageState extends State<CreateOrgPage> {
               description: 'Tạo nhà tổ chức thành công!',
               type: ToastificationType.success,
             );
-            context.go('/eventlist');
+            context.go('/event-list');
           } else if (viewModel.errorMessage != null && context.mounted) {
             developer.log('Toast error: ${viewModel.errorMessage}');
             ToastCustom.show(
@@ -128,15 +124,18 @@ class CreateOrgPageState extends State<CreateOrgPage> {
           if (sessionManager.user == null) {
             return const SizedBox.shrink();
           }
-          return ChangeNotifierProvider(
-            create: (_) => CreateOrgViewModel(
-              organizerRepository: OrganizerRepository(OrganizerApi(DioClient())),
-              sessionManager: sessionManager,
-            ),
-            child: Consumer<CreateOrgViewModel>(
-              builder: (context, viewModel, _) => SingleChildScrollView(
-                child: buildMainContainer(viewModel),
-              ),
+          return Consumer<CreateOrgViewModel>(
+            builder: (context, viewModel, _) => Stack(
+              children: [
+                SingleChildScrollView(
+                  child: buildMainContainer(viewModel),
+                ),
+                if (viewModel.isLoading || viewModel.isLoadingCity || viewModel.isLoadingDistrict || viewModel.isLoadingWard)
+                  Container(
+                    color: Colors.black.withOpacity(0.5),
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
+              ],
             ),
           );
         },
@@ -153,13 +152,13 @@ class CreateOrgPageState extends State<CreateOrgPage> {
       color: AppColors.whiteBackground,
       padding: EdgeInsets.fromLTRB(
         isSmallScreen ? 16 : 24,
-        isSmallScreen ? 100 : 150,
+        isSmallScreen ? 120 : 170,
         isSmallScreen ? 16 : 24,
         isSmallScreen ? 24 : 32,
       ),
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16,),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: maxContentWidth),
             child: Form(
@@ -217,7 +216,8 @@ class CreateOrgPageState extends State<CreateOrgPage> {
                   ),
                   buildLocationSection(viewModel),
                   buildSocialLinksSection(viewModel),
-                  if (viewModel.isLoading) const Center(child: CircularProgressIndicator()),
+                  if (viewModel.isLoading && !viewModel.isLoadingCity && !viewModel.isLoadingDistrict && !viewModel.isLoadingWard)
+                    const Center(child: CircularProgressIndicator()),
                 ],
               ),
             ),
@@ -299,26 +299,41 @@ class CreateOrgPageState extends State<CreateOrgPage> {
               CustomDropdownField(
                 label: "Thành phố",
                 hintText: "Chọn thành phố",
-                items: const ["Hà Nội", "TP.HCM"],
+                items: viewModel.provinces.map((province) => province.name ?? '').toList(),
                 selectedValue: viewModel.selectedCity,
-                onChanged: viewModel.updateCity,
+                onChanged: viewModel.isLoadingCity ? (value) {} : viewModel.updateCity,
                 dropdownWidth: 345,
+                isRequired: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'Vui lòng chọn thành phố';
+                  return null;
+                },
               ),
               CustomDropdownField(
                 label: "Quận",
                 hintText: "Chọn quận",
-                items: const ["Quận 1", "Quận 2"],
+                items: viewModel.districts.map((district) => district.name ?? '').toList(),
                 selectedValue: viewModel.selectedDistrict,
-                onChanged: viewModel.updateDistrict,
+                onChanged: viewModel.isLoadingDistrict ? (value) {} : viewModel.updateDistrict,
                 dropdownWidth: 345,
+                isRequired: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'Vui lòng chọn quận';
+                  return null;
+                },
               ),
               CustomDropdownField(
                 label: "Phường/huyện",
                 hintText: "Chọn phường/huyện",
-                items: const ["Phường A", "Phường B"],
+                items: viewModel.wards.map((ward) => ward.name ?? '').toList(),
                 selectedValue: viewModel.selectedWard,
-                onChanged: viewModel.updateWard,
+                onChanged: viewModel.isLoadingWard ? (value) {} : viewModel.updateWard,
                 dropdownWidth: 345,
+                isRequired: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'Vui lòng chọn phường/huyện';
+                  return null;
+                },
               ),
             ],
           ),
@@ -364,5 +379,18 @@ class CreateOrgPageState extends State<CreateOrgPage> {
         ),
       ],
     );
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    overviewController.dispose();
+    facebookController.dispose();
+    twitterController.dispose();
+    instagramController.dispose();
+    linkedInController.dispose();
+    super.dispose();
   }
 }

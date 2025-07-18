@@ -3,8 +3,8 @@ import 'package:equatable/equatable.dart';
 class Organizer extends Equatable {
   final String id;
   final String name;
-  final String? logo;
   final String email;
+  final String? logo;
   final String? phone;
   final String? description;
   final String? country;
@@ -25,8 +25,8 @@ class Organizer extends Equatable {
   const Organizer({
     required this.id,
     required this.name,
-    this.logo,
     required this.email,
+    this.logo,
     this.phone,
     this.description,
     this.country,
@@ -53,14 +53,14 @@ class Organizer extends Equatable {
     return Organizer(
       id: json['_id'] as String,
       name: json['name'] as String,
-      logo: json['logo'] as String?,
       email: json['email'] as String,
+      logo: json['logo'] as String?,
       phone: json['phone'] as String?,
       description: json['description'] as String?,
-      country: json['country'] as String?,
-      city: json['city'] as String?,
-      district: json['district'] as String?,
-      ward: json['ward'] as String?,
+      country: json['country'] == 'string' ? null : json['country'] as String?,
+      city: json['city'] == 'string' ? null : json['city'] as String?,
+      district: json['district'] == 'string' ? null : json['district'] as String?,
+      ward: json['ward'] == 'string' ? null : json['ward'] as String?,
       facebook: json['facebook'] as String?,
       twitter: json['twitter'] as String?,
       linkedin: json['linkedin'] as String?,
@@ -85,8 +85,8 @@ class Organizer extends Equatable {
     return {
       '_id': id,
       'name': name,
-      'logo': logo,
       'email': email,
+      'logo': logo,
       'phone': phone,
       'description': description,
       'country': country,
@@ -110,8 +110,8 @@ class Organizer extends Equatable {
   List<Object?> get props => [
         id,
         name,
-        logo,
         email,
+        logo,
         phone,
         description,
         country,

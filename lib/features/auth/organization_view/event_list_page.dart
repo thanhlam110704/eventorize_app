@@ -1,11 +1,8 @@
 import 'package:eventorize_app/common/components/side_bar.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
-import 'package:eventorize_app/common/services/dio_client.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/components/top_nav_org_bar.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
-import 'package:eventorize_app/data/api/event_api.dart';
-import 'package:eventorize_app/data/repositories/event_repository.dart';
 import 'package:eventorize_app/features/auth/organization_view_model/event_list_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:eventorize_app/data/models/event.dart';
@@ -13,12 +10,10 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:eventorize_app/common/components/custom_event_menu.dart';
-import 'package:eventorize_app/features/auth/organization_view/edit_event_page.dart';
+import 'package:eventorize_app/common/services/session_manager.dart';
 
 class EventListPage extends StatefulWidget {
-  final String organizerId;
-
-  const EventListPage({super.key, required this.organizerId});
+  const EventListPage({super.key});
 
   @override
   EventListPageState createState() => EventListPageState();
@@ -29,6 +24,25 @@ class EventListPageState extends State<EventListPage> {
   static const maxContentWidth = 600.0;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final sessionManager = context.read<SessionManager>();
+        if (sessionManager.selectedOrganizerId == null) {
+          ToastCustom.show(
+            context: context,
+            title: 'Lỗi',
+            description: 'Vui lòng chọn một nhà tổ chức trước',
+            type: ToastificationType.error,
+          );
+          context.go('/select-org');
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,14 +59,11 @@ class EventListPageState extends State<EventListPage> {
       ),
       drawer: const CustomDrawer(currentPage: AppPage.eventList),
       backgroundColor: AppColors.whiteBackground,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.fromLTRB(0, 0, 20, 50),
-        child: SizedBox(
-          width: 70,
-          height: 70,
-          child: FloatingActionButton(
+      floatingActionButton: Consumer<SessionManager>(
+        builder: (context, sessionManager, _) {
+          return FloatingActionButton(
             onPressed: () {
-              context.go('/createevent/${widget.organizerId}');
+              context.go('/create-event/${sessionManager.selectedOrganizerId}');
             },
             backgroundColor: const Color(0xFF194185),
             elevation: 6,
@@ -62,42 +73,36 @@ class EventListPageState extends State<EventListPage> {
               color: Colors.white,
               size: 32,
             ),
-          ),
-        ),
+          );
+        },
       ),
       body: SafeArea(
-        child: ChangeNotifierProvider(
-          create: (_) => EventListViewModel(
-            eventRepository: EventRepository(EventApi(DioClient())),
-            organizerId: widget.organizerId,
-          ),
-          child: Consumer<EventListViewModel>(
-            builder: (context, viewModel, _) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted && viewModel.errorMessage != null) {
-                  ToastCustom.show(
-                    context: context,
-                    title: viewModel.errorTitle ?? 'Error',
-                    description: viewModel.errorMessage!,
-                    type: ToastificationType.error,
-                  );
-                  viewModel.clearError();
-                }
-              });
-
-              if (viewModel.isLoading) {
-                return const Center(child: CircularProgressIndicator());
+        child: Consumer<EventListViewModel>(
+          builder: (context, viewModel, _) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted && viewModel.errorMessage != null) {
+                ToastCustom.show(
+                  context: context,
+                  title: viewModel.errorTitle ?? 'Error',
+                  description: viewModel.errorMessage!,
+                  type: ToastificationType.error,
+                );
+                viewModel.clearError();
               }
+            });
 
-              return SingleChildScrollView(
-                child: buildMainContainer(
-                  MediaQuery.of(context).size.width <= smallScreenThreshold,
-                  MediaQuery.of(context).size,
-                  viewModel,
-                ),
-              );
-            },
-          ),
+            if (viewModel.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            return SingleChildScrollView(
+              child: buildMainContainer(
+                MediaQuery.of(context).size.width <= smallScreenThreshold,
+                MediaQuery.of(context).size,
+                viewModel,
+              ),
+            );
+          },
         ),
       ),
     );
@@ -247,14 +252,7 @@ class EventListPageState extends State<EventListPage> {
               onPressed: () {
                 final RenderBox box = context.findRenderObject() as RenderBox;
                 final position = box.localToGlobal(Offset.zero);
-                showEventMenu(context, position, () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => EditEventPage()),
-                  );
-                }, () {
-                  // Delete action placeholder
-                });
+                showEventMenu(context, position, event.id);
               },
             ),
           ),
@@ -263,7 +261,7 @@ class EventListPageState extends State<EventListPage> {
     );
   }
 
-  void showEventMenu(BuildContext context, Offset position, VoidCallback onEdit, VoidCallback onDelete) {
+  void showEventMenu(BuildContext context, Offset position, String eventId) {
     final overlay = Overlay.of(context);
     final entry = OverlayEntry(
       builder: (context) => Positioned(
@@ -271,7 +269,14 @@ class EventListPageState extends State<EventListPage> {
         left: position.dx - 80,
         child: Material(
           color: Colors.transparent,
-          child: CustomEventMenu(onEdit: onEdit, onDelete: onDelete),
+          child: CustomEventMenu(
+            onEdit: () {
+              context.go('/edit-event/$eventId');
+            },
+            onDelete: () {
+              // Delete action placeholder
+            },
+          ),
         ),
       ),
     );

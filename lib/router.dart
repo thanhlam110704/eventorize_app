@@ -1,3 +1,4 @@
+import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/features/auth/user_view/privacy_policy.dart';
 import 'package:eventorize_app/features/auth/user_view/terms_of_service.dart';
 import 'package:flutter/material.dart';
@@ -26,10 +27,12 @@ import 'package:eventorize_app/features/auth/organization_view/edit_event_page.d
 import 'package:eventorize_app/features/auth/organization_view/edit_ticket_page.dart';
 import 'package:eventorize_app/features/auth/organization_view/org_info_page.dart';
 import 'package:eventorize_app/features/auth/organization_view/select_org_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/order_detail_page.dart';
+import 'package:provider/provider.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: '/splashscreen',
+    initialLocation: '/order-detail',
     routes: [
       GoRoute(
         path: '/splashscreen',
@@ -52,15 +55,18 @@ class AppRouter {
         builder: (context, state) => const SelectOrgPage(),
       ),
       GoRoute(
-        path: '/eventlist/:organizerId',
-        name: 'eventlist',
-        builder: (context, state) {
-          final organizerId = state.pathParameters['organizerId']!;
-          return EventListPage(organizerId: organizerId);
-        },
+        path: '/order-detail',
+        name: 'orderdetail',
+        builder: (context, state) => const OrderDetailPage(),
       ),
       GoRoute(
-        path: '/orderlist',
+        path: '/event-list',
+        name: 'eventList',
+        builder: (context, state) => const EventListPage(),
+        redirect: (context, state) => _authGuard(context),
+      ),
+      GoRoute(
+        path: '/order-list',
         name: 'orderlist',
         builder: (context, state) => const OrderListPage(),
       ),
@@ -186,4 +192,11 @@ class AppRouter {
       ),
     ),
   );
+  static String? _authGuard(BuildContext context) {
+    final sessionManager = context.read<SessionManager>();
+    if (sessionManager.user == null && !sessionManager.isCheckingSession) {
+      return '/login';
+    }
+    return null;
+  }
 }

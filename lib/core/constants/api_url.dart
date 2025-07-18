@@ -31,16 +31,35 @@ class ApiUrl {
 
   // Organizer endpoints
   static String get getOrganizers => '/v1/organizers';
-  static String get createOrganizers => '/v1/organizers';
   static String get exportOrganizers => '/v1/organizers/export';
   static String getOrganizerDetail(String id) => '/v1/organizers/$id';
-  static String editOrganizer(String id) => '/v1/organizers/$id';
-  static String deleteOrganizer(String id) => '/v1/organizers/$id';
   static String getOrganizerDetailPublic(String id) => '/v1/home/organizers/$id';
-  static String editOrganizerLogo(String id) => '/v1/organizers/$id/logo';
+  static String get createOrganizer => '/v1/organizers';
+  static String editOrganizer(String id) => '/v1/organizers/$id';
+  static String editOrganizerThumbnail(String id) => '/v1/organizers/$id/logo';
+  static String deleteOrganizer(String id) => '/v1/organizers/$id';
 
   // Favorite endpoints
-  static const String getFavorites = '/v1/favorites/my-events';
+  static const String getMyFavoriteEvents = '/v1/favorites/my-events';
   static String addEventFavorite(String eventId) => '/v1/favorites/add-event/$eventId';
   static String removeEventFavorite(String eventId) => '/v1/favorites/remove-event/$eventId';
+
+  // Ticket endpoints
+  static String getEventTickets(String eventId) => '/v1//home/event/$eventId/tickets';
+  static String getTicketDetail(String eventId, String ticketId) => '/v1/event/$eventId/tickets/$ticketId';
+  static String createTicket(String eventId) => '/v1/event/$eventId/tickets';
+  static String buyTicket(String eventId) => '/v1/event/$eventId/tickets/checkout';
+  static String editTicket(String eventId, String ticketId) => '/v1/event/$eventId/tickets/$ticketId';
+  static String deleteTicket(String ticketId) => '/v1/event/tickets/$ticketId';
+
+  // Order endpoints
+  static String get getOrders => '/v1/orders';
+  static String get exportOrders => '/v1/orders/export';
+  static String getOrderDetail(String id) => '/v1/orders/$id';
+  static String acceptOrder(String id) => '/v1/orders/$id/accept';
+  static String deleteOrder(String id) => '/v1/orders/$id';
+
+  // Payment endpoints
+  static const String generatePayosQr = '/v1/payments/payos/generate';
+  static const String getPayosStatus = '/v1/payments/payos/status';
 }

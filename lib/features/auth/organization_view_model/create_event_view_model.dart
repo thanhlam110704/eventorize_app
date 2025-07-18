@@ -8,7 +8,7 @@ import 'package:eventorize_app/core/utils/exceptions.dart';
 class CreateEventViewModel extends ChangeNotifier {
   final EventRepository _eventRepository;
   final SessionManager _sessionManager;
-  final String _organizerId; // Add organizerId field
+  final String _organizerId; 
   final ErrorState _errorState = ErrorState();
 
   bool _isLoading = false;
@@ -22,7 +22,7 @@ class CreateEventViewModel extends ChangeNotifier {
 
   String? _title;
   String? _description;
-  String? _dateRange = '2025-07-10 to 2025-07-11'; // Hard-coded date range
+  String? _dateRange = '2025-07-10 to 2025-07-11'; 
   String? _address;
   String? _link;
   bool _isOnline = false;
@@ -126,28 +126,12 @@ class CreateEventViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Parse date range
       final dates = (_dateRange ?? '2025-07-10 to 2025-07-11').split(' to ');
       final startDate = DateTime.parse(dates[0]);
       final endDate = DateTime.parse(dates[1]);
 
-      // Log payload for debugging
-      print('Creating event with payload:');
-      print('organizer_id: $_organizerId');
-      print('title: $_title');
-      print('description: $_description');
-      print('start_date: $startDate');
-      print('end_date: $endDate');
-      print('is_online: $_isOnline');
-      print('address: $_address');
-      print('city: $_selectedCity');
-      print('district: $_selectedDistrict');
-      print('ward: $_selectedWard');
-      print('link: $_link');
-      print('thumbnailFile: ${_thumbnailFile != null ? "Present" : "Null"}');
-
       _event = await _eventRepository.createEvent(
-        organizerId: _organizerId, // Use passed organizerId
+        organizerId: _organizerId, 
         title: _title!,
         description: _description,
         link: _isOnline ? _link : null,
@@ -163,14 +147,12 @@ class CreateEventViewModel extends ChangeNotifier {
       );
     } catch (e) {
       if (e is DioException && e.response != null) {
-        print('Server error response: ${e.response!.data}');
         ErrorHandler.handleError(
           e,
           'Lỗi khi tạo sự kiện: ${e.response!.data.toString()}',
           _errorState,
         );
       } else {
-        print('Error: $e');
         ErrorHandler.handleError(e, 'Lỗi khi tạo sự kiện', _errorState);
       }
     } finally {

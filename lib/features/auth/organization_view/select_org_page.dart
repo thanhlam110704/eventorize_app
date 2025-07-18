@@ -2,13 +2,10 @@ import 'dart:ui';
 import 'package:eventorize_app/common/components/custom_fields.dart';
 import 'package:eventorize_app/common/components/side_bar.dart';
 import 'package:eventorize_app/common/components/toast_custom.dart';
-import 'package:eventorize_app/common/services/dio_client.dart';
 import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:eventorize_app/core/configs/theme/colors.dart';
 import 'package:eventorize_app/common/components/top_nav_org_bar.dart';
 import 'package:eventorize_app/core/configs/theme/text_styles.dart';
-import 'package:eventorize_app/data/api/organizer_api.dart';
-import 'package:eventorize_app/data/repositories/organizer_repository.dart';
 import 'package:eventorize_app/features/auth/organization_view_model/select_org_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -28,54 +25,52 @@ class _SelectOrgPageState extends State<SelectOrgPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: AppColors.whiteBackground,
-      appBar: TopNavOrgBar(
-        leadingIcon: Icons.menu,
-        onLeadingPressed: () {
-          if (mounted) _scaffoldKey.currentState?.openDrawer();
-        },
-        title: 'Danh sách sự kiện',
-        actionIcon: Icons.search,
-        onActionPressed: () {},
-      ),
-      drawer: const CustomDrawer(currentPage: AppPage.eventList),
-      body: SafeArea(
-        child: Consumer<SessionManager>(
-          builder: (context, sessionManager, _) {
-            return ChangeNotifierProvider(
-              create: (_) => SelectOrgViewModel(
-                organizerRepository: OrganizerRepository(OrganizerApi(DioClient())),
-                sessionManager: sessionManager,
-              ),
-              child: Consumer<SelectOrgViewModel>(
-                builder: (context, viewModel, _) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) _handleErrors(context, sessionManager, viewModel);
-                  });
+    return Consumer<SessionManager>(
+      builder: (context, sessionManager, _) {
+        return Scaffold(
+          key: _scaffoldKey,
+          backgroundColor: AppColors.whiteBackground,
+          appBar: TopNavOrgBar(
+            leadingIcon: Icons.menu,
+            onLeadingPressed: () {
+              _scaffoldKey.currentState?.openDrawer();
+            },
+            title: 'Danh sách sự kiện',
+            actionIcon: Icons.search,
+            onActionPressed: null,
+          ),
+          drawer: CustomDrawer(
+            currentPage: AppPage.eventList,
+          ),
+          body: SafeArea(
+            child: Consumer<SelectOrgViewModel>(
+              builder: (context, viewModel, _) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) _handleErrors(context, sessionManager, viewModel);
+                });
 
-                  if (sessionManager.isCheckingSession || sessionManager.isLoading || viewModel.isLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+                if (sessionManager.isCheckingSession ||
+                    sessionManager.isLoading ||
+                    viewModel.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-                  if (sessionManager.user == null) {
-                    return const SizedBox.shrink();
-                  }
+                if (sessionManager.user == null) {
+                  return const SizedBox.shrink();
+                }
 
-                  return Stack(
-                    children: [
-                      const SizedBox.expand(),
-                      if (showPopup) _buildOrganizerPopup(viewModel),
-                    ],
-                  );
-                },
-              ),
-            );
-          },
-        ),
-      ),
-      floatingActionButton: _buildFAB(),
+                return Stack(
+                  children: [
+                    const SizedBox.expand(),
+                    if (showPopup) _buildOrganizerPopup(viewModel),
+                  ],
+                );
+              },
+            ),
+          ),
+          floatingActionButton: _buildFAB(),
+        );
+      },
     );
   }
 
@@ -87,7 +82,7 @@ class _SelectOrgPageState extends State<SelectOrgPage> {
     if (session.errorMessage != null) {
       ToastCustom.show(
         context: context,
-        title: session.errorTitle ?? 'Error',
+        title: session.errorTitle ?? 'Lỗi',
         description: session.errorMessage!,
         type: ToastificationType.error,
       );
@@ -100,7 +95,7 @@ class _SelectOrgPageState extends State<SelectOrgPage> {
     if (viewModel.errorMessage != null) {
       ToastCustom.show(
         context: context,
-        title: viewModel.errorTitle ?? 'Error',
+        title: viewModel.errorTitle ?? 'Lỗi',
         description: viewModel.errorMessage!,
         type: ToastificationType.error,
       );
@@ -112,76 +107,88 @@ class _SelectOrgPageState extends State<SelectOrgPage> {
     return Stack(
       children: [
         Positioned.fill(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 3.0, sigmaY: 3.0),
-            child: Container(color: Colors.black.withAlpha(0)),
+          child: GestureDetector(
+            onTap: () {}, 
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 3.0, sigmaY: 3.0),
+              child: Container(
+                color: Colors.black.withValues(alpha: 0.5),
+              ),
+            ),
           ),
         ),
         Center(
-          child: Material(
-            borderRadius: BorderRadius.circular(10),
-            color: Colors.white,
-            child: Container(
-              width: 350,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.grey, width: 1),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Lựa chọn nhà tổ chức', style: AppTextStyles.bold),
-                      GestureDetector(
-                        onTap: () => setState(() => showPopup = false),
-                        child: const Icon(Icons.close),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Chọn nhà tổ chức quản lý sự kiện',
-                    style: AppTextStyles.text.copyWith(
-                      color: AppColors.grey,
-                      fontSize: 13,
+          child: Transform.translate(
+            offset: const Offset(0, -40),
+            child: Material(
+              borderRadius: BorderRadius.circular(10),
+              color: Colors.white,
+              child: Container(
+                width: 350,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.grey, width: 1),
+                ),
+                clipBehavior: Clip.none,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Lựa chọn nhà tổ chức',
+                          style: AppTextStyles.bold.copyWith(fontSize: 20),
+                        ),
+                        GestureDetector(
+                          onTap: () => context.pop(),
+                          child: const Icon(Icons.close),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  CustomDropdownField(
-                    label: '',
-                    hintText: 'Chọn nhà tổ chức',
-                    items: viewModel.organizers.map((org) => org.name).toList(),
-                    selectedValue: viewModel.selectedOrganizerId != null
-                        ? viewModel.organizers
-                            .firstWhere((org) => org.id == viewModel.selectedOrganizerId)
-                            .name
-                        : null,
-                    dropdownWidth: 300,
-                    onChanged: (value) async {
-                      if (!mounted || value == null) return;
-                      try {
-                        final selectedOrg = viewModel.organizers.firstWhere((org) => org.name == value);
-                        viewModel.selectOrganizer(selectedOrg.id);
-                        await Future.delayed(const Duration(milliseconds: 100));
-                        if (mounted) context.push('/eventlist/${selectedOrg.id}');
-                      } catch (_) {
-                        if (mounted) {
-                          ToastCustom.show(
-                            context: context,
-                            title: 'Error',
-                            description: 'Lỗi khi chọn nhà tổ chức',
-                            type: ToastificationType.error,
-                          );
+                    const SizedBox(height: 4),
+                    Text(
+                      'Chọn nhà tổ chức quản lý sự kiện',
+                      style: AppTextStyles.text.copyWith(
+                        color: AppColors.grey,
+                        fontSize: 13,
+                      ),
+                    ),
+                    CustomDropdownField(
+                      label: '',
+                      hintText: 'Chọn nhà tổ chức',
+                      items: viewModel.organizers.map((org) => org.name).toList(),
+                      selectedValue: viewModel.selectedOrganizerId != null
+                          ? viewModel.organizers
+                              .firstWhere((org) => org.id == viewModel.selectedOrganizerId)
+                              .name
+                          : null,
+                      dropdownWidth: 310,
+                      onChanged: (value) async {
+                        if (!mounted || value == null) return;
+                        try {
+                          final selectedOrg = viewModel.organizers
+                              .firstWhere((org) => org.name == value);
+                          await viewModel.selectOrganizer(selectedOrg.id);
+                          await Future.delayed(const Duration(milliseconds: 100));
+                          if (mounted) context.push('/event-list');
+                        } catch (_) {
+                          if (mounted) {
+                            ToastCustom.show(
+                              context: context,
+                              title: 'Lỗi',
+                              description: 'Lỗi khi chọn nhà tổ chức',
+                              type: ToastificationType.error,
+                            );
+                          }
                         }
-                      }
-                    },
-                  ),
-                ],
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -197,7 +204,7 @@ class _SelectOrgPageState extends State<SelectOrgPage> {
         width: 70,
         height: 70,
         child: FloatingActionButton(
-          onPressed: () => context.go('/createevent'),
+          onPressed: showPopup ? null : () => context.go('/create-event'),
           backgroundColor: const Color(0xFF194185),
           elevation: 6,
           shape: const CircleBorder(),

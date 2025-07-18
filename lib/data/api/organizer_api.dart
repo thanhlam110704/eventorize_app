@@ -59,8 +59,20 @@ class OrganizerApi {
         'records_per_page': response.data['records_per_page'] as int,
       };
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to fetch organizers: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Lấy danh sách tổ chức thất bại: $errorMessage');
+    }
+  }
+
+  Future<List<Organizer>> exportOrganizers() async {
+    try {
+      final response = await _dioClient.get(ApiUrl.exportOrganizers);
+      return (response.data as List)
+          .map((json) => Organizer.fromJson(json))
+          .toList();
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Xuất danh sách tổ chức thất bại: $errorMessage');
     }
   }
 
@@ -72,15 +84,28 @@ class OrganizerApi {
       );
       return Organizer.fromJson(response.data);
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to fetch organizer detail: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Lấy chi tiết tổ chức thất bại: $errorMessage');
+    }
+  }
+
+  Future<Organizer> getDetailPublic(String id, {String? fields}) async {
+    try {
+      final response = await _dioClient.get(
+        ApiUrl.getOrganizerDetailPublic(id),
+        queryParameters: fields != null ? {'fields': fields} : null,
+      );
+      return Organizer.fromJson(response.data);
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Lấy chi tiết tổ chức công khai thất bại: $errorMessage');
     }
   }
 
   Future<Organizer> create({
     required String name,
-    String? logo,
     required String email,
+    String? logo,
     String? phone,
     String? description,
     String? country,
@@ -96,8 +121,8 @@ class OrganizerApi {
     try {
       final data = FormData.fromMap({
         'name': name,
-        'logo': logo,
         'email': email,
+        'logo': logo,
         'phone': phone,
         'description': description,
         'country': country,
@@ -115,21 +140,21 @@ class OrganizerApi {
       }
 
       final response = await _dioClient.post(
-        ApiUrl.createOrganizers,
+        ApiUrl.createOrganizer,
         data: data,
       );
       return Organizer.fromJson(response.data);
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to create organizer: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Tạo tổ chức thất bại: $errorMessage');
     }
   }
 
   Future<Organizer> edit(
     String id, {
     String? name,
-    String? logo,
     String? email,
+    String? logo,
     String? phone,
     String? description,
     String? country,
@@ -146,8 +171,8 @@ class OrganizerApi {
         ApiUrl.editOrganizer(id),
         data: {
           if (name != null) 'name': name,
-          if (logo != null) 'logo': logo,
           if (email != null) 'email': email,
+          if (logo != null) 'logo': logo,
           if (phone != null) 'phone': phone,
           if (description != null) 'description': description,
           if (country != null) 'country': country,
@@ -162,12 +187,12 @@ class OrganizerApi {
       );
       return Organizer.fromJson(response.data);
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to update organizer: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Cập nhật tổ chức thất bại: $errorMessage');
     }
   }
 
-  Future<Organizer> editLogo({
+  Future<Organizer> editThumbnail({
     required String id,
     MultipartFile? file,
     String? imageUrl,
@@ -182,13 +207,13 @@ class OrganizerApi {
       }
 
       final response = await _dioClient.put(
-        ApiUrl.editOrganizerLogo(id),
+        ApiUrl.editOrganizerThumbnail(id),
         data: data,
       );
       return Organizer.fromJson(response.data);
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to update organizer logo: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Cập nhật logo tổ chức thất bại: $errorMessage');
     }
   }
 
@@ -196,18 +221,8 @@ class OrganizerApi {
     try {
       await _dioClient.delete(ApiUrl.deleteOrganizer(id));
     } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to delete organizer: $errorMessage');
-    }
-  }
-
-  Future<Map<String, dynamic>> exportOrganizers() async {
-    try {
-      final response = await _dioClient.get(ApiUrl.exportOrganizers);
-      return response.data;
-    } on DioException catch (e) {
-      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Unknown error';
-      throw Exception('Failed to export organizers: $errorMessage');
+      final errorMessage = e.response?.data?['detail'] ?? e.message ?? 'Lỗi không xác định';
+      throw Exception('Xóa tổ chức thất bại: $errorMessage');
     }
   }
 }

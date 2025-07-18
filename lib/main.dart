@@ -1,4 +1,10 @@
 import 'package:eventorize_app/common/services/session_manager.dart';
+import 'package:eventorize_app/data/api/organizer_api.dart';
+import 'package:eventorize_app/data/repositories/organizer_repository.dart';
+import 'package:eventorize_app/features/auth/organization_view_model/org_info_view_model.dart';
+import 'package:eventorize_app/features/auth/organization_view_model/select_org_view_model.dart';
+import 'package:eventorize_app/features/auth/organization_view_model/create_org_view_model.dart';
+import 'package:eventorize_app/features/auth/organization_view_model/event_list_view_model.dart';
 import 'package:eventorize_app/features/auth/user_view_model/register_view_model.dart';
 import 'package:eventorize_app/features/auth/user_view_model/login_view_model.dart';
 import 'package:eventorize_app/features/auth/user_view_model/verify_view_model.dart';
@@ -35,10 +41,38 @@ void setupDependencies() {
   getIt.registerSingleton<EventRepository>(EventRepository(getIt<EventApi>()));
   getIt.registerSingleton<FavoriteApi>(FavoriteApi(getIt<DioClient>()));
   getIt.registerSingleton<FavoriteRepository>(FavoriteRepository(getIt<FavoriteApi>()));
+  getIt.registerSingleton<OrganizerApi>(OrganizerApi(getIt<DioClient>()));
+  getIt.registerSingleton<OrganizerRepository>(OrganizerRepository(getIt<OrganizerApi>()));
   getIt.registerSingleton<SessionManager>(SessionManager(getIt<UserRepository>()));
   getIt.registerSingleton<LocationCache>(LocationCache());
   getIt.registerFactory<EventDetailViewModel>(
     () => EventDetailViewModel(eventRepository: getIt<EventRepository>()),
+  );
+  getIt.registerFactory<SelectOrgViewModel>(
+    () => SelectOrgViewModel(
+      organizerRepository: getIt<OrganizerRepository>(),
+      sessionManager: getIt<SessionManager>(),
+    ),
+  );
+  getIt.registerFactory<OrgInfoViewModel>(
+    () => OrgInfoViewModel(
+      getIt<OrganizerRepository>(),
+      getIt<SessionManager>(),
+      getIt<LocationRepository>(),
+    ),
+  );
+  getIt.registerFactory<CreateOrgViewModel>(
+    () => CreateOrgViewModel(
+      organizerRepository: getIt<OrganizerRepository>(),
+      sessionManager: getIt<SessionManager>(),
+      locationRepository: getIt<LocationRepository>(),
+    ),
+  );
+  getIt.registerFactory<EventListViewModel>(
+    () => EventListViewModel(
+      eventRepository: getIt<EventRepository>(),
+      sessionManager: getIt<SessionManager>(),
+    ),
   );
 }
 
@@ -58,6 +92,9 @@ class MyApp extends StatelessWidget {
       providers: [
         Provider<FavoriteRepository>(
           create: (_) => getIt<FavoriteRepository>(),
+        ),
+        Provider<OrganizerRepository>(
+          create: (_) => getIt<OrganizerRepository>(),
         ),
         ChangeNotifierProvider<SessionManager>(
           create: (_) => getIt<SessionManager>(),
@@ -96,6 +133,18 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<EventDetailViewModel>(
           create: (_) => getIt<EventDetailViewModel>(),
+        ),
+        ChangeNotifierProvider<SelectOrgViewModel>(
+          create: (_) => getIt<SelectOrgViewModel>(),
+        ),
+        ChangeNotifierProvider<OrgInfoViewModel>(
+          create: (_) => getIt<OrgInfoViewModel>(),
+        ),
+        ChangeNotifierProvider<CreateOrgViewModel>(
+          create: (_) => getIt<CreateOrgViewModel>(),
+        ),
+        ChangeNotifierProvider<EventListViewModel>(
+          create: (_) => getIt<EventListViewModel>(),
         ),
       ],
       child: MaterialApp.router(

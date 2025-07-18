@@ -10,6 +10,10 @@ class SessionManager extends ChangeNotifier {
   User? _user;
   bool _isCheckingSession = false;
   bool _isLoading = false;
+  String? _selectedOrganizerId;
+  String? _selectedOrganizerName;
+  String? _selectedOrganizerLogo;
+  String? _selectedOrganizerEmail;
 
   SessionManager(this._userRepository);
 
@@ -18,6 +22,10 @@ class SessionManager extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorState.errorMessage;
   String? get errorTitle => _errorState.errorTitle;
+  String? get selectedOrganizerId => _selectedOrganizerId;
+  String? get selectedOrganizerName => _selectedOrganizerName;
+  String? get selectedOrganizerLogo => _selectedOrganizerLogo;
+  String? get selectedOrganizerEmail => _selectedOrganizerEmail;
 
   Future<void> checkSession() async {
     _isCheckingSession = true;
@@ -28,34 +36,46 @@ class SessionManager extends ChangeNotifier {
     try {
       final token = await SecureStorage.getToken();
       if (token == null) {
-        throw Exception('No token found');
+        throw Exception('Không tìm thấy token');
       }
       _user = await _userRepository.getMe();
     } catch (e) {
-      ErrorHandler.handleError(e, 'Session check failed', _errorState);
+      ErrorHandler.handleError(e, 'Kiểm tra phiên thất bại', _errorState);
     } finally {
       _isCheckingSession = false;
       notifyListeners();
     }
   }
 
+  Future<void> refreshUser() async {
+    if (_user == null) return;
+    try {
+      _user = await _userRepository.getMe();
+      notifyListeners();
+    } catch (e) {
+      ErrorHandler.handleError(e, 'Làm mới thông tin người dùng thất bại', _errorState);
+    }
+  }
+
   Future<void> logout() async {
     _isLoading = true;
     ErrorHandler.clearError(_errorState);
-    notifyListeners();
-
     try {
       await SecureStorage.clearToken();
       _user = null;
+      _selectedOrganizerId = null;
+      _selectedOrganizerName = null;
+      _selectedOrganizerLogo = null;
+      _selectedOrganizerEmail = null;
+      notifyListeners();
     } catch (e) {
-      ErrorHandler.handleError(e, 'Logout failed', _errorState);
+      ErrorHandler.handleError(e, 'Đăng xuất thất bại', _errorState);
       rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
-
 
   Future<void> setUserFromToken(String token) async {
     _isLoading = true;
@@ -66,7 +86,7 @@ class SessionManager extends ChangeNotifier {
       await SecureStorage.saveToken(token);
       _user = await _userRepository.getMe();
     } catch (e) {
-      ErrorHandler.handleError(e, 'Failed to set user from token', _errorState);
+      ErrorHandler.handleError(e, 'Thiết lập người dùng từ token thất bại', _errorState);
       _user = null;
       await SecureStorage.clearToken();
     } finally {
@@ -79,7 +99,33 @@ class SessionManager extends ChangeNotifier {
     _user = user;
     notifyListeners();
   }
-    
+
+  void setSelectedOrganizerId(String? organizerId) {
+    _selectedOrganizerId = organizerId;
+    notifyListeners();
+  }
+
+  void setSelectedOrganizerDetails({
+    String? organizerId,
+    String? name,
+    String? logo,
+    String? email,
+  }) {
+    _selectedOrganizerId = organizerId;
+    _selectedOrganizerName = name;
+    _selectedOrganizerLogo = logo;
+    _selectedOrganizerEmail = email;
+    notifyListeners();
+  }
+
+  void clearSelectedOrganizerId() {
+    _selectedOrganizerId = null;
+    _selectedOrganizerName = null;
+    _selectedOrganizerLogo = null;
+    _selectedOrganizerEmail = null;
+    notifyListeners();
+  }
+
   void clearError() {
     ErrorHandler.clearError(_errorState);
     notifyListeners();

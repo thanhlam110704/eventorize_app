@@ -4,20 +4,24 @@ import 'package:flutter/material.dart';
 
 class CustomDropdownField extends StatelessWidget {
   final String label;
-  final String? hintText; 
+  final String? hintText;
   final List<String> items;
   final String? selectedValue;
   final void Function(String?) onChanged;
   final double? dropdownWidth;
+  final bool isRequired;
+  final String? Function(String?)? validator;
 
   const CustomDropdownField({
     super.key,
     required this.label,
-    this.hintText, 
+    this.hintText,
     required this.items,
     required this.onChanged,
     this.selectedValue,
     this.dropdownWidth,
+    this.isRequired = false,
+    this.validator,
   });
 
   @override
@@ -27,7 +31,20 @@ class CustomDropdownField extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: AppTextStyles.text),
+          RichText(
+            text: TextSpan(
+              text: label,
+              style: AppTextStyles.text,
+              children: isRequired
+                  ? [
+                      TextSpan(
+                        text: ' *',
+                        style: AppTextStyles.text.copyWith(color: Colors.red),
+                      ),
+                    ]
+                  : [],
+            ),
+          ),
           const SizedBox(height: 8),
           DropdownMenu<String>(
             initialSelection: selectedValue,
@@ -37,7 +54,7 @@ class CustomDropdownField extends StatelessWidget {
                 .toList(),
             width: dropdownWidth ?? double.infinity,
             hintText: hintText,
-            textStyle: AppTextStyles.text, 
+            textStyle: AppTextStyles.text,
             menuStyle: MenuStyle(
               backgroundColor: WidgetStateProperty.all(Colors.white),
               shape: WidgetStateProperty.all(
@@ -54,6 +71,7 @@ class CustomDropdownField extends StatelessWidget {
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(5)),
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
             ),
+            errorText: validator != null && selectedValue != null ? validator!(selectedValue) : null,
           ),
         ],
       ),

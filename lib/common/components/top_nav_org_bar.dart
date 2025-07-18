@@ -18,35 +18,41 @@ class TopNavOrgBar extends StatelessWidget implements PreferredSizeWidget {
   });
 
   @override
-Widget build(BuildContext context) {
-  return AppBar(
-    backgroundColor: const Color(0xFF1E266D),
-    automaticallyImplyLeading: false,
-    titleSpacing: 0, 
-    title: Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 16), 
-  child: Row(
-    children: [
-      IconButton(
-        icon: Icon(leadingIcon, color: Colors.white),
-        onPressed: onLeadingPressed ?? () => Navigator.pop(context),
-      ),
-      Text(
-        title,
-        style: AppTextStyles.bold.copyWith(fontSize: 25,color: Colors.white)
-      ),
-      const Spacer(),
-      if (actionIcon != null)
-        IconButton( 
-          icon: Icon(actionIcon, color: Colors.white),
-          onPressed: onActionPressed,
+  Widget build(BuildContext context) {
+    return AppBar(
+      backgroundColor: const Color(0xFF1E266D),
+      automaticallyImplyLeading: false,
+      titleSpacing: 0,
+      title: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            IconButton(
+              icon: Icon(leadingIcon, color: Colors.white),
+              onPressed: onLeadingPressed, 
+            ),
+            Expanded(
+              child: Container(
+                alignment: Alignment.center,
+                child: Text(
+                  title,
+                  style: AppTextStyles.bold.copyWith(fontSize: 25, color: Colors.white),
+                ),
+              ),
+            ),
+            if (actionIcon != null)
+              IconButton(
+                icon: Icon(actionIcon, color: Colors.white),
+                onPressed: onActionPressed,
+              )
+            else
+              const SizedBox(width: 48),
+          ],
         ),
-    ],
-  ),
-),
-  );
-}
-
+      ),
+    );
+  }
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
