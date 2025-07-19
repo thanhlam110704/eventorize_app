@@ -61,6 +61,33 @@ class ProfileDetailPageState extends State<ProfileDetailPage> {
     super.dispose();
   }
 
+  String? _validateFullname(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng nhập họ tên';
+    }
+    if (!RegExp(r"^[a-zA-ZÀ-ỹ\s'-]{2,}$").hasMatch(value)) {
+      return 'Vui lòng nhập họ tên hợp lệ';
+    }
+    return null;
+  }
+
+  String? _validatePhone(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng nhập số điện thoại';
+    }
+    if (!RegExp(r'^\+?\d{7,15}$').hasMatch(value)) {
+      return 'Vui lòng nhập số điện thoại hợp lệ';
+    }
+    return null;
+  }
+
+  String? _validateLocation(String? value, String fieldName) {
+    if (value == null || value.isEmpty) {
+      return 'Vui lòng chọn $fieldName';
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.sizeOf(context);
@@ -417,7 +444,7 @@ class ProfileDetailPageState extends State<ProfileDetailPage> {
     );
   }
 
-  InputDecoration _inputDecoration({bool isEnabled = true}) {
+  InputDecoration _inputDecoration({bool isEnabled = true, String? errorText}) {
     return InputDecoration(
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
@@ -435,6 +462,15 @@ class ProfileDetailPageState extends State<ProfileDetailPage> {
         borderRadius: BorderRadius.circular(8),
         borderSide: const BorderSide(color: AppColors.red),
       ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: AppColors.red),
+      ),
+      errorText: errorText,
+      errorStyle: AppTextStyles.hint.copyWith(
+        color: Colors.red,
+        fontSize: 12,
+      ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       filled: true,
       fillColor: AppColors.inputBackground,
@@ -446,8 +482,11 @@ class ProfileDetailPageState extends State<ProfileDetailPage> {
       label: "Họ tên",
       child: TextFormField(
         controller: viewModel.fullnameController,
-        decoration: _inputDecoration(),
-        validator: (value) => value!.isEmpty ? "Hãy nhập thông tin tên" : null,
+        decoration: _inputDecoration(
+          errorText: _validateFullname(viewModel.fullnameController.text),
+        ),
+        validator: _validateFullname,
+        onChanged: (value) => setState(() {}),
       ),
     );
   }
@@ -469,8 +508,11 @@ class ProfileDetailPageState extends State<ProfileDetailPage> {
       child: TextFormField(
         controller: viewModel.phoneController,
         keyboardType: TextInputType.phone,
-        decoration: _inputDecoration(),
-        validator: (value) => value!.isEmpty ? "Hãy nhập thông tin số điện thoại" : null,
+        decoration: _inputDecoration(
+          errorText: _validatePhone(viewModel.phoneController.text),
+        ),
+        validator: _validatePhone,
+        onChanged: (value) => setState(() {}),
       ),
     );
   }
@@ -487,8 +529,10 @@ class ProfileDetailPageState extends State<ProfileDetailPage> {
           );
         }).toList(),
         onChanged: viewModel.isLoadingAnyLocation ? null : viewModel.setCity,
-        decoration: _inputDecoration(),
-        validator: (value) => value == null ? "Hãy nhập thông tin thành phố/tỉnh" : null,
+        decoration: _inputDecoration(
+          errorText: _validateLocation(viewModel.selectedCity, 'thành phố/tỉnh'),
+        ),
+        validator: (value) => _validateLocation(value, 'thành phố/tỉnh'),
         isExpanded: true,
         menuMaxHeight: MediaQuery.sizeOf(context).height * 0.4,
         dropdownColor: AppColors.white,
@@ -509,8 +553,10 @@ class ProfileDetailPageState extends State<ProfileDetailPage> {
           );
         }).toList(),
         onChanged: viewModel.isLoadingAnyLocation ? null : viewModel.setDistrict,
-        decoration: _inputDecoration(),
-        validator: (value) => value == null ? "Hãy nhập thông tin quận/huyện" : null,
+        decoration: _inputDecoration(
+          errorText: _validateLocation(viewModel.selectedDistrict, 'quận/huyện'),
+        ),
+        validator: (value) => _validateLocation(value, 'quận/huyện'),
         isExpanded: true,
         menuMaxHeight: MediaQuery.sizeOf(context).height * 0.4,
         dropdownColor: AppColors.white,
@@ -531,8 +577,10 @@ class ProfileDetailPageState extends State<ProfileDetailPage> {
           );
         }).toList(),
         onChanged: viewModel.isLoadingAnyLocation ? null : viewModel.setWard,
-        decoration: _inputDecoration(),
-        validator: (value) => value == null ? "Hãy nhập thông tin phường/xã" : null,
+        decoration: _inputDecoration(
+          errorText: _validateLocation(viewModel.selectedWard, 'phường/xã'),
+        ),
+        validator: (value) => _validateLocation(value, 'phường/xã'),
         isExpanded: true,
         menuMaxHeight: MediaQuery.sizeOf(context).height * 0.4,
         dropdownColor: AppColors.white,
@@ -553,7 +601,7 @@ class ProfileDetailPageState extends State<ProfileDetailPage> {
                   ToastCustom.show(
                     context: context,
                     title: 'Lỗi cập nhật',
-                    description: 'Hãy điền đầy đủ thông tin trước khi cập nhật.',
+                    description: 'Hãy điền đầy đủ thông tin hợp lệ trước khi cập nhật.',
                     type: ToastificationType.error,
                   );
                   return;
