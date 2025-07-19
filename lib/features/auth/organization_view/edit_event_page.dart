@@ -254,7 +254,6 @@ class EditEventPageState extends State<EditEventPage> {
       organizerId: sessionManager.selectedOrganizerId!,
       page: 1,
       limit: 20,
-      search: "",
     );
     if (context.mounted) {
       Navigator.of(context).pop();

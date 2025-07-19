@@ -12,6 +12,8 @@ import 'package:toastification/toastification.dart';
 import 'package:get_it/get_it.dart';
 import 'package:eventorize_app/data/models/order.dart';
 import 'package:eventorize_app/common/components/custom_event_menu.dart';
+import 'package:shimmer/shimmer.dart';
+import 'dart:async';
 
 final getIt = GetIt.instance;
 
@@ -27,6 +29,9 @@ class OrderListPageState extends State<OrderListPage> {
   static const maxContentWidth = 600.0;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -39,6 +44,26 @@ class OrderListPageState extends State<OrderListPage> {
         search: "",
       );
     });
+
+    _searchController.addListener(() {
+      _debounce?.cancel();
+      _debounce = Timer(const Duration(milliseconds: 300), () {
+        final viewModel = getIt<OrderListViewModel>();
+        viewModel.fetchOrders(
+          page: 1,
+          limit: 20,
+          search: _searchController.text.trim(),
+        );
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -55,8 +80,8 @@ class OrderListPageState extends State<OrderListPage> {
         },
         title: 'Danh sách đơn hàng',
         actionIcon: Icons.search,
-        onActionPressed: () {
-          // Submit logic
+        onSearchChanged: (query) {
+          _searchController.text = query;
         },
       ),
       drawer: const CustomDrawer(currentPage: AppPage.orderList),
@@ -135,7 +160,7 @@ class OrderListPageState extends State<OrderListPage> {
               placeholderBuilder: (context) => Container(
                 width: 100,
                 height: 100,
-                color: AppColors.grey.withValues(alpha: 0.3),
+                color: AppColors.skeleton,
                 child: const Icon(Icons.error),
               ),
             ),
@@ -167,43 +192,47 @@ class OrderListPageState extends State<OrderListPage> {
   }
 
   Widget buildSkeletonCard() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Container(
-          width: 24,
-          height: 24,
-          color: AppColors.grey.withValues(alpha: 0.3),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 80,
-                height: 16,
-                color: AppColors.grey.withValues(alpha: 0.3),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Container(
-                    width: 120,
-                    height: 12,
-                    color: AppColors.grey.withValues(alpha: 0.3),
-                  ),
-                ],
-              ),
-            ],
+    return Shimmer.fromColors(
+      baseColor: AppColors.shimmerBase,
+      highlightColor: AppColors.shimmerHighlight,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            color: AppColors.shimmerBase,
           ),
-        ),
-        Container(
-          width: 24,
-          height: 24,
-          color: AppColors.grey.withValues(alpha: 0.3),
-        ),
-      ],
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 80,
+                  height: 16,
+                  color: AppColors.shimmerBase,
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Container(
+                      width: 120,
+                      height: 12,
+                      color: AppColors.shimmerBase,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Container(
+            width: 24,
+            height: 24,
+            color: AppColors.shimmerBase,
+          ),
+        ],
+      ),
     );
   }
 
@@ -325,7 +354,7 @@ class OrderListPageState extends State<OrderListPage> {
             onTickets: () {},
             onDetail: () {
               closeMenu(dialogContext);
-              context.push('/order-detail/${order.id}');
+              context.push('/order/${order.id}');
             },
             showTickets: false,
             showDetail: true,

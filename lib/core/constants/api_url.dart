@@ -23,6 +23,7 @@ class ApiUrl {
 
   // Event endpoints
   static String get getEvents => '/v1/events';
+  static String getEventsByOrganizer(String organizerId) => '/v1/organizer/$organizerId/events';
   static String getEventDetail(String id) => '/v1/events/$id';
   static String get createEvent => '/v1/events';
   static String editEvent(String id) => '/v1/events/$id';
@@ -58,6 +59,7 @@ class ApiUrl {
   static String getOrderDetail(String id) => '/v1/orders/$id';
   static String acceptOrder(String id) => '/v1/orders/$id/accept';
   static String deleteOrder(String id) => '/v1/orders/$id';
+
 
   // Payment endpoints
   static const String generatePayosQr = '/v1/payments/payos/generate';

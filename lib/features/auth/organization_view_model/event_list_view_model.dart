@@ -50,10 +50,11 @@ class EventListViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _eventRepository.getAll(
-        search: organizerId,
+      final response = await _eventRepository.getEventsByOrganizer(
+        organizerId: organizerId,
         page: page,
         limit: limit,
+        search: search.isNotEmpty ? search : null,
       );
 
       final eventList = response['data'] as List<Event>;
@@ -66,9 +67,6 @@ class EventListViewModel extends ChangeNotifier {
     } catch (e) {
       _errorMessage = 'Lỗi khi tải danh sách sự kiện: $e';
       _errorTitle = 'Lỗi';
-      if (kDebugMode) {
-        print('Fetch events error: $e');
-      }
     } finally {
       _isLoading = false;
       notifyListeners();

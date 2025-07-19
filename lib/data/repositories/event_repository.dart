@@ -33,6 +33,28 @@ class EventRepository {
     );
   }
 
+  Future<Map<String, dynamic>> getEventsByOrganizer({
+    required String organizerId,
+    int page = 1,
+    int limit = 10,
+    String? query,
+    String? search,
+    String? fields,
+    String? sortBy,
+    String? orderBy,
+  }) async {
+    return await _eventApi.getEventsByOrganizerId(
+      organizerId: organizerId,
+      page: page,
+      limit: limit,
+      query: query,
+      search: search,
+      fields: fields,
+      sortBy: sortBy,
+      orderBy: orderBy,
+    );
+  }
+
   Future<Event> getEventDetail(String id, {String? fields}) async {
     return await _eventApi.getEventDetail(id, fields: fields);
   }
@@ -116,6 +138,4 @@ class EventRepository {
   Future<void> deleteEvent(String id) async {
     await _eventApi.deleteEvent(id);
   }
-
-  
 }

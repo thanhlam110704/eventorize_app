@@ -14,6 +14,7 @@ import 'package:eventorize_app/common/components/custom_event_menu.dart';
 import 'package:eventorize_app/common/services/session_manager.dart';
 import 'package:get_it/get_it.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'dart:async';
 
 final getIt = GetIt.instance;
 
@@ -29,7 +30,10 @@ class EventListPageState extends State<EventListPage> {
   static const maxContentWidth = 600.0;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   bool _hasShownUpdateToast = false;
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -46,6 +50,30 @@ class EventListPageState extends State<EventListPage> {
         );
       }
     });
+
+    _searchController.addListener(() {
+      _debounce?.cancel();
+      _debounce = Timer(const Duration(milliseconds: 300), () {
+        final viewModel = getIt<EventListViewModel>();
+        final sessionManager = getIt<SessionManager>();
+        if (sessionManager.user != null) {
+          viewModel.fetchEvents(
+            organizerId: sessionManager.selectedOrganizerId!,
+            page: 1,
+            limit: 20,
+            search: _searchController.text.trim(),
+          );
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -59,7 +87,9 @@ class EventListPageState extends State<EventListPage> {
         },
         title: 'Danh sách sự kiện',
         actionIcon: Icons.search,
-        onActionPressed: () {},
+        onSearchChanged: (query) {
+          _searchController.text = query;
+        },
       ),
       drawer: const CustomDrawer(currentPage: AppPage.eventList),
       backgroundColor: AppColors.whiteBackground,
@@ -107,7 +137,7 @@ class EventListPageState extends State<EventListPage> {
                     organizerId: getIt<SessionManager>().selectedOrganizerId!,
                     page: 1,
                     limit: 20,
-                    search: "",
+                    search: _searchController.text.trim(),
                   );
                 }
               });
@@ -189,7 +219,7 @@ class EventListPageState extends State<EventListPage> {
               placeholderBuilder: (context) => Container(
                 width: 100,
                 height: 100,
-                color: AppColors.grey.withValues(alpha: 0.5),
+                color: AppColors.shimmerBase,
                 child: const Icon(Icons.error),
               ),
             ),
@@ -227,7 +257,7 @@ class EventListPageState extends State<EventListPage> {
           width: 80,
           height: 80,
           decoration: BoxDecoration(
-            color: AppColors.grey.withValues(alpha: 0.3),
+            color: AppColors.shimmerBase,
             borderRadius: BorderRadius.circular(4),
           ),
         ),
@@ -239,19 +269,28 @@ class EventListPageState extends State<EventListPage> {
               Container(
                 width: double.infinity,
                 height: 16,
-                color: AppColors.grey.withValues(alpha: 0.3),
+                decoration: BoxDecoration(
+                  color: AppColors.shimmerBase,
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
               const SizedBox(height: 8),
               Container(
                 width: 100,
                 height: 12,
-                color: AppColors.grey.withValues(alpha: 0.3),
+                decoration: BoxDecoration(
+                  color: AppColors.shimmerBase,
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
               const SizedBox(height: 4),
               Container(
                 width: 60,
                 height: 12,
-                color: AppColors.grey.withValues(alpha: 0.3),
+                decoration: BoxDecoration(
+                  color: AppColors.shimmerBase,
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
             ],
           ),

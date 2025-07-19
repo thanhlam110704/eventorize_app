@@ -141,7 +141,6 @@ class CreateEventViewModel extends ChangeNotifier {
         organizerId: _sessionManager.selectedOrganizerId!,
         page: 1,
         limit: 20,
-        search: "",
       );
 
       _isCreateSuccessful = true;

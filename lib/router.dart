@@ -28,6 +28,7 @@ import 'package:eventorize_app/features/auth/organization_view/ticket_list_page.
 import 'package:eventorize_app/features/auth/organization_view/create_ticket_page.dart';
 import 'package:eventorize_app/features/auth/organization_view/edit_ticket_page.dart';
 import 'package:eventorize_app/features/auth/organization_view/order_list_page.dart';
+import 'package:eventorize_app/features/auth/organization_view/order_detail_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -228,7 +229,7 @@ class AppRouter {
         builder: (context, state) => const OrderListPage(),
         redirect: (context, state) => _authGuard(context),
       ),
-      /* GoRoute(
+      GoRoute(
         path: '/order/:orderId',
         name: 'orderDetail',
         builder: (context, state) {
@@ -236,7 +237,7 @@ class AppRouter {
           return OrderDetailPage(orderId: orderId);
         },
         redirect: (context, state) => _authGuard(context),
-      ) */
+      )
     ],
     errorBuilder: (context, state) => Scaffold(
       body: Center(

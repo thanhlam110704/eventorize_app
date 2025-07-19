@@ -12,6 +12,8 @@ import 'package:toastification/toastification.dart';
 import 'package:get_it/get_it.dart';
 import 'package:eventorize_app/data/models/ticket.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:shimmer/shimmer.dart';
+import 'dart:async';
 
 final getIt = GetIt.instance;
 
@@ -29,6 +31,9 @@ class TicketListPageState extends State<TicketListPage> {
   static const maxContentWidth = 600.0;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -42,6 +47,27 @@ class TicketListPageState extends State<TicketListPage> {
         search: "",
       );
     });
+
+    _searchController.addListener(() {
+      _debounce?.cancel();
+      _debounce = Timer(const Duration(milliseconds: 300), () {
+        final viewModel = getIt<TicketListViewModel>();
+        viewModel.fetchTickets(
+          eventId: widget.eventId,
+          page: 1,
+          limit: 20,
+          search: _searchController.text.trim(),
+        );
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -58,8 +84,8 @@ class TicketListPageState extends State<TicketListPage> {
         onLeadingPressed: () {
           context.pop();
         },
-        onActionPressed: () {
-          // Submit logic
+        onSearchChanged: (query) {
+          _searchController.text = query;
         },
       ),
       drawer: const CustomDrawer(currentPage: AppPage.ticketList),
@@ -190,43 +216,47 @@ class TicketListPageState extends State<TicketListPage> {
   }
 
   Widget buildSkeletonCard() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Container(
-          width: 24,
-          height: 24,
-          color: AppColors.grey.withValues(alpha: 0.3),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 80,
-                height: 16,
-                color: AppColors.grey.withValues(alpha: 0.3),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Container(
-                    width: 120,
-                    height: 12,
-                    color: AppColors.grey.withValues(alpha: 0.3),
-                  ),
-                ],
-              ),
-            ],
+    return Shimmer.fromColors(
+      baseColor: AppColors.shimmerBase,
+      highlightColor: AppColors.shimmerHighlight,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            color: AppColors.skeleton,
           ),
-        ),
-        Container(
-          width: 24,
-          height: 24,
-          color: AppColors.grey.withValues(alpha: 0.3),
-        ),
-      ],
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 80,
+                  height: 16,
+                  color: AppColors.skeleton,
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Container(
+                      width: 120,
+                      height: 12,
+                      color: AppColors.skeleton,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Container(
+            width: 24,
+            height: 24,
+            color: AppColors.skeleton,
+          ),
+        ],
+      ),
     );
   }
 

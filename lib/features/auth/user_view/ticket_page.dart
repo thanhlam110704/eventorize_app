@@ -143,6 +143,7 @@ class TicketPageState extends State<TicketPage> {
         height: height,
         decoration: BoxDecoration(
           color: AppColors.skeleton,
+          borderRadius: BorderRadius.circular(4),
         ),
       ),
     );

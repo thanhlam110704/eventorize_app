@@ -430,7 +430,10 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
           child: Container(
             width: double.infinity,
             height: 48, 
-            color: AppColors.skeleton,
+            decoration: BoxDecoration(
+              color: AppColors.skeleton,
+              borderRadius: BorderRadius.circular(4),
+            ),
           ),
         ),
         const SizedBox(height: 10),
@@ -440,7 +443,10 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
           child: Container(
             width: double.infinity,
             height: 16,
-            color: AppColors.skeleton,
+            decoration: BoxDecoration(
+              color: AppColors.skeleton,
+              borderRadius: BorderRadius.circular(4),
+            ),
           ),
         ),
         const SizedBox(height: 10),
@@ -450,7 +456,10 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
           child: Container(
             width: double.infinity,
             height: 36,
-            color: AppColors.skeleton,
+            decoration: BoxDecoration(
+              color: AppColors.skeleton,
+              borderRadius: BorderRadius.circular(4),
+            ),
           ),
         ),
         const SizedBox(height: 10),
@@ -460,7 +469,10 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
           child: Container(
             width: double.infinity,
             height: 36,
-            color: AppColors.skeleton,
+            decoration: BoxDecoration(
+              color: AppColors.skeleton,
+              borderRadius: BorderRadius.circular(4),
+            ),
           ),
         ),
       ],
