@@ -78,7 +78,7 @@ class RegisterPageState extends State<RegisterPage> {
           title: 'Đăng ký thành công!',
           type: ToastificationType.success,
         );
-        context.goNamed(
+        context.go(
           'verify-code',
           extra: {
             'email': emailController.text.trim(),
