@@ -92,9 +92,10 @@ class TopNavOrgBarState extends State<TopNavOrgBar> {
                   color: Colors.white,
                 ),
                 onPressed: () {
-                  _toggleSearch();
-                  if (!_isSearchActive && widget.onActionPressed != null) {
-                    widget.onActionPressed!();
+                  if (widget.actionIcon == Icons.search) {
+                    _toggleSearch(); 
+                  } else if (!_isSearchActive && widget.onActionPressed != null) {
+                    widget.onActionPressed!(); 
                   }
                 },
               )
