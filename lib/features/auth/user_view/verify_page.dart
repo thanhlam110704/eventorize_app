@@ -34,22 +34,17 @@ class VerificationCodePageState extends State<VerificationCodePage> {
       List.generate(6, (_) => GlobalKey<State<OTPFieldInput>>());
   Timer? _timer;
   Duration _remainingTime = countdownDuration;
-  bool isSubmitEnabled = false;
 
   @override
   void initState() {
     super.initState();
     _startCountdown();
-    for (var controller in codeControllers) {
-      controller.addListener(_updateSubmitButtonState);
-    }
   }
 
   @override
   void dispose() {
     _timer?.cancel();
     for (var controller in codeControllers) {
-      controller.removeListener(_updateSubmitButtonState);
       controller.dispose();
     }
     super.dispose();
@@ -69,15 +64,7 @@ class VerificationCodePageState extends State<VerificationCodePage> {
     });
   }
 
-  void _updateSubmitButtonState() {
-    setState(() {
-      isSubmitEnabled = codeControllers.every((controller) => controller.text.length == 1);
-    });
-  }
-
   Future<void> handleVerify(VerifyViewModel viewModel) async {
-    if (!isSubmitEnabled) return;
-
     final otp = codeControllers.map((c) => c.text).join();
     await viewModel.verifyEmail(email: widget.email, otp: otp);
     if (mounted && viewModel.isSuccess) {
@@ -105,7 +92,6 @@ class VerificationCodePageState extends State<VerificationCodePage> {
         controller.clear();
       }
       _startCountdown();
-      _updateSubmitButtonState();
     }
   }
 
@@ -115,7 +101,6 @@ class VerificationCodePageState extends State<VerificationCodePage> {
         codeControllers[i].text = value[i];
       }
       FocusScope.of(context).unfocus();
-      _updateSubmitButtonState();
       handleVerify(viewModel);
     }
   }
@@ -311,7 +296,7 @@ class VerificationCodePageState extends State<VerificationCodePage> {
       height: buttonHeight,
       margin: const EdgeInsets.only(top: 10),
       child: ElevatedButton(
-        onPressed: isSubmitEnabled && !viewModel.isLoading ? () => handleVerify(viewModel) : null,
+        onPressed: !viewModel.isLoading ? () => handleVerify(viewModel) : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           shape: RoundedRectangleBorder(
