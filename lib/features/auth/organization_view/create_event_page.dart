@@ -383,7 +383,7 @@ class CreateEventPageState extends State<CreateEventPage> {
                   CustomTextField(
                     key: _timeRangeInputKey,
                     label: "Thời gian diễn ra",
-                    hintText: "YYYY-MM-DD HH:mm:ss to YYYY-MM-DD HH:mm:ss",
+                    hintText: "YYYY-MM-DD HH:mm:ss đến YYYY-MM-DD HH:mm:ss",
                     isRequired: true,
                     isBold: true,
                     controller: _timeRangeController,
@@ -393,7 +393,7 @@ class CreateEventPageState extends State<CreateEventPage> {
                       if (pickedRange != null && mounted) {
                         final viewModel = Provider.of<CreateEventViewModel>(context, listen: false);
                         final timeRange =
-                            '${DateFormat('yyyy-MM-dd HH:mm:ss').format(pickedRange['start']!)} to ${DateFormat('yyyy-MM-dd HH:mm:ss').format(pickedRange['end']!)}';
+                            '${DateFormat('yyyy-MM-dd HH:mm:ss').format(pickedRange['start']!)} đến ${DateFormat('yyyy-MM-dd HH:mm:ss').format(pickedRange['end']!)}';
                         viewModel.setTimeRange(timeRange);
                         setState(() {
                           _timeRangeController.text = timeRange;
@@ -405,7 +405,7 @@ class CreateEventPageState extends State<CreateEventPage> {
                       if (value == null || value.isEmpty) {
                         return 'Vui lòng chọn thời gian diễn ra';
                       }
-                      final dates = value.split(' - ');
+                      final dates = value.split(' đến ');
                       if (dates.length != 2) {
                         return 'Thời gian diễn ra không hợp lệ';
                       }

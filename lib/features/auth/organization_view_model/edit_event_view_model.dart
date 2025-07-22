@@ -81,7 +81,7 @@ class EditEventViewModel extends ChangeNotifier {
       onSuccess: (event) {
         _event = event as Event;
         final dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
-        _timeRange = '${dateFormat.format(event.startDate)} to ${dateFormat.format(event.endDate)}';
+        _timeRange = '${dateFormat.format(event.startDate)} đến ${dateFormat.format(event.endDate)}';
         selectedCountry = event.country ?? 'Việt Nam';
         selectedCity = event.city;
         selectedDistrict = event.district;
@@ -121,7 +121,7 @@ class EditEventViewModel extends ChangeNotifier {
     ErrorHandler.clearError(errorState);
     notifyListeners();
 
-    List<String> dates = _timeRange?.split(' - ') ?? [];
+    List<String> dates = _timeRange?.split(' đến ') ?? [];
     if (dates.length != 2) {
       errorState.errorTitle = 'Lỗi';
       errorState.errorMessage = 'Thời gian diễn ra không hợp lệ';

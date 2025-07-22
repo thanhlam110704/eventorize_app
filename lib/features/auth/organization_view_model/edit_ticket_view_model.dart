@@ -32,7 +32,7 @@ class EditTicketViewModel extends ChangeNotifier {
   void setDateRange(DateTime? start, DateTime? end) {
     if (start != null && end != null) {
       final dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
-      _saleDateRange = '${dateFormat.format(start)} to ${dateFormat.format(end)}';
+      _saleDateRange = '${dateFormat.format(start)} đến ${dateFormat.format(end)}';
     } else {
       _saleDateRange = null;
     }
@@ -56,7 +56,7 @@ class EditTicketViewModel extends ChangeNotifier {
       onSuccess: (ticket) {
         _ticket = ticket as Ticket;
         final dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
-        _saleDateRange = '${dateFormat.format(ticket.startSaleDate)} to ${dateFormat.format(ticket.endSaleDate)}';
+        _saleDateRange = '${dateFormat.format(ticket.startSaleDate)} đến ${dateFormat.format(ticket.endSaleDate)}';
       },
     );
 
@@ -99,7 +99,7 @@ class EditTicketViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final dates = _saleDateRange!.split(' - ');
+      final dates = _saleDateRange!.split(' đến ');
       if (dates.length != 2) {
         errorState.errorTitle = 'Lỗi';
         errorState.errorMessage = 'Thời gian bán vé không hợp lệ';

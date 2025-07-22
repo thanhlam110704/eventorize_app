@@ -242,7 +242,7 @@ class EditTicketPageState extends State<EditTicketPage> {
                   CustomTextField(
                     key: _dateRangeInputKey,
                     label: "Thời gian",
-                    hintText: "YYYY-MM-DD HH:MM:SS to YYYY-MM-DD HH:MM:SS",
+                    hintText: "YYYY-MM-DD HH:MM:SS đến YYYY-MM-DD HH:MM:SS",
                     isRequired: true,
                     isBold: true,
                     controller: _dateRangeController,
@@ -261,7 +261,7 @@ class EditTicketPageState extends State<EditTicketPage> {
                       if (viewModel.saleDateRange == null || value == null || value.isEmpty) {
                         return 'Vui lòng chọn thời gian bán vé';
                       }
-                      final dates = value.split(' - ');
+                      final dates = value.split(' đến ');
                       if (dates.length != 2) {
                         return 'Thời gian bán vé không hợp lệ';
                       }

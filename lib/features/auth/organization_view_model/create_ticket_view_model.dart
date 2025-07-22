@@ -31,7 +31,7 @@ class CreateTicketViewModel extends ChangeNotifier {
   void setDateRange(DateTime? start, DateTime? end) {
     if (start != null && end != null) {
       final dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
-      _saleDateRange = '${dateFormat.format(start)} to ${dateFormat.format(end)}';
+      _saleDateRange = '${dateFormat.format(start)} đến ${dateFormat.format(end)}';
     } else {
       _saleDateRange = null;
     }
@@ -48,7 +48,7 @@ class CreateTicketViewModel extends ChangeNotifier {
     required int price,
     required int minPerUser,
     required int maxPerUser,
-    required String status, // Expects backend values: ["active", "sold out", "paused", "hidden"]
+    required String status, 
   }) async {
     if (!formKey.currentState!.validate()) return null;
 
@@ -72,7 +72,7 @@ class CreateTicketViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final dates = _saleDateRange!.split(' - ');
+      final dates = _saleDateRange!.split(' đến ');
       if (dates.length != 2) {
         errorState.errorTitle = 'Lỗi';
         errorState.errorMessage = 'Thời gian bán vé không hợp lệ';

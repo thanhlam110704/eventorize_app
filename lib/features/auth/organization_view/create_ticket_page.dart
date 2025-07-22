@@ -161,7 +161,7 @@ class CreateTicketPageState extends State<CreateTicketPage> {
                   CustomTextField(
                     key: _titleInputKey,
                     label: "Tên vé",
-                    hintText: "Tên vé",
+                    hintText: "Nhập tên vé",
                     isRequired: true,
                     isBold: true,
                     controller: _titleController,
@@ -178,7 +178,7 @@ class CreateTicketPageState extends State<CreateTicketPage> {
                   CustomTextField(
                     key: _descriptionInputKey,
                     label: "Tổng quan",
-                    hintText: "Tổng quan",
+                    hintText: "Nhập tổng quan",
                     isRequired: true,
                     maxLines: 4,
                     isBold: true,
@@ -217,40 +217,45 @@ class CreateTicketPageState extends State<CreateTicketPage> {
                   ),
                   CustomTextField(
                     key: _dateRangeInputKey,
-                    label: "Thời gian",
-                    hintText: "YYYY-MM-DD HH:MM:SS to YYYY-MM-DD HH:MM:SS",
+                    label: "Thời gian bán vé",
+                    hintText: "YYYY-MM-DD HH:mm:ss đến YYYY-MM-DD HH:mm:ss",
                     isRequired: true,
                     isBold: true,
                     controller: _dateRangeController,
+                    readOnly: true, 
                     onTap: () async {
                       final pickedRange = await _pickDateTimeRange(context);
-                      if (pickedRange != null) {
+                      if (pickedRange != null && mounted) {
+                        final timeRange =
+                            '${DateFormat('yyyy-MM-dd HH:mm:ss').format(pickedRange['start']!)} đến ${DateFormat('yyyy-MM-dd HH:mm:ss').format(pickedRange['end']!)}';
                         viewModel.setDateRange(pickedRange['start'], pickedRange['end']);
-                        _dateRangeInputKey.currentState?.validate();
+                        setState(() {
+                          _dateRangeController.text = timeRange;
+                          _dateRangeInputKey.currentState?.validate();
+                        });
                       }
-                    },
-                    readOnly: true,
-                    onChanged: (value) {
-                      _dateRangeInputKey.currentState?.validate();
                     },
                     validator: (value) {
-                      if (viewModel.saleDateRange == null || value == null || value.isEmpty) {
+                      if (value == null || value.isEmpty) {
                         return 'Vui lòng chọn thời gian bán vé';
                       }
-                      final dates = value.split(' - ');
+                      final dates = value.split(' đến ');
                       if (dates.length != 2) {
                         return 'Thời gian bán vé không hợp lệ';
                       }
                       try {
                         final startDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(dates[0]);
                         final endDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(dates[1]);
-                        if (endDate.isBefore(startDate)) {
+                        if (endDate.isBefore(startDate) || endDate.isAtSameMomentAs(startDate)) {
                           return 'Thời gian kết thúc phải sau thời gian bắt đầu';
                         }
                       } catch (e) {
                         return 'Định dạng thời gian không hợp lệ';
                       }
                       return null;
+                    },
+                    onChanged: (value) {
+                      _dateRangeInputKey.currentState?.validate();
                     },
                   ),
                   CustomTextField(
@@ -260,6 +265,7 @@ class CreateTicketPageState extends State<CreateTicketPage> {
                     isRequired: true,
                     isBold: true,
                     controller: _priceController,
+                    keyboardType: TextInputType.number,
                     onChanged: (value) {
                       _priceInputKey.currentState?.validate();
                     },
@@ -505,19 +511,65 @@ class CreateTicketPageState extends State<CreateTicketPage> {
     if (_priceInputKey.currentState?.validate() != true) isValid = false;
     if (_statusInputKey.currentState?.validate() != true) isValid = false;
 
-    if (isValid) {
-      await viewModel.createTicket(
-        context,
-        _formKey,
-        eventId: widget.eventId,
-        title: _titleController.text,
-        description: _descriptionController.text,
-        quantity: int.parse(_quantityController.text),
-        price: int.parse(_priceController.text.replaceAll('.', '')),
-        minPerUser: _minPer.round(),
-        maxPerUser: _maxPer.round(),
-        status: statusDisplayToValue[_selectedStatus] ?? 'active',
-      );
+    // Thêm kiểm tra thời gian giống CreateEventPage
+    if (_dateRangeController.text.isNotEmpty) {
+      try {
+        final dates = _dateRangeController.text.split(' đến ');
+        if (dates.length != 2) {
+          isValid = false;
+          ToastCustom.show(
+            context: context,
+            title: 'Lỗi',
+            description: 'Thời gian bán vé không hợp lệ',
+            type: ToastificationType.error,
+          );
+          return;
+        }
+        final startDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(dates[0]);
+        final endDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(dates[1]);
+        if (endDate.isBefore(startDate) || endDate.isAtSameMomentAs(startDate)) {
+          isValid = false;
+          ToastCustom.show(
+            context: context,
+            title: 'Lỗi',
+            description: 'Thời gian kết thúc phải sau thời gian bắt đầu',
+            type: ToastificationType.error,
+          );
+          return;
+        }
+      } catch (e) {
+        isValid = false;
+        ToastCustom.show(
+          context: context,
+          title: 'Lỗi',
+          description: 'Định dạng thời gian không hợp lệ',
+          type: ToastificationType.error,
+        );
+        return;
+      }
     }
+
+    if (!isValid) {
+      ToastCustom.show(
+        context: context,
+        title: 'Lỗi',
+        description: 'Hãy điền đầy đủ thông tin bắt buộc trước khi tạo.',
+        type: ToastificationType.error,
+      );
+      return;
+    }
+
+    await viewModel.createTicket(
+      context,
+      _formKey,
+      eventId: widget.eventId,
+      title: _titleController.text,
+      description: _descriptionController.text,
+      quantity: int.parse(_quantityController.text),
+      price: int.parse(_priceController.text.replaceAll('.', '')),
+      minPerUser: _minPer.round(),
+      maxPerUser: _maxPer.round(),
+      status: statusDisplayToValue[_selectedStatus] ?? 'active',
+    );
   }
 }

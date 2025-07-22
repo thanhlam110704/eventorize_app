@@ -68,8 +68,8 @@ class EditEventPageState extends State<EditEventPage> {
     TimeOfDay initialStartTime = TimeOfDay.now();
     if (mounted) {
       final viewModel = Provider.of<EditEventViewModel>(context, listen: false);
-      if (viewModel.timeRange != null && viewModel.timeRange!.contains(' to ')) {
-        initialStartDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(viewModel.timeRange!.split(' to ')[0]);
+      if (viewModel.timeRange != null && viewModel.timeRange!.contains(' đến ')) {
+        initialStartDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(viewModel.timeRange!.split(' đến ')[0]);
         initialStartTime = TimeOfDay.fromDateTime(initialStartDate);
       }
     }
@@ -172,7 +172,7 @@ class EditEventPageState extends State<EditEventPage> {
   }
   if (_timeRangeController.text.isNotEmpty) {
     try {
-      final dates = _timeRangeController.text.split(' - ');
+      final dates = _timeRangeController.text.split(' đến ');
       if (dates.length != 2) {
         isValid = false;
         if (mounted) {
@@ -431,7 +431,7 @@ class EditEventPageState extends State<EditEventPage> {
                   CustomTextField(
                     key: _timeRangeInputKey,
                     label: "Thời gian diễn ra",
-                    hintText: "YYYY-MM-DD HH:mm:ss to YYYY-MM-DD HH:mm:ss",
+                    hintText: "YYYY-MM-DD HH:mm:ss đến YYYY-MM-DD HH:mm:ss",
                     isRequired: true,
                     isBold: true,
                     controller: _timeRangeController,
@@ -441,7 +441,7 @@ class EditEventPageState extends State<EditEventPage> {
                       if (pickedRange != null && mounted) {
                         final viewModel = Provider.of<EditEventViewModel>(context, listen: false);
                         final timeRange =
-                            '${DateFormat('yyyy-MM-dd HH:mm:ss').format(pickedRange['start']!)} to ${DateFormat('yyyy-MM-dd HH:mm:ss').format(pickedRange['end']!)}';
+                            '${DateFormat('yyyy-MM-dd HH:mm:ss').format(pickedRange['start']!)} đến ${DateFormat('yyyy-MM-dd HH:mm:ss').format(pickedRange['end']!)}';
                         viewModel.setTimeRange(timeRange);
                         setState(() {
                           _timeRangeController.text = timeRange;
@@ -453,7 +453,7 @@ class EditEventPageState extends State<EditEventPage> {
                       if (value == null || value.isEmpty) {
                         return "Hãy chọn thời gian diễn ra";
                       }
-                      final dates = value.split(' to ');
+                      final dates = value.split(' đến ');
                       if (dates.length != 2) {
                         return "Thời gian diễn ra không hợp lệ";
                       }
