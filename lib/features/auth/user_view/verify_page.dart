@@ -320,7 +320,7 @@ class VerificationCodePageState extends State<VerificationCodePage> {
           elevation: 0,
         ),
         child: Text(
-          'Gửi mã',
+          'Xác nhận',
           style: AppTextStyles.text.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.w600,
