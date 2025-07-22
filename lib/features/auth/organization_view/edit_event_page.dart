@@ -63,16 +63,8 @@ class EditEventPageState extends State<EditEventPage> {
     super.dispose();
   }
 
-  Future<Map<String, DateTime>?> _pickDateTimeRange() async {
-    DateTime initialStartDate = DateTime.now();
-    TimeOfDay initialStartTime = TimeOfDay.now();
-    if (mounted) {
-      final viewModel = Provider.of<EditEventViewModel>(context, listen: false);
-      if (viewModel.timeRange != null && viewModel.timeRange!.contains(' đến ')) {
-        initialStartDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(viewModel.timeRange!.split(' đến ')[0]);
-        initialStartTime = TimeOfDay.fromDateTime(initialStartDate);
-      }
-    }
+  Future<Map<String, DateTime>?> _pickDateTimeRange(BuildContext context) async {
+    if (!mounted) return null;
 
     final theme = ThemeData.light().copyWith(
       colorScheme: const ColorScheme.light(
@@ -88,25 +80,31 @@ class EditEventPageState extends State<EditEventPage> {
 
     final startDate = await showDatePicker(
       context: context,
-      initialDate: initialStartDate,
+      initialDate: DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (context, child) {
-        return Theme(data: theme, child: child!);
+        return Theme(
+          data: theme,
+          child: child!,
+        );
       },
     );
 
-    if (startDate == null || !mounted) return null;
+    if (startDate == null || !context.mounted) return null;
 
     final startTime = await showTimePicker(
       context: context,
-      initialTime: initialStartTime,
+      initialTime: TimeOfDay.now(),
       builder: (context, child) {
-        return Theme(data: theme, child: child!);
+        return Theme(
+          data: theme,
+          child: child!,
+        );
       },
     );
 
-    if (startTime == null || !mounted) return null;
+    if (startTime == null || !context.mounted) return null;
 
     final endDate = await showDatePicker(
       context: context,
@@ -114,21 +112,27 @@ class EditEventPageState extends State<EditEventPage> {
       firstDate: startDate,
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (context, child) {
-        return Theme(data: theme, child: child!);
+        return Theme(
+          data: theme,
+          child: child!,
+        );
       },
     );
 
-    if (endDate == null || !mounted) return null;
+    if (endDate == null || !context.mounted) return null;
 
     final endTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
       builder: (context, child) {
-        return Theme(data: theme, child: child!);
+        return Theme(
+          data: theme,
+          child: child!,
+        );
       },
     );
 
-    if (endTime == null || !mounted) return null;
+    if (endTime == null || !context.mounted) return null;
 
     final startDateTime = DateTime(
       startDate.year,
@@ -149,117 +153,118 @@ class EditEventPageState extends State<EditEventPage> {
   }
 
   void _submitEvent(BuildContext context) async {
-  bool isValid = true;
-  isValid &= _titleInputKey.currentState!.validate();
-  isValid &= _descriptionInputKey.currentState!.validate();
-  isValid &= _timeRangeInputKey.currentState!.validate();
-  if (_selectedLocation == LocationType.location) {
-    isValid &= _addressInputKey.currentState!.validate();
-  } else {
-    isValid &= _onlineLinkInputKey.currentState!.validate();
-  }
-  if (!mounted) return;
-  final viewModel = Provider.of<EditEventViewModel>(context, listen: false);
-  if (viewModel.timeRange == null) {
-    isValid = false;
-    ToastCustom.show(
-      context: context,
-      title: 'Lỗi',
-      description: 'Vui lòng chọn thời gian diễn ra',
-      type: ToastificationType.error,
-    );
-    return;
-  }
-  if (_timeRangeController.text.isNotEmpty) {
-    try {
-      final dates = _timeRangeController.text.split(' đến ');
-      if (dates.length != 2) {
-        isValid = false;
-        if (mounted) {
-          ToastCustom.show(
-            context: context,
-            title: 'Lỗi',
-            description: 'Thời gian diễn ra không hợp lệ',
-            type: ToastificationType.error,
-          );
-        }
-        return;
-      }
-      final startDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(dates[0]);
-      final endDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(dates[1]);
-      if (endDate.isBefore(startDate) || endDate.isAtSameMomentAs(startDate)) {
-        isValid = false;
-        if (mounted) {
-          ToastCustom.show(
-            context: context,
-            title: 'Lỗi',
-            description: 'Ngày kết thúc phải sau ngày bắt đầu',
-            type: ToastificationType.error,
-          );
-        }
-        return;
-      }
-    } catch (e) {
+    bool isValid = true;
+    isValid &= _titleInputKey.currentState!.validate();
+    isValid &= _descriptionInputKey.currentState!.validate();
+    isValid &= _timeRangeInputKey.currentState!.validate();
+    if (_selectedLocation == LocationType.location) {
+      isValid &= _addressInputKey.currentState!.validate();
+    } else {
+      isValid &= _onlineLinkInputKey.currentState!.validate();
+    }
+    if (!mounted) return;
+    final viewModel = Provider.of<EditEventViewModel>(context, listen: false);
+    if (viewModel.timeRange == null) {
       isValid = false;
+      ToastCustom.show(
+        context: context,
+        title: 'Lỗi',
+        description: 'Vui lòng chọn thời gian diễn ra',
+        type: ToastificationType.error,
+      );
+      return;
+    }
+    if (_timeRangeController.text.isNotEmpty) {
+      try {
+        final dates = _timeRangeController.text.split(' đến ');
+        if (dates.length != 2) {
+          isValid = false;
+          if (mounted) {
+            ToastCustom.show(
+              context: context,
+              title: 'Lỗi',
+              description: 'Thời gian diễn ra không hợp lệ',
+              type: ToastificationType.error,
+            );
+          }
+          return;
+        }
+        final startDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(dates[0]);
+        final endDate = DateFormat('yyyy-MM-dd HH:mm:ss').parse(dates[1]);
+        if (endDate.isBefore(startDate) || endDate.isAtSameMomentAs(startDate)) {
+          isValid = false;
+          if (mounted) {
+            ToastCustom.show(
+              context: context,
+              title: 'Lỗi',
+              description: 'Ngày kết thúc phải sau ngày bắt đầu',
+              type: ToastificationType.error,
+            );
+          }
+          return;
+        }
+      } catch (e) {
+        isValid = false;
+        if (mounted) {
+          ToastCustom.show(
+            context: context,
+            title: 'Lỗi',
+            description: 'Định dạng thời gian không hợp lệ',
+            type: ToastificationType.error,
+          );
+        }
+        return;
+      }
+    }
+    if (!isValid) {
       if (mounted) {
         ToastCustom.show(
           context: context,
           title: 'Lỗi',
-          description: 'Định dạng thời gian không hợp lệ',
+          description: 'Hãy điền đầy đủ thông tin bắt buộc trước khi cập nhật.',
           type: ToastificationType.error,
         );
       }
       return;
     }
-  }
-  if (!isValid) {
-    if (mounted) {
+
+    final eventListViewModel = GetIt.instance<EventListViewModel>();
+    final sessionManager = GetIt.instance<SessionManager>();
+    await viewModel.updateEvent(
+      context,
+      _formKey,
+      eventId: widget.eventId,
+      title: _titleController.text,
+      description: _descriptionController.text,
+      link: _selectedLocation == LocationType.online ? _onlineLinkController.text : null,
+      isOnline: _selectedLocation == LocationType.online,
+      address: _selectedLocation == LocationType.location ? _addressController.text : null,
+      district: _selectedLocation == LocationType.location ? viewModel.selectedDistrict : null,
+      ward: _selectedLocation == LocationType.location ? viewModel.selectedWard : null,
+      city: _selectedLocation == LocationType.location ? viewModel.selectedCity : null,
+      country: _selectedLocation == LocationType.location ? viewModel.selectedCountry : null,
+    );
+
+    if (viewModel.isUpdateSuccessful && !viewModel.isUploadingThumbnail && context.mounted) {
       ToastCustom.show(
         context: context,
-        title: 'Lỗi',
-        description: 'Hãy điền đầy đủ thông tin bắt buộc trước khi cập nhật.',
-        type: ToastificationType.error,
+        title: 'Thành công',
+        description: 'Cập nhật sự kiện thành công!',
+        type: ToastificationType.success,
       );
-    }
-    return;
-  }
-
-  final eventListViewModel = GetIt.instance<EventListViewModel>();
-  final sessionManager = GetIt.instance<SessionManager>();
-  await viewModel.updateEvent(
-    context,
-    _formKey,
-    eventId: widget.eventId,
-    title: _titleController.text,
-    description: _descriptionController.text,
-    link: _selectedLocation == LocationType.online ? _onlineLinkController.text : null,
-    isOnline: _selectedLocation == LocationType.online,
-    address: _selectedLocation == LocationType.location ? _addressController.text : null,
-    district: _selectedLocation == LocationType.location ? viewModel.selectedDistrict : null,
-    ward: _selectedLocation == LocationType.location ? viewModel.selectedWard : null,
-    city: _selectedLocation == LocationType.location ? viewModel.selectedCity : null,
-    country: _selectedLocation == LocationType.location ? viewModel.selectedCountry : null,
-  );
-
-  if (viewModel.isUpdateSuccessful && !viewModel.isUploadingThumbnail && context.mounted) {
-    ToastCustom.show(
-      context: context,
-      title: 'Thành công',
-      description: 'Cập nhật sự kiện thành công!',
-      type: ToastificationType.success,
-    );
-    viewModel.clearUpdateStatus();
-    viewModel.clearError();
-    await eventListViewModel.fetchEvents(
-      organizerId: sessionManager.selectedOrganizerId!,
-      page: 1,
-      limit: 20,
-    );
-    if (context.mounted) {
-      Navigator.of(context).pop();
+      viewModel.clearUpdateStatus();
+      viewModel.clearError();
+      await eventListViewModel.fetchEvents(
+        organizerId: sessionManager.selectedOrganizerId!,
+        page: 1,
+        limit: 20,
+      );
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
     }
   }
-}
+
   void _updateFields(Event event, EditEventViewModel viewModel) {
     _titleController.text = event.title;
     _descriptionController.text = event.description ?? '';
@@ -437,7 +442,7 @@ class EditEventPageState extends State<EditEventPage> {
                     controller: _timeRangeController,
                     readOnly: true,
                     onTap: () async {
-                      final pickedRange = await _pickDateTimeRange();
+                      final pickedRange = await _pickDateTimeRange(context);
                       if (pickedRange != null && mounted) {
                         final viewModel = Provider.of<EditEventViewModel>(context, listen: false);
                         final timeRange =

@@ -22,7 +22,7 @@ class PerRangeSlider extends StatelessWidget {
         children: [
           RichText(
             text: TextSpan(
-              text: 'Per range',
+              text: 'Lượt mua tối thiểu và tối đa',
               style: AppTextStyles.text,
               children: [
                 TextSpan(

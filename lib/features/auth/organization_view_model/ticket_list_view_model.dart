@@ -59,9 +59,6 @@ class TicketListViewModel extends ChangeNotifier {
     } catch (e) {
       _errorMessage = 'Lỗi khi tải danh sách vé: $e';
       _errorTitle = 'Lỗi';
-      if (kDebugMode) {
-        print('Fetch tickets error: $e');
-      }
     } finally {
       _isLoading = false;
       notifyListeners();

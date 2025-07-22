@@ -236,7 +236,7 @@ class OrderDetailPageState extends State<OrderDetailPage> {
               style: AppTextStyles.bold.copyWith(fontSize: 18),
             ),
             const SizedBox(height: 12),
-            buildInfoRow('Order_id:', order.id),
+            buildInfoRow('Order_id:', order.orderNo),
             const SizedBox(height: 8),
             buildInfoRow('Tên người đặt:', order.userName ?? 'Không có'),
             const SizedBox(height: 8),

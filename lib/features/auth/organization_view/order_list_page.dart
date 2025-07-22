@@ -237,11 +237,6 @@ class OrderListPageState extends State<OrderListPage> {
   }
 
   Widget buildOrderItem(int index, Order order) {
-    String formatOrderId(String orderId) {
-      if (orderId.length <= 6) return orderId;
-      return '${orderId.substring(0, 3)}...${orderId.substring(orderId.length - 3)}';
-    }
-
     String localizeStatus(String status) {
       const statusMap = {
         'active': 'Hoạt động',
@@ -275,7 +270,7 @@ class OrderListPageState extends State<OrderListPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Order_id: ${formatOrderId(order.id)}',
+                      'Order_id: ${order.orderNo}',
                       style: AppTextStyles.bold,
                     ),
                     const SizedBox(height: 2),

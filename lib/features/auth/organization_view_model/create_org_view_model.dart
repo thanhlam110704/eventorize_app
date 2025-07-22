@@ -188,7 +188,7 @@ class CreateOrgViewModel extends ChangeNotifier {
         file: _selectedImage,
       );
 
-      // Update SessionManager with the new organizer
+    
       _sessionManager.setSelectedOrganizerDetails(
         organizerId: organizer.id,
         name: organizer.name,
@@ -196,7 +196,7 @@ class CreateOrgViewModel extends ChangeNotifier {
         email: organizer.email,
       );
 
-      // Refresh SelectOrgViewModel to include the new organizer
+  
       final selectOrgViewModel = GetIt.instance<SelectOrgViewModel>();
       await selectOrgViewModel.resetAndFetchOrganizers();
 

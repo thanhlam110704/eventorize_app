@@ -82,7 +82,7 @@ class TicketListPageState extends State<TicketListPage> {
         title: 'Danh sách vé',
         actionIcon: Icons.search,
         onLeadingPressed: () {
-          context.pop();
+          context.push('/event-list');
         },
         onSearchChanged: (query) {
           _searchController.text = query;
@@ -350,21 +350,7 @@ class TicketListPageState extends State<TicketListPage> {
               final viewModel = getIt<TicketListViewModel>();
               await viewModel.deleteTicket(ticket.id);
               if (!context.mounted) return;
-              if (viewModel.errorMessage == null) {
-                ToastCustom.show(
-                  context: context,
-                  title: 'Thành công',
-                  description: 'Xóa vé thành công',
-                  type: ToastificationType.success,
-                );
-              } else {
-                ToastCustom.show(
-                  context: context,
-                  title: viewModel.errorTitle ?? 'Lỗi',
-                  description: viewModel.errorMessage!,
-                  type: ToastificationType.error,
-                );
-              }
+             
             },
             onTickets: () {},
             showTickets: false,

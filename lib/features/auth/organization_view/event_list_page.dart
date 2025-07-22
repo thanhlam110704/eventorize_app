@@ -415,21 +415,6 @@ class EventListPageState extends State<EventListPage> {
               final viewModel = getIt<EventListViewModel>();
               await viewModel.deleteEvent(eventId);
               if (!context.mounted) return;
-              if (viewModel.errorMessage == null) {
-                ToastCustom.show(
-                  context: context,
-                  title: 'Thành công',
-                  description: 'Xóa sự kiện thành công',
-                  type: ToastificationType.success,
-                );
-              } else {
-                ToastCustom.show(
-                  context: context,
-                  title: viewModel.errorTitle ?? 'Lỗi',
-                  description: viewModel.errorMessage!,
-                  type: ToastificationType.error,
-                );
-              }
             },
             onTickets: () {
               closeMenu(dialogContext);
