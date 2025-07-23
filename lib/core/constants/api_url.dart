@@ -12,5 +12,56 @@ class ApiUrl {
   static String editUser(String id) => '/v1/users/$id';
   static String deleteUser(String id) => '/v1/users/$id';
   static String get editAvatar => '/v1/users/me/avatar';
-  static String get googleSSO => '/auth/google/login';
+  static String get googleSSOAndroid => '/v1/auth/google/android';
+  static const String verifyEmail = '/v1/auth/verify-email';
+  static const String resendVerificationEmail = '/v1/auth/resend-verification-email';
+
+  // New endpoints
+  static String get getProvinces => '/v1/locations/province';
+  static String get getDistricts => '/v1/locations/districts';
+  static String get getWards => '/v1/locations/wards';
+
+  // Event endpoints
+  static String get getEvents => '/v1/events';
+  static String getEventsByOrganizer(String organizerId) => '/v1/organizer/$organizerId/events';
+  static String getEventDetail(String id) => '/v1/events/$id';
+  static String get createEvent => '/v1/events';
+  static String editEvent(String id) => '/v1/events/$id';
+  static String editEventThumbnail(String id) => '/v1/events/$id/thumbnail';
+  static String deleteEvent(String id) => '/v1/events/$id';
+
+  // Organizer endpoints
+  static String get getOrganizers => '/v1/organizers';
+  static String get exportOrganizers => '/v1/organizers/export';
+  static String getOrganizerDetail(String id) => '/v1/organizers/$id';
+  static String getOrganizerDetailPublic(String id) => '/v1/home/organizers/$id';
+  static String get createOrganizer => '/v1/organizers';
+  static String editOrganizer(String id) => '/v1/organizers/$id';
+  static String editOrganizerThumbnail(String id) => '/v1/organizers/$id/logo';
+  static String deleteOrganizer(String id) => '/v1/organizers/$id';
+
+  // Favorite endpoints
+  static const String getMyFavoriteEvents = '/v1/favorites/my-events';
+  static String addEventFavorite(String eventId) => '/v1/favorites/add-event/$eventId';
+  static String removeEventFavorite(String eventId) => '/v1/favorites/remove-event/$eventId';
+
+  // Ticket endpoints
+  static String getEventTickets(String eventId) => '/v1//home/event/$eventId/tickets';
+  static String getTicketDetail(String eventId, String ticketId) => '/v1/event/$eventId/tickets/$ticketId';
+  static String createTicket(String eventId) => '/v1/event/$eventId/tickets';
+  static String buyTicket(String eventId) => '/v1/event/$eventId/tickets/checkout';
+  static String editTicket(String eventId, String ticketId) => '/v1/event/$eventId/tickets/$ticketId';
+  static String deleteTicket(String ticketId) => '/v1/event/tickets/$ticketId';
+
+  // Order endpoints
+  static String get getOrders => '/v1/orders';
+  static String get exportOrders => '/v1/orders/export';
+  static String getOrderDetail(String id) => '/v1/orders/$id';
+  static String acceptOrder(String id) => '/v1/orders/$id/accept';
+  static String deleteOrder(String id) => '/v1/orders/$id';
+
+
+  // Payment endpoints
+  static const String generatePayosQr = '/v1/payments/payos/generate';
+  static const String getPayosStatus = '/v1/payments/payos/status';
 }
