@@ -23,7 +23,7 @@ class PerRangeSlider extends StatelessWidget {
           RichText(
             text: TextSpan(
               text: 'Lượt mua tối thiểu và tối đa',
-              style: AppTextStyles.text,
+              style: AppTextStyles.bold.copyWith(fontSize: 15, color: Colors.black),
               children: [
                 TextSpan(
                   text: ' *',

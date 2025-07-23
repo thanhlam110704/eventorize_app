@@ -5,6 +5,7 @@ import 'package:eventorize_app/features/auth/organization_view_model/edit_ticket
 import 'package:eventorize_app/features/auth/organization_view_model/ticket_list_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:eventorize_app/data/models/ticket.dart';
 import 'package:toastification/toastification.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
@@ -42,6 +43,7 @@ class EditTicketPageState extends State<EditTicketPage> {
   String? _selectedStatus;
   double _minPer = 1;
   double _maxPer = 10;
+  bool _isFieldsUpdated = false; // Biến để kiểm soát việc cập nhật fields
   bool _hasShownUpdateToast = false;
 
   static const Map<String, String> statusDisplayToValue = {
@@ -76,6 +78,27 @@ class EditTicketPageState extends State<EditTicketPage> {
     super.dispose();
   }
 
+ 
+  void _updateFields(Ticket ticket, EditTicketViewModel viewModel) {
+    _titleController.text = ticket.title;
+    _descriptionController.text = ticket.description ?? '';
+    _quantityController.text = ticket.quantity.toString();
+    _priceController.text = ticket.price.toString();
+    _selectedStatus = statusValueToDisplay[ticket.status] ?? ticket.status;
+    _minPer = ticket.minPerUser.toDouble();
+    _maxPer = ticket.maxPerUser.toDouble();
+    _dateRangeController.text = viewModel.saleDateRange ?? '';
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _titleInputKey.currentState?.validate();
+      _descriptionInputKey.currentState?.validate();
+      _quantityInputKey.currentState?.validate();
+      _dateRangeInputKey.currentState?.validate();
+      _priceInputKey.currentState?.validate();
+      _statusInputKey.currentState?.validate();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
@@ -85,27 +108,13 @@ class EditTicketPageState extends State<EditTicketPage> {
       value: GetIt.instance<EditTicketViewModel>(),
       child: Consumer<EditTicketViewModel>(
         builder: (context, viewModel, _) {
-          if (viewModel.ticket != null) {
-            _titleController.text = viewModel.ticket!.title;
-            _descriptionController.text = viewModel.ticket!.description ?? '';
-            _quantityController.text = viewModel.ticket!.quantity.toString();
-            _priceController.text = viewModel.ticket!.price.toString();
-            _selectedStatus = statusValueToDisplay[viewModel.ticket!.status] ?? viewModel.ticket!.status;
-            _minPer = viewModel.ticket!.minPerUser.toDouble();
-            _maxPer = viewModel.ticket!.maxPerUser.toDouble();
-            _dateRangeController.text = viewModel.saleDateRange ?? '';
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                _titleInputKey.currentState?.validate();
-                _descriptionInputKey.currentState?.validate();
-                _quantityInputKey.currentState?.validate();
-                _dateRangeInputKey.currentState?.validate();
-                _priceInputKey.currentState?.validate();
-                _statusInputKey.currentState?.validate();
-              }
-            });
+          // Cập nhật các trường khi ticket được tải và chưa cập nhật
+          if (viewModel.ticket != null && !_isFieldsUpdated) {
+            _updateFields(viewModel.ticket!, viewModel);
+            _isFieldsUpdated = true;
           }
 
+          // Xử lý thông báo thành công hoặc lỗi
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted && viewModel.isUpdateSuccessful && !_hasShownUpdateToast) {
               _hasShownUpdateToast = true;
@@ -250,7 +259,10 @@ class EditTicketPageState extends State<EditTicketPage> {
                       final pickedRange = await _pickDateTimeRange(context);
                       if (pickedRange != null) {
                         viewModel.setDateRange(pickedRange['start'], pickedRange['end']);
-                        _dateRangeInputKey.currentState?.validate();
+                        setState(() {
+                          _dateRangeController.text = viewModel.saleDateRange ?? '';
+                          _dateRangeInputKey.currentState?.validate();
+                        });
                       }
                     },
                     readOnly: true,
@@ -310,13 +322,13 @@ class EditTicketPageState extends State<EditTicketPage> {
                         _statusInputKey.currentState?.validate();
                       });
                     },
-                    dropdownWidth: 345,
                     validator: (value) {
                       if (value == null) {
                         return 'Vui lòng chọn trạng thái';
                       }
                       return null;
                     },
+                    dropdownWidth: 345,
                   ),
                   PerRangeSlider(
                     minPer: _minPer,
@@ -550,5 +562,6 @@ class EditTicketPageState extends State<EditTicketPage> {
   void didUpdateWidget(covariant EditTicketPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     _hasShownUpdateToast = false;
+    _isFieldsUpdated = false; // Reset để cho phép cập nhật lại khi widget được xây dựng lại
   }
 }
