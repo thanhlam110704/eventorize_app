@@ -1,0 +1,132 @@
+import 'package:equatable/equatable.dart';
+
+class Event extends Equatable {
+  final String id;
+  final String organizerId;
+  final String title;
+  final String? thumbnail;
+  final String? description;
+  final DateTime startDate;
+  final DateTime endDate;
+  final String? link;
+  final bool isOnline;
+  final String? address;
+  final String? district;
+  final String? ward;
+  final String? city;
+  final String? country;
+  final DateTime? createdAt;
+  final String? createdBy;
+  final DateTime? updatedAt;
+  final String? updatedBy;
+  final DateTime? deletedAt;
+  final String? deletedBy;
+
+  const Event({
+    required this.id,
+    required this.organizerId,
+    required this.title,
+    this.thumbnail,
+    this.description,
+    required this.startDate,
+    required this.endDate,
+    this.link,
+    required this.isOnline,
+    this.address,
+    this.district,
+    this.ward,
+    this.city,
+    this.country,
+    this.createdAt,
+    this.createdBy,
+    this.updatedAt,
+    this.updatedBy,
+    this.deletedAt,
+    this.deletedBy,
+  });
+
+  factory Event.fromJson(Map<String, dynamic> json) {
+    DateTime parseDateTime(String dateStr) {
+      return DateTime.parse(dateStr).toLocal();
+    }
+
+    return Event(
+      id: json['_id'] as String,
+      organizerId: json['organizer_id'] as String,
+      title: json['title'] as String,
+      thumbnail: json['thumbnail'] as String?,
+      description: json['description'] as String?,
+      startDate: parseDateTime(json['start_date'] as String),
+      endDate: parseDateTime(json['end_date'] as String),
+      link: json['link'] as String?,
+      isOnline: json['is_online'] as bool,
+      address: json['address'] as String?,
+      district: json['district'] == 'string' ? null : json['district'] as String?,
+      ward: json['ward'] == 'string' ? null : json['ward'] as String?,
+      city: json['city'] == 'string' ? null : json['city'] as String?,
+      country: json['country'] == 'string' ? null : json['country'] as String?,
+      createdAt: json['created_at'] != null ? parseDateTime(json['created_at'] as String) : null,
+      createdBy: json['created_by'] as String?,
+      updatedAt: json['updated_at'] != null ? parseDateTime(json['updated_at'] as String) : null,
+      updatedBy: json['updated_by'] as String?,
+      deletedAt: json['deleted_at'] != null ? parseDateTime(json['deleted_at'] as String) : null,
+      deletedBy: json['deleted_by'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    String? formatDateTime(DateTime? date) {
+      if (date == null) return null;
+      final offset = const Duration(hours: 7);
+      final adjusted = date.toUtc().add(offset);
+      return adjusted.toIso8601String();
+    }
+
+    return {
+      '_id': id,
+      'organizer_id': organizerId,
+      'title': title,
+      'thumbnail': thumbnail,
+      'description': description,
+      'start_date': formatDateTime(startDate),
+      'end_date': formatDateTime(endDate),
+      'link': link,
+      'is_online': isOnline,
+      'address': address,
+      'district': district,
+      'ward': ward,
+      'city': city,
+      'country': country,
+      'created_at': formatDateTime(createdAt),
+      'created_by': createdBy,
+      'updated_at': formatDateTime(updatedAt),
+      'updated_by': updatedBy,
+      'deleted_at': formatDateTime(deletedAt),
+      'deleted_by': deletedBy,
+    };
+  }
+
+  @override
+  List<Object?> get props => [
+        id,
+        organizerId,
+        title,
+        thumbnail,
+        description,
+        startDate,
+        endDate,
+        link,
+        isOnline,
+        address,
+        district,
+        ward,
+        city,
+        country,
+        createdAt,
+        createdBy,
+        updatedAt,
+        updatedBy,
+        deletedAt,
+        deletedBy,
+      ];
+}
